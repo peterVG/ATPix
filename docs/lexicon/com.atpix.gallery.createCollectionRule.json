@@ -16,8 +16,8 @@
             "targetScope": { "type": "ref", "ref": "com.atpix.gallery.defs#targetScope" },
             "targetAlbumUri": { "type": "string", "format": "at-uri" },
             "useFollowGraph": { "type": "boolean", "default": false },
-            "followedActors": { "type": "array", "items": { "type": "string", "format": "did" } },
-            "hashtags": { "type": "array", "items": { "type": "string", "maxLength": 64 } },
+            "followedActors": { "type": "array", "maxLength": 500, "items": { "type": "string", "format": "did" } },
+            "hashtags": { "type": "array", "maxLength": 50, "items": { "type": "string", "maxLength": 64 } },
             "includeOwnPhotos": { "type": "boolean", "default": true },
             "active": { "type": "boolean", "default": true }
           }

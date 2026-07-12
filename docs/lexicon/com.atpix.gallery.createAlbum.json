@@ -17,6 +17,7 @@
             "spaceKey": { "type": "string", "maxLength": 64 },
             "collectionRuleUris": {
               "type": "array",
+              "maxLength": 20,
               "items": { "type": "string", "format": "at-uri" }
             },
             "seedFromRules": {

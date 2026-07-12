@@ -30,7 +30,7 @@
                   "uri": { "type": "string", "format": "at-uri" },
                   "albumUri": { "type": "string", "format": "at-uri" },
                   "photoUri": { "type": "string", "format": "at-uri" },
-                  "position": { "type": "integer" },
+                  "position": { "type": "integer", "minimum": 0 },
                   "addedBy": { "type": "string", "format": "did" },
                   "createdAt": { "type": "string", "format": "datetime" },
                   "photo": { "type": "ref", "ref": "com.atpix.gallery.defs#photoView" }

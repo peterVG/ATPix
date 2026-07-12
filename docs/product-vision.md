@@ -12,7 +12,7 @@
 - **atproto-native users** (e.g. Bluesky community) who prefer OAuth identity over new account/password systems
 - **Developers** exploring App View patterns on HappyView with a concrete media use case
 
-**Jobs:** Upload photos, group them into albums, share a public profile gallery or a curated album link, create groups of user accounts than are authorized to access permissioned data, browse others' public galleries.
+**Jobs:** Upload photos, group them into albums, share a public profile gallery or a curated album link, create groups of user accounts that are authorized to access permissioned data, browse others' public galleries.
 
 **Pains:** Vendor lock-in, lost libraries on service shutdown, opaque sharing permissions, duplicate uploads across platforms.
 
@@ -36,7 +36,7 @@
 - I want to upload photos and see them in my gallery immediately.
 - I want to organize photos into named albums.
 - I want to share my full public gallery or a specific album via a link.
-- I want to restrict access to a shared galler or album to a select group of authenticated users.
+- I want to restrict access to a shared gallery or album to a select group of authenticated users.
 - I want to browse another user's public photos if they use ATPix Lexicons.
 - I want confidence that my photos live in my repo, not only on an app's servers.
 
