@@ -24,6 +24,7 @@ Observability (Promtail → Redpanda → Loki, Prometheus, Grafana) runs via roo
 - **[Product vision](docs/product-vision.md)** — problem, users, value proposition
 - **[PRD v1.5](docs/prd.md)** — F-001–F-016 functional requirements, NFRs, technical constraints
 - **[SRS v1.0](docs/srs.md)** — technical specs with 100% PRD traceability
+- **[UI requirements v1.0](docs/ui-requirements.md)** — screens, components, and mockups ([UX guide](docs/references/000-UX-guide.md))
 - **BDD features** — Gherkin scenarios under `apps/frontend/tests/features/` (UI/auth/gallery) and `apps/backend/tests/features/` (C2PA, lexicon, spaces, performance)
 - **Architecture** — [ADRs 001–011](docs/architecture/) including OAuth ([006](docs/architecture/006-oauth-dpop-authentication.md)), HappyView integration ([007](docs/architecture/007-happyview-app-view-integration.md)), C2PA ([008](docs/architecture/008-c2pa-sdk-and-signing.md)), lexicon authority ([009](docs/architecture/009-lexicon-namespace-authority.md)), permissioned spaces ([010](docs/architecture/010-permissioned-spaces-storage.md)), SQLite index ([011](docs/architecture/011-sqlite-index-database.md))
 

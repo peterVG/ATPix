@@ -13,6 +13,8 @@ This SRS translates [docs/prd.md](./prd.md) into verifiable technical requiremen
 
 **Architecture baseline:** [005-application-architecture.md](./architecture/005-application-architecture.md) — vanilla JS frontend (Vite, port 5173), FastAPI auxiliary backend (port 8000), external HappyView for XRPC/OAuth/indexing.
 
+**UI requirements:** Screen layouts, component states, and design-token application are specified in [ui-requirements.md](./ui-requirements.md) (derived from [000-UX-guide.md](./references/000-UX-guide.md) and v1 mockups). This SRS retains verifiable behavioral requirements; UI-SCR-* IDs in the UI spec link back to SRS-F-* blocks here.
+
 ---
 
 # Functional Requirements
