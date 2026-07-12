@@ -1,0 +1,33 @@
+{
+  "lexicon": 1,
+  "id": "com.atpix.gallery.getAlbum",
+  "target_collection": "com.atpix.gallery.album",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get a single album; permissioned albums require space credentials.",
+      "parameters": {
+        "type": "params",
+        "required": ["uri"],
+        "properties": {
+          "uri": { "type": "string", "format": "at-uri" },
+          "hydrateItems": { "type": "boolean", "default": false }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["album"],
+          "properties": {
+            "album": { "type": "ref", "ref": "com.atpix.gallery.defs#albumView" },
+            "items": {
+              "type": "array",
+              "items": { "type": "ref", "ref": "com.atpix.gallery.defs#photoView" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

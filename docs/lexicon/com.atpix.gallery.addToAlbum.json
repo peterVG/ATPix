@@ -1,0 +1,33 @@
+{
+  "lexicon": 1,
+  "id": "com.atpix.gallery.addToAlbum",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Add a photo to an album via albumItem junction record.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["albumUri", "photoUri"],
+          "properties": {
+            "albumUri": { "type": "string", "format": "at-uri" },
+            "photoUri": { "type": "string", "format": "at-uri" },
+            "position": { "type": "integer", "minimum": 0 }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri", "cid"],
+          "properties": {
+            "uri": { "type": "string", "format": "at-uri" },
+            "cid": { "type": "string", "format": "cid" }
+          }
+        }
+      }
+    }
+  }
+}
