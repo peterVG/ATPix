@@ -14,7 +14,7 @@ Galleries populate two ways:
 **(a)** direct PDS upload and 
 **(b)** photos already indexed on the network via follow-graph and hashtag rules—Path B uses only HappyView Jetstream sync, not a custom firehose. 
 
-Sharing supports **public**, **unlisted**, and **permissioned** albums; permissioned collections use [HappyView Permissioned Spaces](https://happyview.dev/experimental/spaces/index) (ATP-0016) so only invited members can view curated private albums.
+Sharing supports **public**, **unlisted**, and **permissioned** albums; permissioned collections use [HappyView Permissioned Spaces]([https://happyview.dev/experimental/spaces/index](https://happyview.dev/experimental/spaces)) (ATP-0016) so only invited members can view curated private albums.
 
 Product language (gallery, album) maps to atproto primitives (queries, `com.atpix.gallery.*` records, space repos) in the [PRD](docs/prd.md#product-terms--at-protocol-primitives) and [Lexicon README](docs/lexicon/README.md).
 
