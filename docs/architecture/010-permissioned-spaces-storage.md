@@ -19,8 +19,9 @@ Accepted
 - **Visibility model:** Album `visibility` enum: `public`, `unlisted`, `permissioned`.
 - **Public/unlisted photos:** Stored in user's public PDS repo (`com.atpix.gallery.photo`, `albumItem`).
 - **Permissioned photos:** Stored in space repo via `com.atproto.space.putRecord` / `createRecord`; album metadata in public repo links `spaceUri`.
-- **Space type:** `com.atpix.gallery.albumSpace` created via `com.atproto.simplespace.createSpace` with `mintPolicy: member-list`.
-- **Access:** Members use delegation token → space credential flows; unauthorized users get access-denied without metadata leakage.
+- **Space type:** `com.atpix.gallery.albumSpace` created via `com.atproto.simplespace.createSpace` with `mintPolicy: member-list`, `appAccess: {"type": "allowList", "allowed": ["<ATPix OAuth clientId URL>"]}`, and `config: {"membershipPublic": false, "recordsPublic": false}`.
+- **Blobs:** Bytes on author PDS via `uploadBlob`; gated reads via `com.atproto.space.getBlob`.
+- **Access:** Direct members use DPoP + client key; cross-service reads use delegation token → space credential (Bearer). Invite flow uses `createInvite` / `acceptInvite`. Unauthorized users get access-denied without metadata leakage.
 - **Index isolation:** Permissioned content excluded from public App View indexes.
 - **Feature flag:** HappyView `feature.spaces_enabled` MUST be on for permissioned testing (TC-008).
 

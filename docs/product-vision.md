@@ -46,7 +46,7 @@
 - **App View:** [HappyView](https://happyview.dev) — Lexicon-driven indexing, Jetstream sync, OAuth proxy
 - **Frontend (options):** Plain vanilla JS, HTML and CSS incorporating `@happyview/lex-agent` and `@happyview/oauth-client-browser`
 - **Index database:** SQLite 
-- **Blob storage:** User PDS (proxied through HappyView `com.atproto.repo.uploadBlob`)
+- **Blob storage:** User PDS (proxied through HappyView `com.atproto.repo.uploadBlob`); permissioned album **records** live in space repos; blob bytes remain on the author's PDS and are served via `com.atproto.space.getBlob` with membership gating
 - **Observability:** Promtail, Loki, Prometheus, Grafana (project `docker-compose.yml`)
 
 ## Technical & Domain References
@@ -66,7 +66,7 @@ ATPix eliminates the traditional photo-app tradeoff between ease of use and data
 
 ## Key Constraints
 
-- v1 limited to **public** repo data (no encrypted private albums per current atproto scope)
+- v1 is **public-by-default** for gallery and album metadata; **permissioned albums** use [HappyView Permissioned Spaces](https://happyview.dev/experimental/spaces) (ATP-0016) for membership-gated photo storage — **no client-side encryption** in v1
 - HappyView blob upload limit **50MB** per image
 - Requires users to have (or create) a PDS-backed atproto account
 - Lexicon authority requires DNS `_lexicon` setup for network publication

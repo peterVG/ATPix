@@ -81,8 +81,8 @@ flowchart LR
 | **Public profile gallery** | Same query, different DID filter | `listPhotos` over indexed `com.atpix.gallery.photo` records for target DID |
 | **Following / Hashtags feed** | Multi-repo index query + rule records | `com.atpix.gallery.listFeedPhotos` + `com.atpix.gallery.collectionRule` records in curator's repo |
 | **Photo** | Record + blob | Record in `com.atpix.gallery.photo`; bytes via `com.atproto.repo.uploadBlob` |
-| **Album** | Container record | `com.atpix.gallery.album` record in owner's **PDS repo** (or space repo when permissioned) |
-| **Album membership** | Junction records + denormalized URIs | `com.atpix.gallery.albumItem` records; optional `photo.albumUris[]` |
+| **Album** | Container record | `com.atpix.gallery.album` record in owner's **PDS repo** (always); links `spaceUri` when `visibility: permissioned` |
+| **Album membership** | Junction records + denormalized URIs | `com.atpix.gallery.albumItem` records in same repo as associated photos (PDS for public/unlisted; space repo when permissioned); optional `photo.albumUris[]` |
 | **Private / permissioned album** | Permissioned **space repo** | `ats://<space-did>/…`; type `com.atpix.gallery.albumSpace`; photos/items in space, not public index |
 | **Share link** | UI route + visibility field | `visibility` on `album` / `photo` records (`public` \| `unlisted` \| `permissioned`) |
 | **App View index** | HappyView local DB | Copy of network `photo` records; not a user repo |
@@ -93,7 +93,7 @@ flowchart LR
 |-----------------|-------------|--------------|
 | `com.atpix.gallery.photo` | Image metadata + blob ref | User PDS repo, or permissioned space repo |
 | `com.atpix.gallery.album` | Named curated container | User PDS repo (metadata); links `spaceUri` when permissioned |
-| `com.atpix.gallery.albumItem` | Ordered album ↔ photo link | Same repo as parent album / associated photos |
+| `com.atpix.gallery.albumItem` | Ordered album ↔ photo link | Same repo as associated photos (PDS for public/unlisted; space repo when permissioned) |
 | `com.atpix.gallery.collectionRule` | Follow/hashtag source rules | Owner's public PDS repo |
 
 **Terminology policy:** User-facing UI and user stories in this PRD keep gallery/album language. Each functional requirement below includes a **Protocol mapping** line for implementers. Architecture docs and [docs/lexicon/README.md](./lexicon/README.md) use repo/collection/record/blob/space vocabulary.
@@ -192,13 +192,14 @@ See [F-008](#f-008-permissioned-gallery--album-access-happyview-permissioned-spa
 **Priority:** Mandatory  
 **User Story:** As a creator, I want to upload photos to my gallery so that they are stored in my PDS repository and immediately visible in my personal gallery.
 
-**Protocol mapping:** `com.atproto.repo.uploadBlob` → PDS **blob**; `com.atpix.gallery.createPhoto` → **record** in collection `com.atpix.gallery.photo`.
+**Protocol mapping:** `com.atproto.repo.uploadBlob` → PDS **blob** (all paths); `com.atpix.gallery.createPhoto` → **record** in `com.atpix.gallery.photo` (public/unlisted PDS repo); permissioned album uploads additionally use `com.atproto.space.createRecord` / `putRecord` in the linked space and `com.atproto.space.getBlob` for gated thumbnail delivery.
 
 ### Acceptance Criteria
 
 - Authenticated users MUST be able to select and upload image files accepted by the `com.atpix.gallery.photo` record Lexicon (`image/*` MIME types).
-- Upload flow MUST: (1) generate and embed a C2PA standard manifest in the image asset per F-012, (2) call `com.atproto.repo.uploadBlob` via HappyView proxy with the manifest-bearing bytes, then (3) create a `com.atpix.gallery.photo` record referencing the blob ref and C2PA summary fields.
-- Each uploaded photo MUST be written to the authenticated user's PDS and indexed in the HappyView App View.
+- **Public/unlisted upload flow** MUST: (1) generate and embed a C2PA standard manifest in the image asset per F-012, (2) call `com.atproto.repo.uploadBlob` via HappyView proxy with the manifest-bearing bytes, then (3) create a `com.atpix.gallery.photo` record in the user's public PDS repo referencing the blob ref and C2PA summary fields.
+- **Permissioned album upload flow** MUST: (1) embed C2PA per F-012, (2) call `com.atproto.repo.uploadBlob` to the author's PDS (blob bytes remain on PDS per HappyView spaces model), then (3) write `com.atpix.gallery.photo` and `com.atpix.gallery.albumItem` records to the linked space via `com.atproto.space.createRecord` / `putRecord` — not to the owner's public repo. Thumbnails and full images for permissioned photos MUST be fetched via `com.atproto.space.getBlob` with valid membership (DPoP) or space credential (Bearer).
+- Each public/unlisted uploaded photo MUST be indexed in the HappyView public App View. Permissioned space photos MUST NOT appear in public indexes (F-008).
 - The UI MUST show upload progress and a completion or error state for each file.
 - Uploads exceeding the 50MB per-blob limit MUST be rejected with a clear, user-visible error before transfer completes.
 - Newly uploaded photos MUST appear in the user's personal gallery without requiring a manual page refresh beyond normal client refresh behavior.
@@ -323,10 +324,10 @@ ATPix v1 MUST exercise [HappyView Permissioned Spaces](https://happyview.dev/exp
 
 - HappyView instances used for ATPix MUST enable `feature.spaces_enabled` before permissioned album features are tested or demonstrated.
 - Album owners MUST be able to designate an album with `visibility: permissioned` and receive a linked `spaceUri` (`ats://<space-did>/com.atpix.gallery.albumSpace/<skey>`).
-- Creating a permissioned album MUST call `com.atproto.simplespace.createSpace` with `type: com.atpix.gallery.albumSpace`, `mintPolicy: member-list`, and `appAccess` allowing the ATPix client application.
-- Photo and `albumItem` records for permissioned albums MUST be written to the space via `com.atproto.space.putRecord` / `com.atproto.space.createRecord`, not to the owner's public repo.
-- Album owners MUST be able to invite members via `dev.happyview.space.createInvite` and manage membership via `com.atproto.simplespace.addMember` / `removeMember`.
-- Only authenticated space members with `read` or `write` access MUST be able to view permissioned album contents via space credential flows (`getDelegationToken` → `getSpaceCredential`).
+- Creating a permissioned album MUST call `com.atproto.simplespace.createSpace` with `type: com.atpix.gallery.albumSpace`, `mintPolicy: member-list`, `appAccess: {"type": "allowList", "allowed": ["<ATPix OAuth clientId URL>"]}` (the ATPix OAuth `clientId` metadata URL published at `{deployment-origin}/oauth-client-metadata.json`; `allowed` entries are client metadata URLs per HappyView credentials docs), and `config: {"membershipPublic": false, "recordsPublic": false}`.
+- Photo and `albumItem` records for permissioned albums MUST be written to the space via `com.atproto.space.putRecord` / `com.atproto.space.createRecord`, not to the owner's public repo. Blob bytes remain on the author's PDS; gated reads use `com.atproto.space.getBlob`.
+- Album owners MUST be able to invite members via `dev.happyview.space.createInvite`; invited users MUST join via `dev.happyview.space.acceptInvite`. Owners MUST manage membership via `com.atproto.simplespace.addMember` / `removeMember` with `access` values `read`, `write`, or `read_self` per HappyView members API.
+- Authenticated space members with `read` or `write` access MUST view permissioned album contents using **direct member auth** (DPoP + `X-Client-Key` on `com.atproto.space.*` routes) or **cross-service reads** via space credential flows (`getDelegationToken` → `getSpaceCredential` → Bearer token without DPoP).
 - Unauthenticated and non-authorized users MUST receive a clear access-denied state (404 or equivalent) without leaking photo thumbnails, blob CIDs, or metadata.
 - Permissioned albums MUST NOT rely on client-side encryption; access control MUST use protocol-native space membership and credentials.
 - Permissioned album content MUST NOT be aggregated into public App View indexes; queries for permissioned content MUST require valid space credentials.
@@ -512,8 +513,8 @@ ATPix v1 MUST exercise [HappyView Permissioned Spaces](https://happyview.dev/exp
 
 ## NFR-001: Data Ownership and Verifiability
 
-**Requirement:** All photo records and blob references MUST reside in user PDS repositories as cryptographically signed atproto records. The App View MUST index and serve copies but MUST NOT be the sole custodian of user media.  
-**Rationale:** Core value proposition—portable, user-owned libraries ([product-vision.md](./product-vision.md)).
+**Requirement:** Blob bytes MUST reside in user PDS repositories (via `com.atproto.repo.uploadBlob`). Photo **records** for public/unlisted content MUST live in the user's public PDS repo as cryptographically signed atproto records. Photo and `albumItem` **records** for permissioned albums MUST live in the linked space repo (`ats://`); blobs remain on the author's PDS and are accessed via `com.atproto.space.getBlob` with membership gating. The App View MUST index and serve public copies but MUST NOT be the sole custodian of user media.  
+**Rationale:** Core value proposition—portable, user-owned libraries ([product-vision.md](./product-vision.md)); HappyView spaces model (blob on PDS, gated record access in space).
 
 ## NFR-002: Public-by-Default Transparency
 
