@@ -77,6 +77,8 @@ Users MUST be able to switch between **dark** and **light** appearance while pre
 | **Accessibility** | Toggle MUST have accessible name; both themes MUST meet WCAG 2.x AA for body and disclosure text. |
 | **Media preservation** | Photo pixels and thumbnail rendering MUST NOT be altered by theme change—only application chrome. |
 
+**Mockup gap:** None of the v1 mockups (01–06) show the color-scheme toggle or Settings → Appearance. Those screens predate UI-SHELL-003. See [Mockup inventory](#mockup-inventory) for planned supplemental assets.
+
 **Source:** [000-UX-guide.md](./references/000-UX-guide.md) Theme toggle, Theme modes  
 **SRS:** SRS-NFR-016 (neutral trust labels unchanged across themes)  
 **Tests:** [`ui_theme_toggle_UI-SHELL-003.feature`](../apps/frontend/tests/features/ui_theme_toggle_UI-SHELL-003.feature)
@@ -362,6 +364,35 @@ Non-members MUST see access-denied panel without thumbnails, blob CIDs, or metad
 
 ---
 
+# Mockup inventory
+
+Reference images live in [docs/references/mockups/](./references/mockups/). All current assets are **dark-mode only** and were captured before the color-scheme toggle was specified.
+
+## On disk (v1 — dark mode)
+
+| File | Screen | UI ID | Theme | Notes |
+|------|--------|-------|-------|-------|
+| [01-discovery-feed.jpg](./references/mockups/01-discovery-feed.jpg) | Discovery feed | UI-SCR-002 | Dark | Following / Trending Hashtags tabs |
+| [02-my-gallery.jpg](./references/mockups/02-my-gallery.jpg) | My Gallery | UI-SCR-001 | Dark | Badges, upload overlay, pagination |
+| [03-photo-detail.jpg](./references/mockups/03-photo-detail.jpg) | Photo detail | UI-SCR-003 | Dark | Split view, C2PA L2 panel |
+| [04-album-view.jpg](./references/mockups/04-album-view.jpg) | Album view | UI-SCR-004 | Dark | Permissioned album example |
+| [05-upload-flow.jpg](./references/mockups/05-upload-flow.jpg) | Upload flow | UI-SCR-005 | Dark | Destination picker wording needs TC-004 fix |
+| [06-permissioned-space-admin.jpg](./references/mockups/06-permissioned-space-admin.jpg) | Space admin | UI-SCR-006 | Dark | Member directory, audit trail |
+
+## Not yet captured (planned supplemental mockups)
+
+These assets are **documented here but not yet in the repository**. Add them when design exports are available; do not block implementation on their absence.
+
+| Planned file | Screen | UI ID | Purpose |
+|--------------|--------|-------|---------|
+| `00-app-shell-annotated.jpg` | Global chrome | UI-SHELL-001, UI-SHELL-003 | Single reference showing header utility cluster with **sun/moon color-scheme toggle** placement (between nav and search) |
+| `02-my-gallery-light.jpg` | My Gallery | UI-SCR-001, UI-SHELL-003 | Light-mode variant of [02](./references/mockups/02-my-gallery.jpg) validating `themes.light` surfaces; **semantic badges unchanged** |
+| `07-settings-appearance.jpg` | Settings | UI-SHELL-003 | **Appearance** section with Dark / Light / System segmented control |
+
+Until planned files land, UI-SHELL-003 acceptance relies on [000-UX-guide.md](./references/000-UX-guide.md) tokens and [`ui_theme_toggle_UI-SHELL-003.feature`](../apps/frontend/tests/features/ui_theme_toggle_UI-SHELL-003.feature)—not on raster mockups.
+
+---
+
 # Mockup fidelity notes
 
 The v1 mockups are **directional**. Implementation MUST correct these PRD conflicts:
@@ -371,6 +402,8 @@ The v1 mockups are **directional**. Implementation MUST correct these PRD confli
 | Upload destination "Encrypted for specific DIDs" | Implies client-side encryption | Label MUST say membership-gated **Permissioned Space** (TC-004) |
 | "TRUSTED" on discovery cards | Acceptable if mapped to C2PA Trusted state | MUST NOT imply content authenticity (NFR-016) |
 | Storage provider names in album panel (e.g., Filecoin) | Not in PRD v1 | Omit or mark as placeholder until ADR defines storage messaging |
+| Color-scheme toggle absent from header (all mockups 01–06) | Feature added after mockups were captured | Implement per UI-SHELL-003 and UX guide; see planned `00-app-shell-annotated.jpg` |
+| All mockups show dark chrome only | Light theme specified in UX guide | Validate with planned `02-my-gallery-light.jpg` or implementation preview |
 
 ---
 
@@ -387,7 +420,7 @@ The v1 mockups are **directional**. Implementation MUST correct these PRD confli
 | UI-SCR-007 | Public profile | SRS-F-006 | F-006 | — |
 | UI-SCR-008 | Trust settings | SRS-F-016 | F-016 | — |
 | UI-SHELL-001 | App chrome | SRS-F-001 | F-001 | all |
-| UI-SHELL-003 | Color scheme toggle | SRS-NFR-016 | — | all |
+| UI-SHELL-003 | Color scheme toggle | SRS-NFR-016 | — | — (see [planned mockups](#not-yet-captured-planned-supplemental-mockups)) |
 
 ---
 
