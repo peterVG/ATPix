@@ -2,6 +2,7 @@
 
 import logging
 import sys
+import time
 
 
 def configure_stdout_logging(level: int = logging.INFO) -> None:
@@ -11,7 +12,9 @@ def configure_stdout_logging(level: int = logging.INFO) -> None:
         level: Logging level for the root logger (default INFO).
     """
     handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(logging.Formatter("%(asctime)sZ %(levelname)s %(name)s %(message)s"))
+    formatter = logging.Formatter("%(asctime)sZ %(levelname)s %(name)s %(message)s")
+    formatter.converter = time.gmtime
+    handler.setFormatter(formatter)
     root = logging.getLogger()
     root.handlers.clear()
     root.addHandler(handler)

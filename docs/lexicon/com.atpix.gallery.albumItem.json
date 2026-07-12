@@ -18,8 +18,8 @@
           },
           "photoUri": {
             "type": "string",
-            "format": "at-uri",
-            "description": "ATPix — child com.atpix.gallery.photo AT URI (at:// or ats://)."
+            "maxLength": 512,
+            "description": "ATPix — child com.atpix.gallery.photo record URI. Use at:// for PDS repo records; use ats:// for permissioned space records (no at-uri format — ats scheme)."
           },
           "position": {
             "type": "integer",

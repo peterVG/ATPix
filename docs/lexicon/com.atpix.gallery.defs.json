@@ -3,12 +3,12 @@
   "id": "com.atpix.gallery.defs",
   "defs": {
     "visibility": {
-      "type": "token",
+      "type": "string",
       "description": "ATPix visibility scope. Permissioned uses HappyView Permissioned Spaces (ATP-0016).",
       "enum": ["public", "unlisted", "permissioned"]
     },
     "targetScope": {
-      "type": "token",
+      "type": "string",
       "description": "Whether a collection rule powers the social gallery feed or a specific album.",
       "enum": ["gallery", "album"]
     },
