@@ -64,12 +64,16 @@ After successful sign-in, the UI MUST display the authenticated user's handle an
 
 ### SRS-F-002.1: Upload procedure sequence
 
-Authenticated users MUST upload `image/*` files via: (1) C2PA manifest embed per SRS-F-012, (2) `com.atproto.repo.uploadBlob` via HappyView OAuth proxy, (3) `com.atpix.gallery.createPhoto` with blob ref and C2PA summary fields.
+Authenticated users MUST upload `image/*` files via: (1) C2PA manifest embed per SRS-F-012, (2) `com.atproto.repo.uploadBlob` via HappyView OAuth proxy (blob always on author's PDS), then (3) record creation per visibility target.
+
+**Public/unlisted path:** `com.atpix.gallery.createPhoto` in the user's public PDS repo with blob ref and C2PA summary fields.
+
+**Permissioned album path:** `com.atproto.space.createRecord` / `putRecord` for `com.atpix.gallery.photo` and `com.atpix.gallery.albumItem` in the linked space — not public repo writes. Thumbnails and image bytes MUST be served via `com.atproto.space.getBlob` with valid membership or space credential.
 
 **Technical Implementation:**
 - HappyView proxy URL from `VITE_HAPPYVIEW_URL`.
 - Record `createdAt` MUST be RFC 3339 UTC (`Z` suffix).
-- Indexed copy appears in HappyView SQLite/Postgres index.
+- Public/unlisted photos appear in HappyView public index; permissioned space photos MUST NOT (SRS-F-008.4).
 
 **Source**
 - [prd.md](./prd.md) F-002, NFR-005
@@ -243,11 +247,11 @@ Unlisted albums MUST NOT appear in public profile album lists or discovery surfa
 
 ### SRS-F-008.1: Permissioned album lifecycle
 
-Album owners MUST create `visibility: permissioned` albums with linked `spaceUri` (`ats://<space-did>/com.atpix.gallery.albumSpace/<skey>`). Space creation MUST call `com.atproto.simplespace.createSpace` with `type: com.atpix.gallery.albumSpace`, `mintPolicy: member-list`, and ATPix `appAccess`.
+Album owners MUST create `visibility: permissioned` albums with linked `spaceUri` (`ats://<space-did>/com.atpix.gallery.albumSpace/<skey>`). Space creation MUST call `com.atproto.simplespace.createSpace` with `type: com.atpix.gallery.albumSpace`, `mintPolicy: member-list`, `appAccess: {"type": "allowList", "allowed": ["<ATPix OAuth clientId URL>"]}` (ATPix OAuth `clientId` at `{deployment-origin}/oauth-client-metadata.json`), and `config: {"membershipPublic": false, "recordsPublic": false}`.
 
 **Technical Implementation:**
 - HappyView MUST have `feature.spaces_enabled=true` (TC-008).
-- Photos and `albumItem` for permissioned albums MUST use `com.atproto.space.putRecord` / `createRecord`, not public repo writes.
+- Photos and `albumItem` for permissioned albums MUST use `com.atproto.space.putRecord` / `createRecord`, not public repo writes. Blob bytes remain on author PDS; gated delivery via `com.atproto.space.getBlob`.
 
 **Source**
 - [prd.md](./prd.md) F-008, TC-004, TC-008, NFR-013
@@ -258,7 +262,7 @@ Album owners MUST create `visibility: permissioned` albums with linked `spaceUri
 
 ### SRS-F-008.2: Membership and credentials
 
-Owners MUST invite via `dev.happyview.space.createInvite` and manage members via `addMember` / `removeMember`. Authorized reads MUST use `getDelegationToken` → `getSpaceCredential`. Unauthorized users MUST receive access-denied without leaking thumbnails, CIDs, or metadata.
+Owners MUST invite via `dev.happyview.space.createInvite`; invitees MUST join via `dev.happyview.space.acceptInvite`. Owners MUST manage members via `com.atproto.simplespace.addMember` / `removeMember` with `access` values `read`, `write`, or `read_self`. Unauthorized users MUST receive access-denied without leaking thumbnails, CIDs, or metadata.
 
 **Source**
 - [prd.md](./prd.md) F-008, NFR-002
@@ -266,9 +270,22 @@ Owners MUST invite via `dev.happyview.space.createInvite` and manage members via
 **Tests**
 - [`permissioned_spaces_integration_SRS-F-008.feature`](../apps/backend/tests/features/permissioned_spaces_integration_SRS-F-008.feature)
 
-### SRS-F-008.3: Index isolation
+### SRS-F-008.3: Authentication modes for space reads
 
-Permissioned content MUST NOT appear in public App View indexes. Queries for permissioned content MUST require valid space credentials. Client-side encryption MUST NOT be implemented.
+**Direct member access:** Authenticated space members MUST call `com.atproto.space.*` routes (including `getRecord`, `listRecords`, `getBlob`) with DPoP OAuth + `X-Client-Key` from `VITE_HAPPYVIEW_CLIENT_KEY`. Credential issuance steps (`getDelegationToken`, `getSpaceCredential`) also require DPoP + client key.
+
+**Cross-service / App View access:** Services that are not direct members (e.g., ATPix thumbnail proxy, feed generators) MUST obtain a space credential via `getDelegationToken` → `getSpaceCredential` and pass it as `Authorization: Bearer <credential>` — no DPoP or client key on the consuming request. HappyView grants read access from the credential `sub` (space URI).
+
+**Source**
+- [prd.md](./prd.md) F-008
+- [happyview.dev.docs.md](./references/happyview.dev.docs.md) — Credentials, Records (getBlob)
+
+**Tests**
+- [`permissioned_spaces_integration_SRS-F-008.feature`](../apps/backend/tests/features/permissioned_spaces_integration_SRS-F-008.feature)
+
+### SRS-F-008.4: Index isolation
+
+Permissioned content MUST NOT appear in public App View indexes. Queries for permissioned content MUST require valid space membership or space credentials. Client-side encryption MUST NOT be implemented.
 
 **Source**
 - [prd.md](./prd.md) F-008, TC-004
@@ -505,7 +522,7 @@ Trust configuration changes MUST affect Trusted state only; Valid and Well-Forme
 
 ## SRS-NFR-001: Data Ownership and Verifiability
 
-Photo records and blob refs MUST reside in user PDS repos as signed atproto records. HappyView index MUST NOT be sole custodian.
+Blob bytes MUST reside in user PDS repos (`uploadBlob`). Public/unlisted photo records MUST live in the user's public PDS as signed atproto records. Permissioned photo and `albumItem` records MUST live in the linked space repo; blobs remain on author PDS and are accessed via `com.atproto.space.getBlob`. HappyView public index MUST NOT be sole custodian of user media.
 
 **Source**
 - [prd.md](./prd.md) NFR-001

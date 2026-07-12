@@ -296,11 +296,19 @@ Upload failures and >50MB rejections MUST show actionable errors with **Retry** 
 
 ### Member directory
 
-Table columns: Identity (handle + avatar), DID (truncated), Role (ADMIN / MEMBER / VIEWER), Actions menu. Roles MUST map to `com.atproto.simplespace` membership capabilities.
+Table columns: Identity (handle + avatar), DID (truncated), Role, Actions menu. UI role labels MUST map to HappyView `access` values:
+
+| UI label | Protocol mapping |
+|----------|------------------|
+| **Authority** | Space creator; automatic `write` member (not assignable via `addMember`) |
+| **Contributor** | `access: write` |
+| **Viewer** | `access: read` |
+
+v1 MAY omit `read_self` in the role picker; if exposed later, label **Contributor (self)** maps to `access: read_self`.
 
 ### Invite flow
 
-Search by handle (e.g., `alice.bsky`); protocol verifies credentials on input; disabled state until valid DID/handle resolved.
+Support both: (1) **token invite** — owner creates invite via `dev.happyview.space.createInvite`, share link/code, recipient accepts via `dev.happyview.space.acceptInvite`; (2) **direct add** — search by handle (e.g., `alice.bsky`), resolve DID, call `addMember`. Disabled state until valid DID/handle resolved.
 
 ### Access audit trail
 
@@ -308,14 +316,14 @@ Chronological log with color-coded action types (ADD, MOD, DEL, INF) and RFC 333
 
 ### Space settings
 
-- **Mint Policy** dropdown (e.g., Admin Only / member-list per ATP-0016).
-- **App Access** — allowed third-party clients icons.
+- **Mint Policy** dropdown — HappyView values: `member-list` (default for ATPix permissioned albums), `public`, `managing-app`. MUST NOT use non-protocol labels (e.g., "Admin Only").
+- **App Access** — display `allowList` with ATPix OAuth client metadata URL; show allowed third-party client icons when configured.
 - **Provenance Enforcement** toggle — require C2PA on uploads to space.
 - **Destroy Space** — destructive; confirmation; separate from album delete.
 
 ### Access denied state (unauthorized viewers)
 
-Non-members MUST see access-denied panel without thumbnails, blob CIDs, or metadata (SRS-F-008.2). MUST include **Request Access** or sign-in CTA where applicable.
+Non-members MUST see access-denied panel without thumbnails, blob CIDs, or metadata (SRS-F-008.2, SRS-F-008.4). MUST include **Request Access** or sign-in CTA where applicable.
 
 **Tests:** [`permissioned_albums_SRS-F-008.feature`](../apps/frontend/tests/features/permissioned_albums_SRS-F-008.feature), [`permissioned_spaces_integration_SRS-F-008.feature`](../apps/backend/tests/features/permissioned_spaces_integration_SRS-F-008.feature)
 
