@@ -1,29 +1,34 @@
 # Apps Directory (`/apps`)
 
-This directory is an organizational **Workspace Boundary** using a monorepo approach.
+Monorepo workspace for deployable ATPix applications. Global tooling and docs stay at the repository root; each app owns its dependencies, tests, and Dockerfile.
 
-## Purpose
+## Layout
 
-By keeping applications strictly within `/apps/`, the repository root remains clean, language-agnostic, and purely structural. It explicitly forbids the installation of global language dependencies (e.g. `package.json`, `mix.exs`, `requirements.txt`) at the repository root.
+| Path | Role | Port (dev) |
+|------|------|------------|
+| [`frontend/`](./frontend/) | Vanilla JS + Vite gallery UI; HappyView OAuth/XRPC via `@happyview/*` SDKs | 5173 |
+| [`backend/`](./backend/) | FastAPI auxiliary API (health, future C2PA 2.2 processing) | 8000 |
 
-## Structure
+**HappyView App View** (PRD TC-001) runs **outside** this repo — typically `http://127.0.0.1:3001` so it does not conflict with Grafana on port 3000.
 
-Each application inside this directory is considered a fully standalone project with its own tooling, tests, dependencies, and configuration layers.
+## Python virtual environment
 
-**Python/JS Stack Example (Monorepo):**
-- `/apps/frontend/` (The actual source code for the SvelteKit application)
-- `/apps/backend/` (The independent configuration and domains for the FastAPI service)
+All Python commands run inside `apps/backend/.venv`:
 
-**BEAM/Elixir Stack Example (Umbrella):**
-- `/apps/my_app/` (The backend core logic layer)
-- `/apps/my_app_web/` (The standalone Phoenix web layer)
+```bash
+cd apps/backend
+python3 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-## What Goes Here
-- Client-facing web applications
-- Mobile applications
-- Desktop applications
-- Backend API services (e.g. `apps/backend/`)
-- Background workers and message processors
+## Testing
 
-## What Does NOT Go Here
-- **Global Manifests:** Global language dependencies must never be hoisted out of `/apps/` to the repository root.
+- Backend: `cd apps/backend && pytest` → `tests/allure-results/`
+- Frontend: `cd apps/frontend && npm run test:unit` → `tests/allure-results/`
+
+See [docs/architecture/001-test-runners-and-reporting.md](../docs/architecture/001-test-runners-and-reporting.md).
+
+## Docker
+
+Root `docker-compose.yml` builds `frontend` and `backend` alongside the observability and datastore services.

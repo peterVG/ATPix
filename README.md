@@ -1,12 +1,92 @@
 # About this project
 
+ATPix is a decentralized photo gallery on the [AT Protocol](https://atproto.com). Users authenticate via OAuth, store photos as signed PDS records, and browse through a [HappyView](https://happyview.dev) App View. This monorepo contains the **vanilla JS frontend** and **FastAPI auxiliary backend** (C2PA/health); HappyView handles atproto indexing and XRPC per [docs/architecture/005-application-architecture.md](docs/architecture/005-application-architecture.md).
+
+## Prerequisites
+
+Install runtimes using a version manager ([mise](https://mise.jdx.dev/), [asdf](https://asdf-vm.com/), [nvm](https://github.com/nvm-sh/nvm), or [pyenv](https://github.com/pyenv/pyenv)) — do not rely on OS-shipped Python/Node alone.
+
+| Tool | Version | Docs |
+|------|---------|------|
+| Python | 3.11+ | [python.org/downloads](https://www.python.org/downloads/) |
+| Node.js | 22+ | [nodejs.org](https://nodejs.org/) |
+| Docker | latest | [docs.docker.com](https://docs.docker.com/get-docker/) |
+
+Copy environment template: `cp .env.example .env` and set `VITE_HAPPYVIEW_CLIENT_KEY`.
+
 # Setup Development Environment
 
 ## Run the application
 
+**HappyView** (separate process): deploy per [happyview.dev](https://happyview.dev) on port **3001** (Grafana uses **3000** in compose).
+
+**Backend** (from `apps/backend/`):
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+```
+
+**Frontend** (from `apps/frontend/`):
+
+```bash
+npm install
+npm run dev
+```
+
+Open [http://127.0.0.1:5173](http://127.0.0.1:5173). API health: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health).
+
+**Full stack via Docker:**
+
+```bash
+docker compose up backend frontend grafana loki promtail prometheus redpanda
+```
+
 ## Run tests
 
+Lint first (see [.agents/rules/lint-enforce.md](.agents/rules/lint-enforce.md)):
+
+```bash
+cd apps/backend && source .venv/bin/activate && ruff check . --fix && ruff format .
+cd apps/frontend && npm run format && npm run lint
+```
+
+**Backend** (`apps/backend/`, venv active):
+
+```bash
+pytest
+```
+
+**Frontend** (`apps/frontend/`):
+
+```bash
+npm install
+npx playwright install    # required before e2e tests are added
+npm run build             # production artifact for UI test mandate
+npm run test:unit
+```
+
+**Allure reports** (install [Allure CLI](https://allurereport.org/docs/install/)):
+
+```bash
+allure serve apps/backend/tests/allure-results
+allure serve apps/frontend/tests/allure-results
+```
+
 ## View logs
+
+Start the observability stack:
+
+```bash
+docker compose up -d loki promtail prometheus redpanda grafana
+```
+
+- **Grafana:** [http://localhost:3000](http://localhost:3000) (default `admin` / `admin`)
+- **Prometheus:** [http://localhost:9090](http://localhost:9090)
+- **Loki:** [http://localhost:3100](http://localhost:3100)
+
+Application containers (`backend`, `frontend`) log to stdout; Promtail ships Docker logs to Loki per `config/promtail/docker-config.yaml`.
 
 ## Viewing Developer Documentation
 
