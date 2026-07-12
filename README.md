@@ -1,10 +1,20 @@
 # About this project
 
-**ATPix** is a decentralized photo collection and sharing application on the [AT Protocol](https://atproto.com). Users own their libraries: photos live as cryptographically signed records and blobs in Personal Data Server (PDS) repositories, indexed and served by a [HappyView](https://happyview.dev) App View. The product targets creators, atproto-native users, and developers who want gallery UX without vendor lock-in or months of App View boilerplate.
+**ATPix** is a decentralized photo collection and sharing application on the [AT Protocol](https://atproto.com). 
+
+Users own their libraries: photos live as cryptographically signed records and blobs in Personal Data Server (PDS) repositories, indexed and served by a [HappyView](https://happyview.dev) App View. 
+
+This product is a proof-of-concept to evaluate HappyView's permissioned spaces implementation.
 
 ## What it does
 
-Users sign in with **atproto OAuth** (DPoP-bound sessions, no app passwords), upload images with **C2PA 2.2 Content Credentials**, organize **albums**, and browse **My Gallery** or a **Following / Hashtags** discovery feed. Galleries populate two ways: **(a)** direct PDS upload and **(b)** photos already indexed on the network via follow-graph and hashtag rules—Path B uses only HappyView Jetstream sync, not a custom firehose. Sharing supports **public**, **unlisted**, and **permissioned** albums; permissioned collections use [HappyView Permissioned Spaces](https://happyview.dev/experimental/spaces/index) (ATP-0016) so only invited members can view curated private albums.
+Users sign in with **atproto OAuth** (DPoP-bound sessions, no app passwords), upload images with **C2PA 2.2 Content Credentials**, organize **albums**, and browse **My Gallery** or a **Following / Hashtags** discovery feed. 
+
+Galleries populate two ways: 
+**(a)** direct PDS upload and 
+**(b)** photos already indexed on the network via follow-graph and hashtag rules—Path B uses only HappyView Jetstream sync, not a custom firehose. 
+
+Sharing supports **public**, **unlisted**, and **permissioned** albums; permissioned collections use [HappyView Permissioned Spaces](https://happyview.dev/experimental/spaces/index) (ATP-0016) so only invited members can view curated private albums.
 
 Product language (gallery, album) maps to atproto primitives (queries, `com.atpix.gallery.*` records, space repos) in the [PRD](docs/prd.md#product-terms--at-protocol-primitives) and [Lexicon README](docs/lexicon/README.md).
 
@@ -41,10 +51,10 @@ Install runtimes using a version manager ([mise](https://mise.jdx.dev/), [asdf](
 | Node.js | 22+ | [nodejs.org](https://nodejs.org/) |
 | Docker | latest | [docs.docker.com](https://docs.docker.com/get-docker/) |
 
-Copy environment template: `cp .env.example .env` and set `VITE_HAPPYVIEW_CLIENT_KEY`.
-ATPix is a decentralized photo collection and sharing application built on the [AT Protocol](https://atproto.com). Users populate galleries and albums by uploading to their own Personal Data Server (PDS) and/or by discovering photos already indexed on the network that match accounts they follow and hashtags they track. They share collections publicly, via unlisted links, or with a **select group of authenticated users** through **permissioned albums** (mandatory v1)—implemented with [HappyView Permissioned Spaces](https://happyview.dev/experimental/spaces/index) and [ATP-0016](https://github.com/bluesky-social/proposals). A [HappyView](https://happyview.dev) App View handles OAuth, indexing, and network sync (Jetstream + backfill); ATPix queries that index rather than operating a standalone firehose. Photo metadata maps to [Dublin Core](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/) and [Schema.org](https://schema.org/docs/schemas.html) terms in `com.atpix.gallery.*` Lexicons; image files embed [C2PA 2.2](https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html) Content Credentials for tamper-evident provenance. Photos and metadata remain user-owned and portable across the Atmosphere—not locked in a proprietary CDN or siloed account system.
-
-The product targets creators, atproto-native users, and developers who want familiar gallery, album, and sharing workflows without surrendering data ownership. Developer docs map those product terms to atproto repos, collections, and records — see [PRD § Product Terms ↔ AT Protocol Primitives](docs/prd.md#product-terms--at-protocol-primitives). See [product vision](docs/product-vision.md) and [PRD](docs/prd.md) for requirements, Lexicon design, metadata vocabularies, C2PA compliance, and release criteria.
+## Metadata
+ Photo metadata maps to [Dublin Core](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/) and [Schema.org](https://schema.org/docs/schemas.html) terms in `com.atpix.gallery.*` Lexicons; image files embed [C2PA 2.2](https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html) Content Credentials for tamper-evident provenance. 
+ 
+ Photos and metadata remain user-owned and portable across the Atmosphere—not locked in a proprietary CDN or siloed account system.
 
 # Setup Development Environment
 
@@ -127,84 +137,3 @@ Application containers (`backend`, `frontend`) log to stdout; Promtail ships Doc
 ## Deploy to Production
 
 ## Monitor and Update
-
----
-
-# About Open Agent Dev
-
-This project has been created using Open Agent Dev, an opionated AI Agent project template focused on docs-as-code development. 
-
-It enforces a strict Branch-Per-Task workflow and Test-Driven Development (TDD). Designed to guide AI dev agents to comply with industry standards and best practices. Tech stack and AI agent neutral.
-
-# Getting Started with Open Agent Dev
-
-## Upload reference documents if you have any
-Upload any reference documents to the `/docs/references/` directory. This includes technical specifications, API references, RFC documents, industry standards, academic papers, technical architecture documents, research papers, library documentation, framework guides, platform specifications, etc.
-
-```text
-@AGENTS.md read any reference documents in @docs/references/ and use the @.agents/skills/kb-synthesizer skill to generate a knowledge base in @.agents/kb/
-```
-
-## Create a Product Vision
-Fill out [`docs/templates/product-vision.md`](./docs/templates/product-vision-template.md) as best as possible and save it as [`/docs/product-vision.md`](./docs/product-vision.md)
-
-If you want AI Agent assistance to write the product vision document, you can invoke the bundled skill:
-```text
-/product-vision I want to build [XYZ]. Refer to the @.agents/kb/ folder for any relevant background information.
-```
-
-## Create a Product Requirements Document
-
-```text
-@AGENTS.md Generate a prd.md in @docs using the @.agents/skills/prd-writer skill. Base it on @docs/product-vision.md, the @.agents/kb/ folder and the principles in the AGENTS.md file.
-```
-Review and revise [`/docs/prd.md`](./docs/prd.md) as needed. Check [`/docs/templates/prd-template.md`](./docs/templates/prd-template.md) for additional guidance. Make sure to add any additional requirements that you think are necessary to fully define the product vision.
-
-## Initialize the project
-
-Open Agent Dev currently supports best practices for the Python/Javascript and BEAM/Elixir tech stacks.
-
-```text
-@AGENTS.md Initialize the project using the @.agents/skills/SKILL-init-beam-elixir.md skill, the technical stack decisions in @docs/prd.md and the principles in the AGENTS.md file.
-```
-
-OR
-
-```text
-@AGENTS.md Initialize the project using the @.agents/skills/SKILL-init-python-js.md skill, the technical stack decisions in @docs/prd.md and the principles in the AGENTS.md file.
-```
-
-## Create a Software Requirement Specification document and Architecture Decision Records
-
-```text
-@AGENTS.md Generate a srs.md in @docs [or @apps/app_123/docs] using the @.agents/skills/srs-writer skill. Base it on @docs/prd.md and the principles in the AGENTS.md file. Use the @.agents/skills/feature-writer skill to generate BDD feature scenarios for each unique requirement in @docs/srs.md and @docs/prd.md. Use the @.agents/rules/adr-formatting.md rule to generate ADR files in the @docs/architecture/ folder based on the technical decisions in @docs/prd.md and @docs/srs.md. Populate the # About this project section of this README.md file with a description of the project based on the @docs/product-vision.md, @docs/prd.md, @docs/srs.md, ADR files and BDD feature files.
-```
-
-## Generate an implementation plan to guide development
-### The "Global Holistic Execution" Prompt
-Use this when you have updated the core PRD or added entirely new modules to a monorepo and need the AI to synthesize everything across the entire project from scratch.
-```text
-@AGENTS.md Invoke the @plan-writer skill. Delete any existing \plan.md` files across the repository. Then, rigorously analyze the root @docs/prd.md, all `srs.md` configurations in the `apps/` directory, and the @docs/architecture/ records. Synthesize these requirements and generate the global roadmap at `docs/plan.md`, sequentially followed by granular module-specific checklists distributed strictly into each app's respective `apps/[Module Name]/docs/plan.md` location.`
-```
-
-### The "Single Module Focus" Prompt
-Use this when you've just drilled down into defining a specific app in a monorepo (e.g., you heavily updated apps/app_123/docs/srs.md) and just want to regenerate that specific localized checklist without touching the global roadmap or other apps.
-
-```text
-@AGENTS.md Please invoke the @plan-writer skill to generate an implementation plan strictly for the \app_123` module. Read its specific @apps/app_123/docs/srs.md, the global @docs/prd.md, and relevant ADRs, and output the tracking checklist directly into @apps/app_123/docs/plan.md.`
-```
-
-## Use the AGENTS.md prompts in your Implementation Plan
-Check @docs/plan.md for specific task prompts in your implementation plan.These will guide you through the task list to generate and test your code in compliance with the Open Dev Agent principles and workflow.
-
-## NOTE: Branch-per-task enforcement
-A branch-per-task workflow is strictly enforced to ensure all code is reviewed before merging. Direct commits to the `main` branch is blocked by local pre-commit hooks.
-
-If you are a human developer and absolutely must push a hotfix directly to `main`, you can override this safeguard by prefixing your commit command:
-
-```bash
-FORCE_MAIN_COMMIT=1 git commit -m "emergency hotfix"
-```
-
-
-
