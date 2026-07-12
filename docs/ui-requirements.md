@@ -25,7 +25,7 @@ This document defines **verifiable user-interface requirements** for ATPix: layo
 
 All screens MUST implement tokens and principles from [000-UX-guide.md](./references/000-UX-guide.md):
 
-- **Theme:** Dark mode default (`background: #10131b`, `slate-900` surfaces).
+- **Theme:** Dark mode default (`background: #10131b`, `slate-900` surfaces); light mode via `themes.light` tokens in [000-UX-guide.md](./references/000-UX-guide.md). User MUST be able to toggle dark/light (UI-SHELL-003).
 - **Typography:** Hanken Grotesk (headings), Inter (body), JetBrains Mono (DIDs, hashes, manifest data).
 - **Primary action color:** `atproto-blue` (#0085FF).
 - **Neutral trust:** C2PA and visibility labels MUST NOT use subjective language ("authentic", "fake") per SRS-NFR-016.
@@ -42,14 +42,14 @@ The application MUST provide persistent chrome across Gallery, Discovery, and Al
 
 | Region | Requirement |
 |--------|-------------|
-| **Header** | ATPix wordmark (left); primary nav tabs **Gallery**, **Discovery**, **Albums** (center); search, upload, notifications, avatar (right). |
+| **Header** | ATPix wordmark (left); primary nav tabs **Gallery**, **Discovery**, **Albums** (center); color-scheme toggle, search, upload, notifications, avatar (right). |
 | **Sidebar** | Protocol identity card (`at://` handle/DID); nav: Home, Trending, Collections, Settings; bottom **Upload Media** (primary) and **Sign Out**. |
 | **Active route** | Current top tab MUST be visually indicated (underline or `atproto-blue` accent). |
 | **Identity** | Signed-in users MUST see handle and/or DID in sidebar per SRS-F-001.3. |
 
 **Source:** UX guide Layout & Components; mockups 01–06  
 **SRS:** SRS-F-001.3, SRS-NFR-008  
-**Tests:** [`oauth_sign_in_SRS-F-001.feature`](../apps/frontend/tests/features/oauth_sign_in_SRS-F-001.feature)
+**Tests:** [`oauth_sign_in_SRS-F-001.feature`](../apps/frontend/tests/features/oauth_sign_in_SRS-F-001.feature), [`ui_app_shell_UI-SHELL-001.feature`](../apps/frontend/tests/features/ui_app_shell_UI-SHELL-001.feature)
 
 ## UI-SHELL-002: Responsive behavior
 
@@ -61,6 +61,25 @@ The application MUST provide persistent chrome across Gallery, Discovery, and Al
 
 **Source:** UX guide Breakpoints  
 **Tests:** UI vitest against production build (NFR-006)
+
+## UI-SHELL-003: Dark / light color scheme toggle
+
+Users MUST be able to switch between **dark** and **light** appearance while preserving semantic status and C2PA colors per [000-UX-guide.md](./references/000-UX-guide.md) Theme modes.
+
+| Requirement | Detail |
+|-------------|--------|
+| **Header control** | Sun/moon icon in header utility cluster; toggles between dark and light (or opens scheme menu). |
+| **Settings control** | Settings → **Appearance** section with segmented options: **Dark**, **Light**, **System**. |
+| **Token application** | `data-theme="dark"` or `data-theme="light"` on root element; all surfaces use theme token CSS variables. |
+| **Semantic colors** | `status-public`, `status-unlisted`, `status-permissioned`, `c2pa-trusted`, `c2pa-invalid`, `c2pa-wellformed`, `atproto-blue` MUST NOT change hue between themes. |
+| **Persistence** | Preference stored in `localStorage` key `atpix-color-scheme` (`dark` \| `light` \| `system`). |
+| **System preference** | When `system` is selected, UI MUST follow `prefers-color-scheme`; when unset, default to dark. |
+| **Accessibility** | Toggle MUST have accessible name; both themes MUST meet WCAG 2.x AA for body and disclosure text. |
+| **Media preservation** | Photo pixels and thumbnail rendering MUST NOT be altered by theme change—only application chrome. |
+
+**Source:** [000-UX-guide.md](./references/000-UX-guide.md) Theme toggle, Theme modes  
+**SRS:** SRS-NFR-016 (neutral trust labels unchanged across themes)  
+**Tests:** [`ui_theme_toggle_UI-SHELL-003.feature`](../apps/frontend/tests/features/ui_theme_toggle_UI-SHELL-003.feature)
 
 ---
 
@@ -339,6 +358,7 @@ Non-members MUST see access-denied panel without thumbnails, blob CIDs, or metad
 | **UI-CMP-005** | Upload progress overlay | Media Cards |
 | **UI-CMP-006** | Confirmation modal (delete, destroy) | Inputs — actionable errors |
 | **UI-CMP-007** | Pagination control (cursor-aware) | Gallery System |
+| **UI-CMP-008** | Color scheme toggle (header + Settings Appearance) | Theme toggle |
 
 ---
 
@@ -367,6 +387,7 @@ The v1 mockups are **directional**. Implementation MUST correct these PRD confli
 | UI-SCR-007 | Public profile | SRS-F-006 | F-006 | — |
 | UI-SCR-008 | Trust settings | SRS-F-016 | F-016 | — |
 | UI-SHELL-001 | App chrome | SRS-F-001 | F-001 | all |
+| UI-SHELL-003 | Color scheme toggle | SRS-NFR-016 | — | all |
 
 ---
 
@@ -374,8 +395,25 @@ The v1 mockups are **directional**. Implementation MUST correct these PRD confli
 
 UI requirements MUST be verified per AGENTS.md UI Test Mandate:
 
-1. **BDD features** in `apps/frontend/tests/features/` (behavioral acceptance).
-2. **Vitest + jsdom** against **`vite build`** production artifacts with strict DOM assertions (NFR-006).
-3. **Visual regression** (optional v1): capture mockup-aligned screenshots in CI when Playwright e2e lands.
+1. **Behavioral BDD** — existing `*_SRS-*.feature` files (protocol and user flows).
+2. **UI BDD** — `ui_*_UI-*.feature` files (layout, components, theme toggle, DOM presentation).
+3. **Vitest + jsdom** against **`vite build`** production artifacts with strict DOM assertions (NFR-006).
+4. **Visual regression** (optional v1): capture mockup-aligned screenshots in CI when Playwright e2e lands.
 
-Each UI-SCR section above lists primary BDD feature files. UI test authors SHOULD assert token-backed classes or data-testid hooks for badges, panels, and destructive confirmations—not implementation-specific selectors.
+### UI BDD feature index
+
+| File | Covers |
+|------|--------|
+| [`ui_app_shell_UI-SHELL-001.feature`](../apps/frontend/tests/features/ui_app_shell_UI-SHELL-001.feature) | Header, sidebar, nav |
+| [`ui_responsive_layout_UI-SHELL-002.feature`](../apps/frontend/tests/features/ui_responsive_layout_UI-SHELL-002.feature) | Breakpoints, grids |
+| [`ui_theme_toggle_UI-SHELL-003.feature`](../apps/frontend/tests/features/ui_theme_toggle_UI-SHELL-003.feature) | Dark / light / system |
+| [`ui_my_gallery_UI-SCR-001.feature`](../apps/frontend/tests/features/ui_my_gallery_UI-SCR-001.feature) | My Gallery layout |
+| [`ui_discovery_feed_UI-SCR-002.feature`](../apps/frontend/tests/features/ui_discovery_feed_UI-SCR-002.feature) | Discovery feed |
+| [`ui_photo_detail_UI-SCR-003.feature`](../apps/frontend/tests/features/ui_photo_detail_UI-SCR-003.feature) | Photo detail split view |
+| [`ui_album_view_UI-SCR-004.feature`](../apps/frontend/tests/features/ui_album_view_UI-SCR-004.feature) | Album view |
+| [`ui_upload_flow_UI-SCR-005.feature`](../apps/frontend/tests/features/ui_upload_flow_UI-SCR-005.feature) | Upload workspace |
+| [`ui_permissioned_space_UI-SCR-006.feature`](../apps/frontend/tests/features/ui_permissioned_space_UI-SCR-006.feature) | Space admin |
+| [`ui_public_profile_UI-SCR-007.feature`](../apps/frontend/tests/features/ui_public_profile_UI-SCR-007.feature) | Public profile |
+| [`ui_components_UI-CMP.feature`](../apps/frontend/tests/features/ui_components_UI-CMP.feature) | Shared components |
+
+UI test authors SHOULD assert token-backed classes or `data-testid` hooks for badges, panels, theme root attribute, and destructive confirmations—not implementation-specific selectors.
