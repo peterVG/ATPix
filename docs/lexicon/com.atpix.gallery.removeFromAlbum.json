@@ -1,0 +1,21 @@
+{
+  "lexicon": 1,
+  "id": "com.atpix.gallery.removeFromAlbum",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Remove albumItem junction record; optionally update photo.albumUris denormalization.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["albumUri", "photoUri"],
+          "properties": {
+            "albumUri": { "type": "string", "format": "at-uri" },
+            "photoUri": { "type": "string", "format": "at-uri" }
+          }
+        }
+      }
+    }
+  }
+}

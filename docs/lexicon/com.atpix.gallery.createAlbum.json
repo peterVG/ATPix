@@ -1,0 +1,45 @@
+{
+  "lexicon": 1,
+  "id": "com.atpix.gallery.createAlbum",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Create an album. When visibility is permissioned, provisions a HappyView space (type com.atpix.gallery.albumSpace) and links spaceUri.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["name", "visibility"],
+          "properties": {
+            "name": { "type": "string", "maxLength": 200 },
+            "description": { "type": "string", "maxLength": 5000 },
+            "visibility": { "type": "ref", "ref": "com.atpix.gallery.defs#visibility" },
+            "spaceKey": { "type": "string", "maxLength": 64 },
+            "collectionRuleUris": {
+              "type": "array",
+              "maxLength": 20,
+              "items": { "type": "string", "format": "at-uri" }
+            },
+            "seedFromRules": {
+              "type": "boolean",
+              "default": false,
+              "description": "When true, evaluate linked collectionRuleUris and create initial albumItem records."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri", "cid"],
+          "properties": {
+            "uri": { "type": "string", "format": "at-uri" },
+            "cid": { "type": "string", "format": "cid" },
+            "spaceUri": { "type": "string", "maxLength": 512 }
+          }
+        }
+      }
+    }
+  }
+}

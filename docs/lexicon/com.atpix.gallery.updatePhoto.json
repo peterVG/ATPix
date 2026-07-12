@@ -1,0 +1,41 @@
+{
+  "lexicon": 1,
+  "id": "com.atpix.gallery.updatePhoto",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Update photo metadata. Does not replace image blob.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri"],
+          "properties": {
+            "uri": { "type": "string", "format": "at-uri" },
+            "title": { "type": "string", "maxLength": 500 },
+            "description": { "type": "string", "maxLength": 5000 },
+            "caption": { "type": "string", "maxLength": 2000 },
+            "keywords": { "type": "array", "maxLength": 50, "items": { "type": "string", "maxLength": 64 } },
+            "license": { "type": "string", "format": "uri" },
+            "copyrightHolder": { "type": "string", "format": "did" },
+            "contributor": { "type": "string", "format": "did" },
+            "inLanguage": { "type": "string", "maxLength": 35 },
+            "locationCreated": { "type": "ref", "ref": "com.atpix.gallery.defs#geoPlace" },
+            "albumUris": { "type": "array", "maxLength": 100, "items": { "type": "string", "format": "at-uri" } }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri", "cid"],
+          "properties": {
+            "uri": { "type": "string", "format": "at-uri" },
+            "cid": { "type": "string", "format": "cid" }
+          }
+        }
+      }
+    }
+  }
+}

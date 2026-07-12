@@ -1,0 +1,43 @@
+{
+  "lexicon": 1,
+  "id": "com.atpix.gallery.albumItem",
+  "description": "Ordered membership linking an album to a photo. ATPix-native junction record.",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Junction record for ordered album membership (schema:isPartOf materialized).",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["albumUri", "photoUri", "createdAt"],
+        "properties": {
+          "albumUri": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "ATPix — parent com.atpix.gallery.album AT URI."
+          },
+          "photoUri": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "ATPix — child com.atpix.gallery.photo AT URI (at:// or ats://)."
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "ATPix — sort order within album (0 = first)."
+          },
+          "addedBy": {
+            "type": "string",
+            "format": "did",
+            "description": "dc:contributor — DID that added this membership."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "dc:date — RFC 3339 UTC."
+          }
+        }
+      }
+    }
+  }
+}

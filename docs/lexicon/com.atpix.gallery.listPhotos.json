@@ -1,0 +1,35 @@
+{
+  "lexicon": 1,
+  "id": "com.atpix.gallery.listPhotos",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List photos with optional filters by author, album, tag, or visibility.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "did": { "type": "string", "format": "did" },
+          "albumUri": { "type": "string", "format": "at-uri" },
+          "tag": { "type": "string", "maxLength": 64 },
+          "visibility": { "type": "ref", "ref": "com.atpix.gallery.defs#visibility" },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 },
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["photos"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "photos": {
+              "type": "array",
+              "items": { "type": "ref", "ref": "com.atpix.gallery.defs#photoView" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

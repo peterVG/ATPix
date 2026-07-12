@@ -1,0 +1,58 @@
+{
+  "lexicon": 1,
+  "id": "com.atpix.gallery.listCollectionRules",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List collection rules owned by the authenticated user.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "targetScope": { "type": "ref", "ref": "com.atpix.gallery.defs#targetScope" },
+          "activeOnly": { "type": "boolean", "default": true },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 },
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["rules"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "rules": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["uri", "cid", "author", "record"],
+                "properties": {
+                  "uri": { "type": "string", "format": "at-uri" },
+                  "cid": { "type": "string", "format": "cid" },
+                  "author": { "type": "string", "format": "did" },
+                  "record": {
+                    "type": "object",
+                    "required": ["name", "targetScope", "createdAt"],
+                    "properties": {
+                      "name": { "type": "string" },
+                      "description": { "type": "string" },
+                      "targetScope": { "type": "ref", "ref": "com.atpix.gallery.defs#targetScope" },
+                      "targetAlbumUri": { "type": "string", "format": "at-uri" },
+                      "useFollowGraph": { "type": "boolean" },
+                      "followedActors": { "type": "array", "items": { "type": "string", "format": "did" } },
+                      "hashtags": { "type": "array", "items": { "type": "string" } },
+                      "includeOwnPhotos": { "type": "boolean" },
+                      "active": { "type": "boolean" },
+                      "createdAt": { "type": "string", "format": "datetime" },
+                      "modifiedAt": { "type": "string", "format": "datetime" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

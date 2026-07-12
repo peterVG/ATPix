@@ -1,0 +1,100 @@
+{
+  "lexicon": 1,
+  "id": "com.atpix.gallery.defs",
+  "defs": {
+    "visibility": {
+      "type": "token",
+      "description": "ATPix visibility scope. Permissioned uses HappyView Permissioned Spaces (ATP-0016).",
+      "enum": ["public", "unlisted", "permissioned"]
+    },
+    "targetScope": {
+      "type": "token",
+      "description": "Whether a collection rule powers the social gallery feed or a specific album.",
+      "enum": ["gallery", "album"]
+    },
+    "geoPlace": {
+      "type": "object",
+      "description": "Subset of schema:Place for schema:locationCreated.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "schema:Place.name — human-readable place name."
+        },
+        "latitude": {
+          "type": "number",
+          "description": "schema:GeoCoordinates.latitude (WGS 84)."
+        },
+        "longitude": {
+          "type": "number",
+          "description": "schema:GeoCoordinates.longitude (WGS 84)."
+        }
+      }
+    },
+    "photoView": {
+      "type": "object",
+      "required": ["uri", "cid", "author", "record"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "author": { "type": "string", "format": "did" },
+        "record": { "type": "ref", "ref": "#photo" }
+      }
+    },
+    "photo": {
+      "type": "object",
+      "description": "Hydrated photo record view (subset of com.atpix.gallery.photo fields).",
+      "required": ["image", "createdAt"],
+      "properties": {
+        "title": { "type": "string", "maxLength": 500 },
+        "description": { "type": "string", "maxLength": 5000 },
+        "caption": { "type": "string", "maxLength": 2000 },
+        "keywords": { "type": "array", "items": { "type": "string", "maxLength": 64 } },
+        "creator": { "type": "string", "format": "did" },
+        "image": { "type": "blob", "accept": ["image/*"] },
+        "thumbnail": { "type": "blob", "accept": ["image/*"] },
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 },
+        "license": { "type": "string", "format": "uri" },
+        "copyrightHolder": { "type": "string", "format": "did" },
+        "source": { "type": "string", "format": "at-uri" },
+        "contributor": { "type": "string", "format": "did" },
+        "inLanguage": { "type": "string", "maxLength": 35 },
+        "locationCreated": { "type": "ref", "ref": "#geoPlace" },
+        "albumUris": { "type": "array", "items": { "type": "string", "format": "at-uri" } },
+        "visibility": { "type": "ref", "ref": "#visibility" },
+        "spaceUri": { "type": "string", "maxLength": 512 },
+        "createdAt": { "type": "string", "format": "datetime" },
+        "modifiedAt": { "type": "string", "format": "datetime" }
+      }
+    },
+    "albumView": {
+      "type": "object",
+      "required": ["uri", "cid", "author", "record"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "author": { "type": "string", "format": "did" },
+        "record": { "type": "ref", "ref": "#album" }
+      }
+    },
+    "album": {
+      "type": "object",
+      "required": ["name", "createdAt", "visibility"],
+      "properties": {
+        "name": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 5000 },
+        "creator": { "type": "string", "format": "did" },
+        "coverPhotoUri": { "type": "string", "format": "at-uri" },
+        "visibility": { "type": "ref", "ref": "#visibility" },
+        "spaceUri": { "type": "string", "maxLength": 512 },
+        "collectionRuleUris": {
+          "type": "array",
+          "items": { "type": "string", "format": "at-uri" }
+        },
+        "createdAt": { "type": "string", "format": "datetime" },
+        "modifiedAt": { "type": "string", "format": "datetime" }
+      }
+    }
+  }
+}

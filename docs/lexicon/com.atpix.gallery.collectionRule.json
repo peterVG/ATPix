@@ -1,0 +1,75 @@
+{
+  "lexicon": 1,
+  "id": "com.atpix.gallery.collectionRule",
+  "description": "Rule for sourcing photos from followed actors and/or hashtags into gallery feed or albums.",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Declares social sources (follow graph, explicit DIDs, hashtags) for gallery feed or album population.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["name", "targetScope", "createdAt"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "dc:title — human-readable rule name."
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000,
+            "description": "dc:description — optional explanation."
+          },
+          "targetScope": {
+            "type": "ref",
+            "ref": "com.atpix.gallery.defs#targetScope",
+            "description": "ATPix — gallery (social feed) or album (membership seeding)."
+          },
+          "targetAlbumUri": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "ATPix — required when targetScope is album; target album AT URI."
+          },
+          "useFollowGraph": {
+            "type": "boolean",
+            "default": false,
+            "description": "ATPix — when true, resolve actors via app.bsky.graph.getFollows."
+          },
+          "followedActors": {
+            "type": "array",
+            "maxLength": 500,
+            "items": { "type": "string", "format": "did" },
+            "description": "schema:follows (conceptual) — explicit DID allow-list; unioned with follow graph when useFollowGraph is true."
+          },
+          "hashtags": {
+            "type": "array",
+            "maxLength": 50,
+            "items": { "type": "string", "maxLength": 64 },
+            "description": "dc:subject — normalized hashtags (no #); matched against photo.keywords."
+          },
+          "includeOwnPhotos": {
+            "type": "boolean",
+            "default": true,
+            "description": "ATPix — include photos authored by the rule owner."
+          },
+          "active": {
+            "type": "boolean",
+            "default": true,
+            "description": "ATPix — inactive rules are ignored by listFeedPhotos."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "dc:date · schema:dateCreated — RFC 3339 UTC."
+          },
+          "modifiedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "schema:dateModified — RFC 3339 UTC."
+          }
+        }
+      }
+    }
+  }
+}

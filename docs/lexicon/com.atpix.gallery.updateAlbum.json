@@ -1,0 +1,38 @@
+{
+  "lexicon": 1,
+  "id": "com.atpix.gallery.updateAlbum",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Update album metadata. Does not change visibility class or space binding.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri"],
+          "properties": {
+            "uri": { "type": "string", "format": "at-uri" },
+            "name": { "type": "string", "maxLength": 200 },
+            "description": { "type": "string", "maxLength": 5000 },
+            "coverPhotoUri": { "type": "string", "format": "at-uri" },
+            "collectionRuleUris": {
+              "type": "array",
+              "items": { "type": "string", "format": "at-uri" }
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri", "cid"],
+          "properties": {
+            "uri": { "type": "string", "format": "at-uri" },
+            "cid": { "type": "string", "format": "cid" }
+          }
+        }
+      }
+    }
+  }
+}
