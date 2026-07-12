@@ -1,0 +1,27 @@
+{
+  "lexicon": 1,
+  "id": "com.atpix.gallery.getPhoto",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get a single photo by AT URI.",
+      "parameters": {
+        "type": "params",
+        "required": ["uri"],
+        "properties": {
+          "uri": { "type": "string", "format": "at-uri" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["photo"],
+          "properties": {
+            "photo": { "type": "ref", "ref": "com.atpix.gallery.defs#photoView" }
+          }
+        }
+      }
+    }
+  }
+}

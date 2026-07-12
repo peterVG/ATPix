@@ -1,0 +1,39 @@
+{
+  "lexicon": 1,
+  "id": "com.atpix.gallery.createCollectionRule",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Create a collection rule for follow-graph and/or hashtag sourcing.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["name", "targetScope"],
+          "properties": {
+            "name": { "type": "string", "maxLength": 200 },
+            "description": { "type": "string", "maxLength": 2000 },
+            "targetScope": { "type": "ref", "ref": "com.atpix.gallery.defs#targetScope" },
+            "targetAlbumUri": { "type": "string", "format": "at-uri" },
+            "useFollowGraph": { "type": "boolean", "default": false },
+            "followedActors": { "type": "array", "items": { "type": "string", "format": "did" } },
+            "hashtags": { "type": "array", "items": { "type": "string", "maxLength": 64 } },
+            "includeOwnPhotos": { "type": "boolean", "default": true },
+            "active": { "type": "boolean", "default": true }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri", "cid"],
+          "properties": {
+            "uri": { "type": "string", "format": "at-uri" },
+            "cid": { "type": "string", "format": "cid" }
+          }
+        }
+      }
+    }
+  }
+}

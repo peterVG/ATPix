@@ -1,0 +1,45 @@
+{
+  "lexicon": 1,
+  "id": "com.atpix.gallery.listAlbumItems",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List ordered albumItem records for an album.",
+      "parameters": {
+        "type": "params",
+        "required": ["albumUri"],
+        "properties": {
+          "albumUri": { "type": "string", "format": "at-uri" },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 },
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["items"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["uri", "albumUri", "photoUri", "createdAt"],
+                "properties": {
+                  "uri": { "type": "string", "format": "at-uri" },
+                  "albumUri": { "type": "string", "format": "at-uri" },
+                  "photoUri": { "type": "string", "format": "at-uri" },
+                  "position": { "type": "integer" },
+                  "addedBy": { "type": "string", "format": "did" },
+                  "createdAt": { "type": "string", "format": "datetime" },
+                  "photo": { "type": "ref", "ref": "com.atpix.gallery.defs#photoView" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

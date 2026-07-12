@@ -1,5 +1,9 @@
 # About this project
 
+ATPix is a decentralized photo collection and sharing application built on the [AT Protocol](https://atproto.com). Users populate galleries and albums by uploading to their own Personal Data Server (PDS) and/or by discovering photos already indexed on the network that match accounts they follow and hashtags they track. They share collections publicly, via unlisted links, or with a **select group of authenticated users** through **permissioned albums** (mandatory v1)—implemented with [HappyView Permissioned Spaces](https://happyview.dev/experimental/spaces/index) and [ATP-0016](https://github.com/bluesky-social/proposals). A [HappyView](https://happyview.dev) App View handles OAuth, indexing, and network sync (Jetstream + backfill); ATPix queries that index rather than operating a standalone firehose. Photo metadata maps to [Dublin Core](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/) and [Schema.org](https://schema.org/docs/schemas.html) terms in `com.atpix.gallery.*` Lexicons; image files embed [C2PA 2.2](https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html) Content Credentials for tamper-evident provenance. Photos and metadata remain user-owned and portable across the Atmosphere—not locked in a proprietary CDN or siloed account system.
+
+The product targets creators, atproto-native users, and developers who want familiar gallery, album, and sharing workflows without surrendering data ownership. Developer docs map those product terms to atproto repos, collections, and records — see [PRD § Product Terms ↔ AT Protocol Primitives](docs/prd.md#product-terms--at-protocol-primitives). See [product vision](docs/product-vision.md) and [PRD](docs/prd.md) for requirements, Lexicon design, metadata vocabularies, C2PA compliance, and release criteria.
+
 # Setup Development Environment
 
 ## Run the application

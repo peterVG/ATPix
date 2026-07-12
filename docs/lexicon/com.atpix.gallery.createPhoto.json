@@ -1,0 +1,47 @@
+{
+  "lexicon": 1,
+  "id": "com.atpix.gallery.createPhoto",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Create a photo record after blob upload. Writes to public repo or permissioned space per visibility.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["image", "visibility"],
+          "properties": {
+            "title": { "type": "string", "maxLength": 500 },
+            "description": { "type": "string", "maxLength": 5000 },
+            "caption": { "type": "string", "maxLength": 2000 },
+            "keywords": { "type": "array", "items": { "type": "string", "maxLength": 64 } },
+            "image": { "type": "blob", "accept": ["image/*"] },
+            "thumbnail": { "type": "blob", "accept": ["image/*"] },
+            "width": { "type": "integer", "minimum": 1 },
+            "height": { "type": "integer", "minimum": 1 },
+            "license": { "type": "string", "format": "uri" },
+            "copyrightHolder": { "type": "string", "format": "did" },
+            "source": { "type": "string", "format": "at-uri" },
+            "contributor": { "type": "string", "format": "did" },
+            "inLanguage": { "type": "string", "maxLength": 35 },
+            "locationCreated": { "type": "ref", "ref": "com.atpix.gallery.defs#geoPlace" },
+            "albumUris": { "type": "array", "items": { "type": "string", "format": "at-uri" } },
+            "visibility": { "type": "ref", "ref": "com.atpix.gallery.defs#visibility" },
+            "spaceUri": { "type": "string", "maxLength": 512 }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri", "cid"],
+          "properties": {
+            "uri": { "type": "string", "format": "at-uri" },
+            "cid": { "type": "string", "format": "cid" }
+          }
+        }
+      }
+    }
+  }
+}

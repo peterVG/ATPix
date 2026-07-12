@@ -1,0 +1,25 @@
+{
+  "lexicon": 1,
+  "id": "com.atpix.gallery.deleteAlbum",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Delete album metadata record and associated albumItem junction records. Does not delete photo records. Permissioned spaces require separate deleteSpace when empty.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri"],
+          "properties": {
+            "uri": { "type": "string", "format": "at-uri" },
+            "deleteSpace": {
+              "type": "boolean",
+              "default": false,
+              "description": "When true and album is permissioned, also call com.atproto.simplespace.deleteSpace."
+            }
+          }
+        }
+      }
+    }
+  }
+}

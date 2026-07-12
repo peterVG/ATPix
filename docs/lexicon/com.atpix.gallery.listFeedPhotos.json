@@ -1,0 +1,32 @@
+{
+  "lexicon": 1,
+  "id": "com.atpix.gallery.listFeedPhotos",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Social gallery feed from active collectionRules (follow graph + hashtags). Requires authenticated caller for follow graph resolution.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "ruleUri": { "type": "string", "format": "at-uri" },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 },
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["photos"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "photos": {
+              "type": "array",
+              "items": { "type": "ref", "ref": "com.atpix.gallery.defs#photoView" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

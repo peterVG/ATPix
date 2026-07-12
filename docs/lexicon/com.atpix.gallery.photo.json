@@ -1,0 +1,147 @@
+{
+  "lexicon": 1,
+  "id": "com.atpix.gallery.photo",
+  "description": "ATPix photo record. Metadata mapped to Dublin Core and Schema.org ImageObject terms (see docs/lexicon/README.md).",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A single image and its descriptive metadata, stored as a signed atproto record.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["image", "createdAt", "visibility"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "dc:title · schema:name — short title."
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 5000,
+            "description": "dc:description · schema:description — longer description."
+          },
+          "caption": {
+            "type": "string",
+            "maxLength": 2000,
+            "description": "schema:caption — display caption."
+          },
+          "keywords": {
+            "type": "array",
+            "maxLength": 50,
+            "items": { "type": "string", "maxLength": 64 },
+            "description": "dc:subject · schema:keywords — tags; matched by collectionRule hashtags."
+          },
+          "creator": {
+            "type": "string",
+            "format": "did",
+            "description": "dc:creator · schema:creator — author DID; defaults to record owner if omitted."
+          },
+          "image": {
+            "type": "blob",
+            "accept": ["image/*"],
+            "maxSize": 50000000,
+            "description": "schema:contentUrl (blob ref) · dc:format (MIME on blob) — primary image."
+          },
+          "thumbnail": {
+            "type": "blob",
+            "accept": ["image/*"],
+            "maxSize": 5000000,
+            "description": "schema:thumbnail — optional preview blob."
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "schema:width — width in pixels."
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "schema:height — height in pixels."
+          },
+          "license": {
+            "type": "string",
+            "format": "uri",
+            "description": "dc:rights · schema:license — license document URI."
+          },
+          "copyrightHolder": {
+            "type": "string",
+            "format": "did",
+            "description": "schema:copyrightHolder — rights holder DID."
+          },
+          "source": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "dc:source · schema:isBasedOn — provenance AT URI if imported."
+          },
+          "contributor": {
+            "type": "string",
+            "format": "did",
+            "description": "dc:contributor — additional contributor DID."
+          },
+          "inLanguage": {
+            "type": "string",
+            "maxLength": 35,
+            "description": "dc:language · schema:inLanguage — BCP 47 tag."
+          },
+          "locationCreated": {
+            "type": "ref",
+            "ref": "com.atpix.gallery.defs#geoPlace",
+            "description": "schema:locationCreated — capture location."
+          },
+          "albumUris": {
+            "type": "array",
+            "maxLength": 100,
+            "items": { "type": "string", "format": "at-uri" },
+            "description": "schema:isPartOf — denormalized parent album AT URIs."
+          },
+          "visibility": {
+            "type": "ref",
+            "ref": "com.atpix.gallery.defs#visibility",
+            "description": "ATPix — public, unlisted, or permissioned (space-gated)."
+          },
+          "spaceUri": {
+            "type": "string",
+            "maxLength": 512,
+            "description": "ATPix · ATP-0016 — ats:// URI when visibility is permissioned."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "dc:date · schema:dateCreated — RFC 3339 UTC."
+          },
+          "modifiedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "schema:dateModified — RFC 3339 UTC."
+          },
+          "c2paActiveManifestId": {
+            "type": "string",
+            "maxLength": 256,
+            "description": "ATPix · C2PA §8.1 — instance ID of active manifest in embedded manifest store."
+          },
+          "c2paValidationState": {
+            "type": "string",
+            "knownValues": ["none", "wellFormed", "valid", "trusted", "invalid"],
+            "description": "ATPix · C2PA §14.3 — cached validator state at last index/display."
+          },
+          "c2paLastAction": {
+            "type": "string",
+            "maxLength": 64,
+            "description": "ATPix · C2PA §18.14 — latest action type (e.g. c2pa.created, c2pa.edited.metadata)."
+          },
+          "c2paManifestStoreUri": {
+            "type": "string",
+            "format": "uri",
+            "description": "ATPix · C2PA §11.4 — URI when manifest store is external to blob."
+          },
+          "c2paIngredientUri": {
+            "type": "string",
+            "format": "uri",
+            "description": "ATPix · C2PA §18.15 — upstream ingredient URI for derived assets."
+          }
+        }
+      }
+    }
+  }
+}

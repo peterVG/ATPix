@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "com.atpix.gallery.deletePhoto",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Delete a photo record from public repo or permissioned space.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri"],
+          "properties": {
+            "uri": { "type": "string", "format": "at-uri" }
+          }
+        }
+      }
+    }
+  }
+}
