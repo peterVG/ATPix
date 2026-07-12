@@ -4,15 +4,24 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Remove albumItem junction record; optionally update photo.albumUris denormalization.",
+      "description": "Remove albumItem junction record(s). When uri is provided, deletes exactly that albumItem (albumUri and photoUri are ignored). When uri is omitted, albumUri and photoUri are required and ALL matching junction records are removed.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["albumUri", "photoUri"],
           "properties": {
+            "uri": {
+              "type": "string",
+              "format": "at-uri",
+              "description": "Specific com.atpix.gallery.albumItem record URI. When set, removes only this junction record."
+            },
             "albumUri": { "type": "string", "format": "at-uri" },
-            "photoUri": { "type": "string", "format": "at-uri" }
+            "photoUri": {
+              "type": "string",
+              "maxLength": 512,
+              "description": "Photo record URI (at:// or ats://). Used with albumUri when uri is omitted."
+            }
           }
         }
       }

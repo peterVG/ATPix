@@ -17,6 +17,7 @@
             "coverPhotoUri": { "type": "string", "format": "at-uri" },
             "collectionRuleUris": {
               "type": "array",
+              "maxLength": 20,
               "items": { "type": "string", "format": "at-uri" }
             }
           }

@@ -1,0 +1,9 @@
+-r requirements.txt
+pytest>=8.3.0
+pytest-asyncio>=0.24.0
+allure-pytest>=2.13.5
+behave>=1.2.6
+allure-behave>=2.13.5
+locust>=2.32.0
+ruff>=0.8.0
+pdoc>=15.0.0

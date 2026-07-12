@@ -1,5 +1,30 @@
 services:
   # ----------------------------------------------------
+  # ATPix applications (monorepo apps/)
+  # ----------------------------------------------------
+  backend:
+    build:
+      context: ./apps/backend
+    container_name: atpix_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - TZ=UTC
+      - HAPPYVIEW_URL=${HAPPYVIEW_URL:-http://host.docker.internal:3001}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://127.0.0.1:5173,http://localhost:5173}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    build:
+      context: ./apps/frontend
+    container_name: atpix_frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+  # ----------------------------------------------------
   # Distributed Datastores
   # ----------------------------------------------------
   postgres:

@@ -11,7 +11,10 @@
           "did": { "type": "string", "format": "did" },
           "albumUri": { "type": "string", "format": "at-uri" },
           "tag": { "type": "string", "maxLength": 64 },
-          "visibility": { "type": "ref", "ref": "com.atpix.gallery.defs#visibility" },
+          "visibility": {
+            "type": "string",
+            "enum": ["public", "unlisted", "permissioned"]
+          },
           "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 },
           "cursor": { "type": "string" }
         }
