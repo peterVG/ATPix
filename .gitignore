@@ -38,4 +38,5 @@ __pycache__/
 !**/tests/e2e/
 !**/tests/integration/
 !**/tests/performance/
+!**/tests/fixtures/
 !**/tests/README.md
