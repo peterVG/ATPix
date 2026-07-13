@@ -175,73 +175,237 @@ Application containers (`backend`, `frontend`) log to stdout; Promtail ships Doc
 
 ## Viewing Developer Documentation
 
-# Setup Production Environment
+See [docs/](docs/) for the PRD, SRS, architecture ADRs, and Lexicon artifacts.
+
+## Setup Production Environment
 
 ATPix application code (frontend, backend, HappyView) can run on your laptop or any host. **User accounts and lexicon authority** for `atpix.net` are deployed separately as below. This repo does not provision DNS or VPS resources automatically.
 
-## atpix.net infrastructure
+Follow the steps in order. DNS can take up to 24 hours to propagate; use `dig` (or your registrar's DNS checker) after each change.
 
-Recommended production layout for the owned domain **atpix.net**. The PDS hostname, user handles, marketing site, and lexicon authority are **separate DNS roles** — handles do not need a `.pds` segment (e.g. use `alice.atpix.net`, not `alice.pds.atpix.net`).
+### Step 0 — Domain map (registrar DNS)
+
+The PDS hostname, user handles, marketing site, and lexicon authority are **separate DNS roles**. Handles do not need a `.pds` segment (use `alice.atpix.net`, not `alice.pds.atpix.net`).
 
 | Host / record | Role | Hosted on |
 |---------------|------|-----------|
-| `atpix.net` | Project homepage (marketing, docs links) | [GitHub Pages](#github-pages--atpixnet-homepage) |
-| `pds.atpix.net` | Self-hosted PDS (one instance, many accounts) | [DigitalOcean VPS](#digitalocean-vps--pdsatpixnet) |
-| `alice.atpix.net`, `bob.atpix.net` | Test handles → DIDs on your PDS | DNS `_atproto` TXT (see below) |
-| `_lexicon.gallery.atpix.net` | Lexicon authority for `net.atpix.gallery.*` | DNS TXT → authority DID (see below) |
+| `atpix.net` | Project homepage (marketing, docs links) | [GitHub Pages](#step-1--github-pages-atpixnet-homepage) |
+| `pds.atpix.net` | Self-hosted PDS (one instance, many accounts) | [DigitalOcean VPS](#step-2--digitalocean-vps--pdsatpixnet) |
+| `alice.atpix.net`, `bob.atpix.net` | Test handles → DIDs on your PDS | [Handle DNS](#step-3--handle-dns-aliceatpixnet--bobatpixnet) |
+| `_lexicon.gallery.atpix.net` | Lexicon authority for `net.atpix.gallery.*` | [Lexicon authority](#step-4--lexicon-authority-_lexicongalleryatpixnet) |
+
+At your domain registrar, create these records. Registrar UIs usually show only the **host label** (left column); the full FQDN is shown for clarity.
+
+| Registrar host label | Type | Value | When to add |
+|----------------------|------|-------|-------------|
+| `@` | `A` | `185.199.108.153` | Step 1 (GitHub Pages apex) |
+| `@` | `A` | `185.199.109.153` | Step 1 |
+| `@` | `A` | `185.199.110.153` | Step 1 |
+| `@` | `A` | `185.199.111.153` | Step 1 |
+| `www` | `CNAME` | `<org-or-user>.github.io` | Step 1 (optional; GitHub redirects `www` ↔ apex) |
+| `pds` | `A` | `<droplet-public-ipv4>` | Step 2 (before PDS install) |
+| `*.pds` | `A` | `<droplet-public-ipv4>` | Step 2 (wildcard for `*.pds.atpix.net` handles) |
+| `_atproto.alice` | `TXT` | `did=<alice-did>` | Step 3 (after account creation) |
+| `_atproto.bob` | `TXT` | `did=<bob-did>` | Step 3 |
+| `_lexicon.gallery` | `TXT` | `did=<authority-did>` | Step 4 (after authority account exists) |
+
+**Do not** add a registrar wildcard `*.atpix.net` — GitHub [discourages apex wildcards](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site) (takeover risk), and it would conflict with TXT-based handles. The PDS installer wildcard is **`*.pds.atpix.net` only**, not the apex zone.
 
 HappyView and ATPix still run wherever you deploy them (local Docker, a cloud VM, etc.). Users sign in with `alice.atpix.net` or `bob.atpix.net`; OAuth and writes proxy to `https://pds.atpix.net` per [ADR-007](docs/architecture/007-happyview-app-view-integration.md).
 
-### GitHub Pages — `atpix.net` homepage
+### Step 1 — GitHub Pages (`atpix.net` homepage)
 
-Host a static project site from this repository (or a dedicated `atpix.net` docs repo) on GitHub Pages.
+Host a static project site from this repository (or a dedicated docs repo) on GitHub Pages. The apex domain serves HTML only; it must not run the PDS.
 
-1. Enable **GitHub Pages** for the repo: Settings → Pages → deploy from `main` branch (`/docs` folder or `/root` per your layout).
-2. Set **Custom domain** to `atpix.net` in Pages settings; GitHub will prompt for DNS verification.
-3. At your domain registrar, add the records GitHub documents for an **apex** domain:
-   - [Managing a custom domain for GitHub Pages](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site)
-   - [About custom domains and GitHub Pages](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/about-custom-domains-and-github-pages) (apex `A`/`AAAA` records to GitHub Pages IPs)
-4. Enable **Enforce HTTPS** in Pages settings after DNS propagates.
+1. **Choose a publishing source** in the GitHub repo: **Settings → Pages → Build and deployment → Source** → deploy from branch `main` (folder `/` or `/docs` depending on where your site files live). Wait for the first `*.github.io` deployment to succeed.
+2. **Add the custom domain** in the same Pages settings panel: enter `atpix.net` under **Custom domain** → **Save**. GitHub commits a `CNAME` file to your publishing branch (pull it locally if you build the site offline).
+3. **Add apex DNS** at your registrar (four `A` records on `@` from the [Step 0](#step-0--domain-map-registrar-dns) table). Optional IPv6: four `AAAA` records on `@` per [GitHub's apex guide](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site#configuring-an-apex-domain).
+4. **Optional `www`:** add the `www` → `<org-or-user>.github.io` `CNAME` from Step 0 so GitHub can redirect between `atpix.net` and `www.atpix.net`.
+5. **Verify DNS:**
 
-Keep the homepage separate from the PDS: `atpix.net` serves HTML only; `pds.atpix.net` serves atproto XRPC.
+```bash
+dig atpix.net +noall +answer -t A
+# Expect four A records → 185.199.108.153 … 185.199.111.153
+```
 
-### DigitalOcean VPS — `pds.atpix.net`
+6. Back in **Settings → Pages**, wait until the custom domain shows as verified, then enable **Enforce HTTPS** (can take up to 24 hours after DNS propagates).
 
-Run one [reference PDS](https://github.com/bluesky-social/pds) on a small VPS for test accounts and lexicon authority publishing.
+References: [Managing a custom domain for GitHub Pages](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site), [About custom domains and GitHub Pages](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/about-custom-domains-and-github-pages).
 
-1. Create a Droplet ([DigitalOcean quickstart](https://docs.digitalocean.com/products/droplets/getting-started/quickstart/)) — Ubuntu LTS, 1–2 GB RAM minimum for a dev/test PDS.
-2. Point **`pds.atpix.net`** to the Droplet public IP (`A` record at your registrar).
-3. Follow the official guide: [Self-hosting AT Protocol](https://atproto.com/guides/self-hosting) and the [PDS README](https://github.com/bluesky-social/pds) (Docker or native install, TLS via Caddy/nginx + Let's Encrypt).
-4. Open ports **443** (HTTPS) and restrict admin surfaces; store secrets in the VPS environment, not in git.
-5. Create test accounts on the PDS:
-   - **Web UI:** `https://pds.atpix.net/account` (included with the [reference PDS](https://github.com/bluesky-social/pds))
-   - **CLI:** [`goat account`](https://github.com/bluesky-social/goat) — install per the [goat README](https://github.com/bluesky-social/goat#install), then run `goat account --help` for `create` options against `https://pds.atpix.net`
-   - Register handles **`alice.atpix.net`** and **`bob.atpix.net`** (two accounts on the same PDS)
+### Step 2 — DigitalOcean VPS + `pds.atpix.net`
 
-6. Publish **handle DNS** for each account ([handle specification](https://atproto.com/specs/handle)):
+Run one [reference PDS](https://github.com/bluesky-social/pds) on a VPS. Use hostname **`pds.atpix.net`** (not the apex `atpix.net`).
 
-| Record name | Type | Value |
-|-------------|------|-------|
-| `_atproto.alice.atpix.net` | TXT | `did=<alice-did>` |
-| `_atproto.bob.atpix.net` | TXT | `did=<bob-did>` |
+#### 2a. Create the Droplet
 
-Replace `<alice-did>` / `<bob-did>` with the DIDs returned at account creation. Handle verification uses `_atproto.<handle>` only — you do not need web servers on `alice.atpix.net` or `bob.atpix.net` for DNS-based handles.
+1. In [DigitalOcean](https://cloud.digitalocean.com/): **Create → Droplets**.
+2. **Image:** Ubuntu 24.04 LTS. **Size:** at least 1 GB RAM / 1 vCPU / 20 GB SSD ([PDS recommendations](https://github.com/bluesky-social/pds#deploying-a-pds-onto-a-vps)).
+3. **Authentication:** SSH key (recommended) or password. Note the **public IPv4** address after creation.
+4. **Firewall:** create or attach a cloud firewall allowing **inbound TCP 80 and 443** from anywhere. Restrict **SSH (22)** to your IP if possible ([DO firewall docs](https://docs.digitalocean.com/products/networking/firewalls/)).
+5. SSH in: `ssh root@<droplet-public-ipv4>`.
 
-7. Use these handles when logging into HappyView and when running permissioned-album BDD scenarios that require multiple identities.
+#### 2b. DNS before install
 
-### Lexicon authority — `_lexicon.gallery.atpix.net`
+Add the Step 0 records `pds` and `*.pds` → `<droplet-public-ipv4>`. Confirm:
 
-Network resolution for `net.atpix.gallery.*` links the NSID authority domain **`gallery.atpix.net`** (reverse of `net.atpix.gallery`) to a DID that publishes `com.atproto.lexicon.schema` records on a PDS ([Lexicons guide](https://atproto.com/guides/lexicons), [ADR-009](docs/architecture/009-lexicon-namespace-authority.md)).
+```bash
+dig pds.atpix.net +short -t A
+dig test123.pds.atpix.net +short -t A
+# Both should return the Droplet IP
+```
 
-1. Choose an **authority account** on your PDS (e.g. `lexicon.atpix.net` or reuse an admin handle); note its DID.
-2. Add DNS at your registrar:
+#### 2c. Run the PDS installer
 
-| Record name | Type | Value |
-|-------------|------|-------|
-| `_lexicon.gallery.atpix.net` | TXT | `did=<authority-did>` |
+On the Droplet ([PDS install guide](https://github.com/bluesky-social/pds#installing-on-ubuntu-200422042404-and-debian-111213)):
 
-3. Publish schemas from this repo to that account's repo using [`goat lex`](https://github.com/bluesky-social/goat?tab=readme-ov-file#lexicon-development): log in as the authority account (`goat account login`), copy or symlink `docs/lexicon/` into a working tree, run `goat lex check-dns` to verify `_lexicon.gallery.atpix.net`, then `goat lex publish`. **Or** upload to HappyView only via `scripts/provision_happyview.py` (App View indexing without network lexicon resolution).
-4. Upload to HappyView for local/dev App View use regardless:
+```bash
+curl -O https://raw.githubusercontent.com/bluesky-social/pds/main/installer.sh
+sudo bash installer.sh
+```
+
+When prompted:
+
+| Prompt | Enter |
+|--------|-------|
+| Public DNS name | `pds.atpix.net` |
+| Admin email | Your email (for Let's Encrypt; need not be `@atpix.net`) |
+| First account | Skip or create a throwaway `admin.pds.atpix.net` for testing — you will create `alice` / `bob` handles in Step 3 |
+
+On success, the installer prints service status commands and required DNS entries.
+
+#### 2d. Verify PDS is live
+
+```bash
+curl -sS https://pds.atpix.net/xrpc/_health
+# Expect JSON with a "version" field, e.g. {"version":"0.2.2-beta.2"}
+
+# From your laptop (optional WebSocket check):
+# wsdump "wss://pds.atpix.net/xrpc/com.atproto.sync.subscribeRepos?cursor=0"
+```
+
+Useful admin commands on the VPS: `sudo systemctl status pds`, `sudo docker logs -f pds`, `sudo pdsadmin help`. Admin password: `/pds/pds.env` → `PDS_ADMIN_PASSWORD`.
+
+References: [Self-hosting AT Protocol](https://atproto.com/guides/self-hosting), [PDS README](https://github.com/bluesky-social/pds).
+
+### Step 3 — Handle DNS (`alice.atpix.net` / `bob.atpix.net`)
+
+Create two accounts on the **same** PDS with custom apex handles, then publish `_atproto` TXT records ([handle specification](https://atproto.com/specs/handle)).
+
+#### 3a. Create accounts
+
+**Option A — PDS web UI:** open `https://pds.atpix.net/account` and register two accounts. If invites are required, create codes on the VPS:
+
+```bash
+sudo docker exec pds goat pds admin create-invites
+```
+
+**Option B — `goat` on the VPS** (admin password from `/pds/pds.env`):
+
+```bash
+sudo docker exec pds goat pds admin account create \
+  --handle alice.atpix.net \
+  --email alice@example.com \
+  --password '<choose-a-password>'
+
+sudo docker exec pds goat pds admin account create \
+  --handle bob.atpix.net \
+  --email bob@example.com \
+  --password '<choose-a-password>'
+```
+
+Save each account's **DID** and password from the command output.
+
+#### 3b. Publish handle TXT records
+
+At your registrar, add (replace placeholders with the DIDs from account creation):
+
+| Full record name | Type | Value |
+|------------------|------|-------|
+| `_atproto.alice.atpix.net` | `TXT` | `did=<alice-did>` |
+| `_atproto.bob.atpix.net` | `TXT` | `did=<bob-did>` |
+
+No `A`/`CNAME` records are required on `alice` or `bob` for DNS-based handle verification.
+
+#### 3c. Verify handles resolve
+
+```bash
+dig _atproto.alice.atpix.net +short -t TXT
+# "did=did:plc:..."
+
+goat resolve alice.atpix.net
+goat resolve bob.atpix.net
+```
+
+Use these handles when logging into HappyView and when running permissioned-album BDD scenarios that require multiple identities.
+
+### Step 4 — Lexicon authority (`_lexicon.gallery.atpix.net`)
+
+Network resolution for `net.atpix.gallery.*` links the authority domain **`gallery.atpix.net`** (reverse of `net.atpix.gallery`) to a DID that publishes `com.atproto.lexicon.schema` records ([Lexicons guide](https://atproto.com/guides/lexicons), [ADR-009](docs/architecture/009-lexicon-namespace-authority.md)).
+
+This step is **distinct** from HappyView provisioning: `scripts/provision_happyview.py` indexes lexicons in your App View only; `goat lex publish` makes schemas resolvable network-wide.
+
+#### 4a. Create the authority account
+
+Create a dedicated account on your PDS (example handle `lexicon.atpix.net`):
+
+```bash
+sudo docker exec pds goat pds admin account create \
+  --handle lexicon.atpix.net \
+  --email lexicon@example.com \
+  --password '<choose-a-password>'
+```
+
+Note the authority **DID** (`<authority-did>`). If this handle uses DNS verification, also add `_atproto.lexicon` TXT — only the `_lexicon.gallery` record is required for NSID authority.
+
+#### 4b. Publish authority DNS
+
+| Full record name | Type | Value |
+|------------------|------|-------|
+| `_lexicon.gallery.atpix.net` | `TXT` | `did=<authority-did>` |
+
+Verify:
+
+```bash
+dig _lexicon.gallery.atpix.net +short -t TXT
+# "did=did:plc:..."
+```
+
+#### 4c. Publish lexicons from this repo with `goat lex`
+
+On your workstation (or the VPS via `docker exec pds goat`):
+
+1. Install [`goat`](https://github.com/bluesky-social/goat#install) if not already available.
+2. Prepare a project directory with `goat`'s expected layout (`lexicons/net/atpix/gallery/*.json`):
+
+```bash
+mkdir -p /tmp/atpix-lexicons/lexicons/net/atpix/gallery
+for f in docs/lexicon/net.atpix.gallery.*.json; do
+  base=$(basename "$f" .json)
+  suffix=${base#net.atpix.gallery.}
+  cp "$f" "/tmp/atpix-lexicons/lexicons/net/atpix/gallery/${suffix}.json"
+done
+cd /tmp/atpix-lexicons
+```
+
+3. Log in as the authority account:
+
+```bash
+goat account login -u lexicon.atpix.net -p '<password>' --pds-host https://pds.atpix.net
+```
+
+4. Lint, verify DNS, and publish:
+
+```bash
+goat lex lint
+goat lex check-dns
+goat lex publish
+```
+
+`goat lex check-dns` should report no missing `_lexicon` entries for `net.atpix.gallery.*`. After publish, network clients can resolve NSIDs like `net.atpix.gallery.photo` via DNS → DID → PDS repo.
+
+#### 4d. HappyView App View (required for ATPix indexing)
+
+Regardless of network publication, upload lexicons to your HappyView instance:
 
 ```bash
 docker compose -f docker-compose.happyview.yml up -d
