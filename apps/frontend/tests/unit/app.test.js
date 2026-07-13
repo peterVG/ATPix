@@ -9,6 +9,7 @@ describe("bootstrapApp", () => {
   let teardown;
 
   beforeEach(() => {
+    teardown = undefined;
     mount = document.createElement("div");
     document.body.appendChild(mount);
     localStorage.clear();

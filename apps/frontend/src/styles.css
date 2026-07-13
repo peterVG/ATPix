@@ -392,6 +392,11 @@ body {
   display: none !important;
 }
 
+[data-breakpoint="tablet"] .mobile-nav-panel,
+[data-breakpoint="desktop"] .mobile-nav-panel {
+  display: none !important;
+}
+
 .gallery-grid {
   display: grid;
   gap: 0.5rem;

@@ -51,6 +51,28 @@ export function syncGalleryGridMetadata() {
 }
 
 /**
+ * Close the mobile navigation panel when the viewport leaves the mobile breakpoint.
+ *
+ * @returns {void}
+ */
+export function closeMobileNavOutsideMobileBreakpoint() {
+  if (document.documentElement.dataset.breakpoint === "mobile") {
+    return;
+  }
+
+  const panel = document.querySelector('[data-testid="mobile-nav"]');
+  const toggle = document.querySelector('[data-testid="mobile-menu-toggle"]');
+
+  if (panel instanceof HTMLElement) {
+    panel.hidden = true;
+  }
+
+  if (toggle instanceof HTMLButtonElement) {
+    toggle.setAttribute("aria-expanded", "false");
+  }
+}
+
+/**
  * Register a resize listener that keeps layout metadata in sync.
  *
  * @returns {() => void} Cleanup function.
@@ -59,6 +81,7 @@ export function watchLayoutBreakpoint() {
   const handler = () => {
     updateLayoutBreakpoint();
     syncGalleryGridMetadata();
+    closeMobileNavOutsideMobileBreakpoint();
   };
 
   window.addEventListener("resize", handler);
