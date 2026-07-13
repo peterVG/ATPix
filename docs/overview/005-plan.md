@@ -1,6 +1,6 @@
 # Implementation Plan: ATPix v1
 
-This document is the **global execution roadmap** for ATPix v1. It sequences work across the monorepo without injecting timelines into [prd.md](./002-prd.md) or [srs.md](./003-srs.md) (per [decoupled-execution](../../.agents/rules/decoupled-execution.md)).
+This document is the **global execution roadmap** for ATPix v1. It sequences work across the monorepo without injecting timelines into [002-prd.md](./002-prd.md) or [003-srs.md](./003-srs.md) (per [decoupled-execution](../../.agents/rules/decoupled-execution.md)).
 
 **Sources synthesized:** [PRD v1.5](./002-prd.md) · [SRS v1.0](./003-srs.md) · [UI requirements](./004-ui-requirements.md) · [ADRs 001–012](../architecture/) · 35 existing BDD feature files under `apps/*/tests/features/`
 

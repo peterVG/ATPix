@@ -18,6 +18,20 @@
   var activeRequestId = 0;
 
   /**
+   * Map pre-overview-reorg root paths to docs/overview/ numbered filenames.
+   *
+   * @type {Record<string, string>}
+   */
+  var LEGACY_DOC_PATHS = {
+    "architecture.md": "overview/000-architecture.md",
+    "product-vision.md": "overview/001-product-vision.md",
+    "prd.md": "overview/002-prd.md",
+    "srs.md": "overview/003-srs.md",
+    "ui-requirements.md": "overview/004-ui-requirements.md",
+    "plan.md": "overview/005-plan.md",
+  };
+
+  /**
    * Resolve a documentation path relative to the site root.
    *
    * @param {string} rawPath - Path or hash fragment pointing at a .md file.
@@ -43,6 +57,10 @@
 
     if (trimmed === "index.md") {
       return null;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(LEGACY_DOC_PATHS, trimmed)) {
+      return LEGACY_DOC_PATHS[trimmed];
     }
 
     return trimmed;

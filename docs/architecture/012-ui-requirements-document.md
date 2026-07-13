@@ -40,4 +40,4 @@ Frontend tasks MUST read `docs/overview/004-ui-requirements.md` and `docs/overvi
 
 ## Related Decisions / Notes
 
-[008-c2pa-sdk-and-signing.md](./008-c2pa-sdk-and-signing.md), [010-permissioned-spaces-storage.md](./010-permissioned-spaces-storage.md), [ui-requirements.md](../overview/004-ui-requirements.md)
+[008-c2pa-sdk-and-signing.md](./008-c2pa-sdk-and-signing.md), [010-permissioned-spaces-storage.md](./010-permissioned-spaces-storage.md), [004-ui-requirements.md](../overview/004-ui-requirements.md)

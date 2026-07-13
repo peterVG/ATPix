@@ -1,6 +1,6 @@
 # ATPix UI mockups
 
-Directional screen captures for [ui-requirements.md](../../overview/004-ui-requirements.md). Styling tokens: [000-UX-guide.md](../000-UX-guide.md).
+Directional screen captures for [004-ui-requirements.md](../../overview/004-ui-requirements.md). Styling tokens: [000-UX-guide.md](../000-UX-guide.md).
 
 ## Current assets (dark mode)
 

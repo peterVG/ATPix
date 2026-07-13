@@ -2,9 +2,9 @@
 
 Machine-readable Lexicon JSON for the ATPix photo record App View. Upload these schemas to HappyView via the dashboard or `POST /admin/lexicons`.
 
-**PRD reference:** [prd.md](../overview/002-prd.md#atpix-lexicon-specification)  
-**Product vision:** [product-vision.md](../overview/001-product-vision.md)  
-**Terminology mapping:** [prd.md § Product Terms ↔ AT Protocol Primitives](../overview/002-prd.md#product-terms--at-protocol-primitives)
+**PRD reference:** [002-prd.md](../overview/002-prd.md#atpix-lexicon-specification)  
+**Product vision:** [001-product-vision.md](../overview/001-product-vision.md)  
+**Terminology mapping:** [002-prd.md § Product Terms ↔ AT Protocol Primitives](../overview/002-prd.md#product-terms--at-protocol-primitives)
 
 ## Product terms ↔ AT Protocol primitives
 
