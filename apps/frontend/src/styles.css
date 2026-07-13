@@ -334,7 +334,10 @@ body {
 
 [data-theme="light"] .status-chip {
   background: #ffffff;
-  border: 1px solid color-mix(in srgb, currentColor 35%, var(--outline-variant));
+  border-top: 1px solid color-mix(in srgb, currentColor 35%, var(--outline-variant));
+  border-right: 1px solid color-mix(in srgb, currentColor 35%, var(--outline-variant));
+  border-bottom: 1px solid color-mix(in srgb, currentColor 35%, var(--outline-variant));
+  border-left: 3px solid currentColor;
 }
 
 [data-theme="light"] .status-chip--public {

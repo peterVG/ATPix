@@ -19,7 +19,7 @@ Implemented holistic Task FE-2.1:
 | `X-Client-Key` on XRPC                                       | `buildXrpcHeaders()` + browser client `clientKey` option                                                                     |
 | Production `TOKEN_ENCRYPTION_KEY`                            | [ADR-006](../../../../docs/architecture/006-oauth-dpop-authentication.md) recommends production HappyView SHOULD set it      |
 | Live OAuth sign-in                                           | Manual verification per README Step 7                                                                                        |
-| Backend BDD `authentication_security_SRS-NFR-003.feature`    | Scaffold present; step definitions require live HappyView for full behave execution (coordinate in Task 7.1 RC verification) |
+| Backend BDD `authentication_security_SRS-NFR-003.feature`    | Unimplemented scaffold only (no step definitions); not runnable — full behave execution deferred to Task 7.1 RC verification |
 
 ## SRS traceability
 
@@ -56,11 +56,11 @@ Exit code: 0
  ✓ tests/unit/router.test.js (4 tests) 1ms
  ✓ tests/unit/colorScheme.test.js (6 tests) 4ms
  ✓ tests/unit/oauthClientMetadata.test.js (10 tests) 5ms
- ✓ tests/unit/app.test.js (2 tests) 19ms
+ ✓ tests/unit/app.test.js (2 tests) 24ms
 
  Test Files  6 passed (6)
       Tests  26 passed (26)
-   Duration  576ms (transform 107ms, setup 0ms, collect 302ms, tests 33ms, environment 1.79s, prepare 275ms)
+   Duration  527ms (transform 114ms, setup 0ms, collect 264ms, tests 39ms, environment 1.60s, prepare 246ms)
 ```
 
 ### UI tests (production build)
@@ -71,18 +71,18 @@ Exit code: 0
 
 vite v6.4.3 building for test...
 ✓ 291 modules transformed.
-✓ built in 387ms
+✓ built in 367ms
 
  RUN  v2.1.9 (repo root)/apps/frontend
 
- ✓ tests/ui/signIn.ui.test.js (1 test) 84ms
- ✓ tests/ui/appShell.ui.test.js (2 tests) 105ms
- ✓ tests/ui/responsiveLayout.ui.test.js (3 tests) 131ms
- ✓ tests/ui/themeToggle.ui.test.js (3 tests) 134ms
+ ✓ tests/ui/signIn.ui.test.js (1 test) 88ms
+ ✓ tests/ui/appShell.ui.test.js (2 tests) 112ms
+ ✓ tests/ui/themeToggle.ui.test.js (3 tests) 139ms
+ ✓ tests/ui/responsiveLayout.ui.test.js (3 tests) 138ms
 
  Test Files  4 passed (4)
       Tests  9 passed (9)
-   Duration  439ms (transform 76ms, setup 37ms, collect 32ms, tests 454ms, environment 614ms, prepare 118ms)
+   Duration  432ms (transform 82ms, setup 34ms, collect 35ms, tests 477ms, environment 591ms, prepare 132ms)
 ```
 
 ## Manual verification

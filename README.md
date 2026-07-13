@@ -243,7 +243,7 @@ HappyView must know about your app **before** users can sign in via OAuth. You r
 VITE_HAPPYVIEW_CLIENT_KEY=hvc_paste_your_key_here
 ```
 
-Vite is configured with `envDir` pointing at the repo root, so `npm run dev` from `apps/frontend/` loads `VITE_*` variables from that file. You do **not** need a separate `apps/frontend/.env` unless you prefer a local override.
+Vite is configured with `envDir` pointing at the repo root, so `npm run dev` from `apps/frontend/` loads `VITE_*` variables from that file only. A separate `apps/frontend/.env` is **not** read unless you change `envDir` in `apps/frontend/vite.config.js`.
 
 7. **Restart** `npm run dev` (Vite reads `.env` at startup).
 
