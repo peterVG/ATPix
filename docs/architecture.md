@@ -219,16 +219,16 @@ erDiagram
     HappyViewIndex ||--o{ LexiconRegistry : provisions
 
     PhotoRecord {
-        string nsid net_atpix_gallery_photo
+        string photo_nsid
         string visibility
-        blob image_ref
+        string image_ref
     }
     AlbumRecord {
-        string nsid net_atpix_gallery_album
-        string spaceUri optional
+        string album_nsid
+        string space_uri
     }
     Blob {
-        bytes on_author_pds
+        string author_pds_bytes
     }
 ```
 
