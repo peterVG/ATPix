@@ -1,7 +1,7 @@
 {
   "lexicon": 1,
   "id": "net.atpix.gallery.photo",
-  "description": "ATPix photo record. Metadata mapped to Dublin Core and Schema.org ImageObject terms (see docs/lexicon/README.md).",
+  "description": "ATPix photo record. Metadata mapped to Dublin Core and Schema.org ImageObject terms (see docs/lexicon/net.atpix.gallery.md).",
   "defs": {
     "main": {
       "type": "record",
