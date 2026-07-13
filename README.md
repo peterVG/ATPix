@@ -57,7 +57,7 @@ Browser (ATPix) → HappyView (OAuth + XRPC proxy) → user's PDS
 
 **Local Docker persistence:** HappyView stores its own SQLite index, OAuth sessions, and provisioned lexicons under `./data/happyview_data/` (bind-mounted in `docker-compose.happyview.yml`). Stopping the container does **not** delete user PDS data. Wiping `./data/happyview_data/` loses local index and sessions only — records on users' PDSes remain; re-run [provisioning](#run-the-application) and backfill to rebuild the index.
 
-**New test accounts:** use an existing atproto identity or sign up with a PDS provider / self-hosted PDS outside this repo before exercising upload flows.
+**New test accounts:** use Bluesky accounts for quick smoke tests, or the [self-hosted `atpix.net` layout](#atpixnet-infrastructure) below for multi-account permissioned-album testing.
 
 ## Requirements and verification
 
@@ -177,6 +177,84 @@ Application containers (`backend`, `frontend`) log to stdout; Promtail ships Doc
 
 # Setup Production Environment
 
+ATPix application code (frontend, backend, HappyView) can run on your laptop or any host. **User accounts and lexicon authority** for `atpix.net` are deployed separately as below. This repo does not provision DNS or VPS resources automatically.
+
+## atpix.net infrastructure
+
+Recommended production layout for the owned domain **atpix.net**. The PDS hostname, user handles, marketing site, and lexicon authority are **separate DNS roles** — handles do not need a `.pds` segment (e.g. use `alice.atpix.net`, not `alice.pds.atpix.net`).
+
+| Host / record | Role | Hosted on |
+|---------------|------|-----------|
+| `atpix.net` | Project homepage (marketing, docs links) | [GitHub Pages](#github-pages--atpixnet-homepage) |
+| `pds.atpix.net` | Self-hosted PDS (one instance, many accounts) | [DigitalOcean VPS](#digitalocean-vps--pdsatpixnet) |
+| `alice.atpix.net`, `bob.atpix.net` | Test handles → DIDs on your PDS | DNS `_atproto` TXT (see below) |
+| `_lexicon.gallery.atpix.net` | Lexicon authority for `net.atpix.gallery.*` | DNS TXT → authority DID (see below) |
+
+HappyView and ATPix still run wherever you deploy them (local Docker, a cloud VM, etc.). Users sign in with `alice.atpix.net` or `bob.atpix.net`; OAuth and writes proxy to `https://pds.atpix.net` per [ADR-007](docs/architecture/007-happyview-app-view-integration.md).
+
+### GitHub Pages — `atpix.net` homepage
+
+Host a static project site from this repository (or a dedicated `atpix.net` docs repo) on GitHub Pages.
+
+1. Enable **GitHub Pages** for the repo: Settings → Pages → deploy from `main` branch (`/docs` folder or `/root` per your layout).
+2. Set **Custom domain** to `atpix.net` in Pages settings; GitHub will prompt for DNS verification.
+3. At your domain registrar, add the records GitHub documents for an **apex** domain:
+   - [Managing a custom domain for GitHub Pages](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site)
+   - [About custom domains and GitHub Pages](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/about-custom-domains-and-github-pages) (apex `A`/`AAAA` records to GitHub Pages IPs)
+4. Enable **Enforce HTTPS** in Pages settings after DNS propagates.
+
+Keep the homepage separate from the PDS: `atpix.net` serves HTML only; `pds.atpix.net` serves atproto XRPC.
+
+### DigitalOcean VPS — `pds.atpix.net`
+
+Run one [reference PDS](https://github.com/bluesky-social/pds) on a small VPS for test accounts and lexicon authority publishing.
+
+1. Create a Droplet ([DigitalOcean quickstart](https://docs.digitalocean.com/products/droplets/getting-started/quickstart/)) — Ubuntu LTS, 1–2 GB RAM minimum for a dev/test PDS.
+2. Point **`pds.atpix.net`** to the Droplet public IP (`A` record at your registrar).
+3. Follow the official guide: [Self-hosting AT Protocol](https://atproto.com/guides/self-hosting) and the [PDS README](https://github.com/bluesky-social/pds) (Docker or native install, TLS via Caddy/nginx + Let's Encrypt).
+4. Open ports **443** (HTTPS) and restrict admin surfaces; store secrets in the VPS environment, not in git.
+5. Create test accounts on the PDS:
+   - **Web UI:** `https://pds.atpix.net/account` (included with the [reference PDS](https://github.com/bluesky-social/pds))
+   - **CLI:** [`goat account`](https://github.com/bluesky-social/goat) — install per the [goat README](https://github.com/bluesky-social/goat#install), then run `goat account --help` for `create` options against `https://pds.atpix.net`
+   - Register handles **`alice.atpix.net`** and **`bob.atpix.net`** (two accounts on the same PDS)
+
+6. Publish **handle DNS** for each account ([handle specification](https://atproto.com/specs/handle)):
+
+| Record name | Type | Value |
+|-------------|------|-------|
+| `_atproto.alice.atpix.net` | TXT | `did=<alice-did>` |
+| `_atproto.bob.atpix.net` | TXT | `did=<bob-did>` |
+
+Replace `<alice-did>` / `<bob-did>` with the DIDs returned at account creation. Handle verification uses `_atproto.<handle>` only — you do not need web servers on `alice.atpix.net` or `bob.atpix.net` for DNS-based handles.
+
+7. Use these handles when logging into HappyView and when running permissioned-album BDD scenarios that require multiple identities.
+
+### Lexicon authority — `_lexicon.gallery.atpix.net`
+
+Network resolution for `net.atpix.gallery.*` links the NSID authority domain **`gallery.atpix.net`** (reverse of `net.atpix.gallery`) to a DID that publishes `com.atproto.lexicon.schema` records on a PDS ([Lexicons guide](https://atproto.com/guides/lexicons), [ADR-009](docs/architecture/009-lexicon-namespace-authority.md)).
+
+1. Choose an **authority account** on your PDS (e.g. `lexicon.atpix.net` or reuse an admin handle); note its DID.
+2. Add DNS at your registrar:
+
+| Record name | Type | Value |
+|-------------|------|-------|
+| `_lexicon.gallery.atpix.net` | TXT | `did=<authority-did>` |
+
+3. Publish schemas from this repo to that account's repo using [`goat lex`](https://github.com/bluesky-social/goat?tab=readme-ov-file#lexicon-development): log in as the authority account (`goat account login`), copy or symlink `docs/lexicon/` into a working tree, run `goat lex check-dns` to verify `_lexicon.gallery.atpix.net`, then `goat lex publish`. **Or** upload to HappyView only via `scripts/provision_happyview.py` (App View indexing without network lexicon resolution).
+4. Upload to HappyView for local/dev App View use regardless:
+
+```bash
+docker compose -f docker-compose.happyview.yml up -d
+python3 scripts/provision_happyview.py
+python3 scripts/provision_happyview.py --verify-only
+```
+
+See [docs/lexicon/README.md](docs/lexicon/README.md) for upload order and [system architecture](docs/architecture.md) for how PDS, HappyView, and DNS roles fit together.
+
 ## Deploy to Production
 
+Deploy ATPix apps per [Run the application](#run-the-application): HappyView (`docker-compose.happyview.yml`), backend, and frontend. Point `VITE_HAPPYVIEW_URL` / `HAPPYVIEW_URL` at your production HappyView instance. Register an OAuth client in HappyView and set `VITE_HAPPYVIEW_CLIENT_KEY` in the frontend build environment.
+
 ## Monitor and Update
+
+Use the observability stack in [View logs](#view-logs) for ATPix containers. Monitor the DigitalOcean PDS VPS separately (disk, TLS expiry, PDS logs). Re-run provisioning after lexicon changes and document HappyView `feature.spaces_enabled` status in test reports per [SRS NFR-013](docs/srs.md).
