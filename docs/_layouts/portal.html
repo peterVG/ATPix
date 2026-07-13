@@ -7,11 +7,25 @@
     <link rel="stylesheet" href="{{ '/assets/docs-portal.css' | relative_url }}" />
   </head>
   <body data-baseurl="{{ site.baseurl }}">
-    <div class="docs-shell">
-      <aside class="docs-toc" aria-label="Table of contents">
+    <div class="docs-shell" id="docs-shell">
+      <aside class="docs-toc" id="docs-toc" aria-label="Table of contents">
         <h1 class="docs-toc-header">ATPix Docs</h1>
         {% include docs-toc.html %}
       </aside>
+      <div
+        class="docs-resizer"
+        id="docs-resizer"
+        role="separator"
+        aria-orientation="vertical"
+        aria-controls="docs-toc docs-content"
+        aria-valuemin="20"
+        aria-valuemax="50"
+        aria-valuenow="33"
+        tabindex="0"
+        title="Drag to resize columns"
+      >
+        <span class="docs-resizer-grip" aria-hidden="true"></span>
+      </div>
       <main class="docs-content" id="docs-content">
         {{ content }}
       </main>

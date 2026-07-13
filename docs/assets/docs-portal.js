@@ -1,13 +1,20 @@
 /**
- * Client-side markdown loader for the ATPix docs portal on GitHub Pages.
- * Fetches static .md files and renders them in the content column.
+ * Client-side markdown loader and portal chrome for the ATPix docs site.
  */
 (function () {
   "use strict";
 
   var CONTENT_ID = "docs-content";
+  var SHELL_ID = "docs-shell";
+  var RESIZER_ID = "docs-resizer";
   var ACTIVE_CLASS = "is-active";
+  var COLLAPSED_CLASS = "is-collapsed";
+  var DRAGGING_CLASS = "is-dragging";
   var MAX_PATH_LENGTH = 256;
+  var MIN_TOC_PERCENT = 20;
+  var MAX_TOC_PERCENT = 50;
+  var DEFAULT_TOC_PERCENT = 33.333;
+  var TOC_WIDTH_KEY = "atpix-docs-toc-width";
   var activeRequestId = 0;
 
   /**
@@ -162,11 +169,7 @@
     var docPath = normalizeDocPath(rawPath);
     var container = document.getElementById(CONTENT_ID);
 
-    if (!docPath) {
-      return Promise.resolve();
-    }
-
-    if (!container) {
+    if (!docPath || !container) {
       return Promise.resolve();
     }
 
@@ -176,27 +179,21 @@
     container.innerHTML = "<p class=\"docs-loading\">Loading…</p>";
     setActiveTocLink(docPath);
 
-    var url = buildFetchUrl(docPath);
-
-    return fetch(url)
+    return fetch(buildFetchUrl(docPath))
       .then(function (response) {
         if (requestId !== activeRequestId) {
           return null;
         }
-
         if (!response.ok) {
           throw new Error("HTTP " + response.status);
         }
-
         return response.text();
       })
       .then(function (markdown) {
         if (requestId !== activeRequestId || markdown === null) {
           return;
         }
-
         renderMarkdown(markdown, docPath);
-
         if (window.history && window.history.replaceState) {
           window.history.replaceState(null, "", "#" + docPath);
         }
@@ -205,9 +202,165 @@
         if (requestId !== activeRequestId) {
           return;
         }
-
         showLoadError(container, docPath, error.message);
       });
+  }
+
+  /**
+   * Toggle a collapsible TOC section node.
+   *
+   * @param {HTMLElement} sectionNode - Section wrapper with panel children.
+   */
+  function toggleTocSection(sectionNode) {
+    var toggle = sectionNode.querySelector(":scope > .docs-toc-section-toggle");
+    var isCollapsed = sectionNode.classList.toggle(COLLAPSED_CLASS);
+    if (toggle) {
+      toggle.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
+    }
+  }
+
+  /**
+   * Wire collapse toggles for hierarchical TOC sections.
+   */
+  function initTocCollapse() {
+    document.querySelectorAll(".docs-toc-section-toggle").forEach(function (button) {
+      button.addEventListener("click", function (event) {
+        event.preventDefault();
+        var section = button.closest("[data-toc-section]");
+        if (section) {
+          toggleTocSection(section);
+        }
+      });
+    });
+  }
+
+  /**
+   * Clamp a TOC width percentage to supported bounds.
+   *
+   * @param {number} percent - Requested sidebar width percentage.
+   * @returns {number} Clamped percentage.
+   */
+  function clampTocPercent(percent) {
+    if (percent < MIN_TOC_PERCENT) {
+      return MIN_TOC_PERCENT;
+    }
+    if (percent > MAX_TOC_PERCENT) {
+      return MAX_TOC_PERCENT;
+    }
+    return percent;
+  }
+
+  /**
+   * Apply sidebar width to the layout shell.
+   *
+   * @param {number} percent - Sidebar width percentage.
+   */
+  function applyTocWidth(percent) {
+    var shell = document.getElementById(SHELL_ID);
+    var resizer = document.getElementById(RESIZER_ID);
+    var clamped = clampTocPercent(percent);
+
+    if (shell) {
+      shell.style.setProperty("--docs-toc-width", clamped + "%");
+    }
+    if (resizer) {
+      resizer.setAttribute("aria-valuenow", String(Math.round(clamped)));
+    }
+  }
+
+  /**
+   * Persist sidebar width for return visits.
+   *
+   * @param {number} percent - Sidebar width percentage.
+   */
+  function saveTocWidth(percent) {
+    try {
+      localStorage.setItem(TOC_WIDTH_KEY, String(percent));
+    } catch (error) {
+      return;
+    }
+  }
+
+  /**
+   * Read stored sidebar width, if present.
+   *
+   * @returns {number|null} Stored width percentage or null.
+   */
+  function loadStoredTocWidth() {
+    try {
+      var stored = localStorage.getItem(TOC_WIDTH_KEY);
+      if (!stored) {
+        return null;
+      }
+      var parsed = parseFloat(stored);
+      if (Number.isNaN(parsed)) {
+        return null;
+      }
+      return clampTocPercent(parsed);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /**
+   * Enable drag and keyboard resizing between TOC and content columns.
+   */
+  function initColumnResizer() {
+    var shell = document.getElementById(SHELL_ID);
+    var resizer = document.getElementById(RESIZER_ID);
+    if (!shell || !resizer) {
+      return;
+    }
+
+    var stored = loadStoredTocWidth();
+    applyTocWidth(stored === null ? DEFAULT_TOC_PERCENT : stored);
+
+    var dragging = false;
+
+    /**
+     * Update column widths from a pointer X coordinate.
+     *
+     * @param {number} clientX - Pointer X position in viewport pixels.
+     */
+    function updateFromPointer(clientX) {
+      var rect = shell.getBoundingClientRect();
+      var percent = ((clientX - rect.left) / rect.width) * 100;
+      var clamped = clampTocPercent(percent);
+      applyTocWidth(clamped);
+      saveTocWidth(clamped);
+    }
+
+    resizer.addEventListener("mousedown", function (event) {
+      dragging = true;
+      resizer.classList.add(DRAGGING_CLASS);
+      event.preventDefault();
+    });
+
+    window.addEventListener("mousemove", function (event) {
+      if (!dragging) {
+        return;
+      }
+      updateFromPointer(event.clientX);
+    });
+
+    window.addEventListener("mouseup", function () {
+      dragging = false;
+      resizer.classList.remove(DRAGGING_CLASS);
+    });
+
+    resizer.addEventListener("keydown", function (event) {
+      var current = parseFloat(resizer.getAttribute("aria-valuenow") || String(DEFAULT_TOC_PERCENT));
+      if (event.key === "ArrowLeft") {
+        applyTocWidth(current - 2);
+        saveTocWidth(clampTocPercent(current - 2));
+        event.preventDefault();
+      }
+      if (event.key === "ArrowRight") {
+        applyTocWidth(current + 2);
+        saveTocWidth(clampTocPercent(current + 2));
+        event.preventDefault();
+      }
+    });
   }
 
   /**
@@ -216,29 +369,25 @@
    * @param {MouseEvent} event - Click event.
    */
   function handleDocClick(event) {
-    var target = event.target;
-    if (!target || !target.closest) {
-      return;
-    }
-
-    var link = target.closest("a.doc-link");
+    var link = event.target && event.target.closest ? event.target.closest("a.doc-link") : null;
     if (!link) {
       return;
     }
-
     var path = link.getAttribute("data-path") || link.getAttribute("href");
     if (!path) {
       return;
     }
-
     event.preventDefault();
     loadDocument(path);
   }
 
   /**
-   * Load a document from the URL hash on first paint.
+   * Boot portal UI and optional hash-routed document.
    */
-  function loadInitialDocument() {
+  function bootPortal() {
+    initTocCollapse();
+    initColumnResizer();
+
     var hash = window.location.hash.replace(/^#/, "");
     if (hash) {
       loadDocument(hash);
@@ -251,8 +400,8 @@
   });
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", loadInitialDocument);
+    document.addEventListener("DOMContentLoaded", bootPortal);
   } else {
-    loadInitialDocument();
+    bootPortal();
   }
 })();
