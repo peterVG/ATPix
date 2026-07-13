@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     debug: bool = False
     cors_origins: str = "http://127.0.0.1:5173,http://localhost:5173"
     happyview_url: str = "http://127.0.0.1:3001"
+    c2pa_signing_certs_path: str = ""
+    c2pa_signing_key_path: str = ""
+    c2pa_tsa_url: str = "http://timestamp.digicert.com"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

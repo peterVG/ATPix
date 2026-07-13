@@ -2,6 +2,7 @@ import { routeHref } from "../router/router.js";
 import { escapeHtml } from "../utils/html.js";
 
 import { bindAppearanceControls, renderRouteContent } from "./GalleryPlaceholder.js";
+import { renderUploadPanel } from "./UploadPanel.js";
 
 /**
  * Render the authenticated application shell (UI-SHELL-001).
@@ -126,7 +127,11 @@ export function renderAppShell({
     return mount;
   }
 
+  const openUpload = () => onNavigate("upload");
+
   shell.querySelector('[data-testid="theme-toggle"]')?.addEventListener("click", onThemeToggle);
+  shell.querySelector('[data-testid="header-upload"]')?.addEventListener("click", openUpload);
+  shell.querySelector('[data-testid="sidebar-upload"]')?.addEventListener("click", openUpload);
   shell.querySelector('[data-testid="sign-out"]')?.addEventListener("click", onSignOut);
   shell.querySelector('[data-testid="mobile-sign-out"]')?.addEventListener("click", onSignOut);
 
@@ -168,11 +173,15 @@ export function renderAppShell({
 
   const main = shell.querySelector('[data-testid="app-main"]');
   if (main instanceof HTMLElement) {
-    renderRouteContent({
-      mount: main,
-      route,
-      showBadges: route === "gallery",
-    });
+    if (route === "upload") {
+      renderUploadPanel({ mount: main, identity });
+    } else {
+      renderRouteContent({
+        mount: main,
+        route,
+        showBadges: route === "gallery",
+      });
+    }
 
     if (route === "settings") {
       bindAppearanceControls(shell, onSchemeSelect, colorPreference);

@@ -36,6 +36,11 @@ Feature: C2PA Manifest Generation on Upload
     Then optional location and device assertions should be omitted
     And required actions and hash assertions should remain
 
+  Scenario: Unsupported image type is rejected
+    Given the C2PA signing service is configured
+    When the API receives an unsupported upload content type
+    Then the embed request should be rejected before signing
+
 # Source
 # - srs.md SRS-F-012, SRS-NFR-014, SRS-NFR-015, SRS-TC-009, SRS-TC-010
 # - prd.md F-012, NFR-014, NFR-015, TC-009, TC-010

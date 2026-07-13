@@ -20,7 +20,7 @@ Granular checklist for the FastAPI auxiliary service (C2PA, health, integration 
   - **Related Tests:** [`test_health.py`](../tests/unit/test_health.py), [`test_health_api.py`](../tests/integration/test_health_api.py)
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task BE-1.1. Work strictly in apps/backend/. Run ruff check, pytest. Generate apps/backend/docs/tasks/Task-BE-1.1-Walkthrough.md. Check off plan. Commit and push.`
 
-- [ ] **Task BE-1.2: C2PA module scaffold expansion**
+- [x] **Task BE-1.2: C2PA module scaffold expansion**
   - **Description:** Expand `app/modules/c2pa/` with service interfaces for generate, update, validate per [ADR-008](../../../docs/architecture/008-c2pa-sdk-and-signing.md). Add `c2pa` SDK to requirements.txt when selected.
   - **Estimated Time:** 3 hours
   - **Dependencies:** Task BE-1.1
@@ -60,7 +60,7 @@ Granular checklist for the FastAPI auxiliary service (C2PA, health, integration 
 
 ## Phase BE-3: C2PA Manifest Generation
 
-- [ ] **Task BE-3.1: C2PA manifest generation on upload**
+- [x] **Task BE-3.1: C2PA manifest generation on upload**
   - **Description:** Implement POST endpoint embedding C2PA 2.2 manifest in JPEG/PNG per Appendix A; `c2pa.created` first action; `net.atpix.gallery.creatorDid` assertion; return manifest-bearing bytes for frontend `uploadBlob`.
   - **Estimated Time:** 12 hours
   - **Dependencies:** Task BE-1.2
