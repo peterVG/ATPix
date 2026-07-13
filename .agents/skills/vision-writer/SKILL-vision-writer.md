@@ -11,7 +11,7 @@ references:
 # Product Vision Architect Skill
 
 ## Purpose
-This skill facilitates a collaborative, Socratic dialogue to help the user define and refine their product strategy. It transforms abstract ideas into a concrete, validated `docs/product-vision.md` file based on the official template.
+This skill facilitates a collaborative, Socratic dialogue to help the user define and refine their product strategy. It transforms abstract ideas into a concrete, validated `docs/overview/001-product-vision.md` file based on the official template.
 
 ## When to Use This Skill
 - When the user invokes `/product-vision`
@@ -40,7 +40,7 @@ The agent does NOT present a wall of text. It engages in **Progressive Discovery
 The agent maintains a working draft. After each section is "settled," it provides a summary and asks if the user wants to move to the next block of the template.
 
 ### Step 5: Final Output
-Once all sections are complete, the agent generates `docs/product-vision.md`.
+Once all sections are complete, the agent generates `docs/overview/001-product-vision.md`.
 
 ### Step 6: Trigger KB Refinement
 If the user previously indicated they want any raw reference resources in `docs/references/` to be further refined into `.agents/kb/` files, explicitly invoke the **Knowledge Base Synthesizer** skill (`.agents/skills/kb-synthesizer/SKILL-kb-synthesizer.md`) to process those specific documents.
@@ -59,11 +59,11 @@ AGENT: [Searches Dutch public sector NextCloud usage to ground the conversation]
 AGENT: "I see you're targeting the Dutch public sector. Would this primarily serve as a 'dark archive' for compliance, or a functional extension for daily users? This will help us define the 'Product Vision' and 'Core Features'."
 ...
 AGENT: [Finalizes all sections]
-AGENT: [Creates docs/vision.md]
+AGENT: [Creates docs/overview/001-product-vision.md]
 
 ## Success Criteria
 - ✅ **Completness:** Every placeholder in the template is replaced with specific, high-fidelity content.
 - ✅ **Internal Consistency:** The "Value Proposition" directly addresses the "Pains" in the Customer Profile.
 - ✅ **Technical Realism:** The "Technical Stack" is compatible with the "Key Constraints."
 - ✅ **Strategic Depth:** The "Unfair Advantage" identifies a genuine barrier to entry.
-- ✅ **Documentation:** A fully populated `docs/product-vision.md` is generated.
+- ✅ **Documentation:** A fully populated `docs/overview/001-product-vision.md` is generated.

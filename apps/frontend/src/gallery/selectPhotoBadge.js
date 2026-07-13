@@ -1,0 +1,74 @@
+/**
+ * Map photo visibility and C2PA state to UI-SCR-001 badge labels.
+ */
+
+/**
+ * @typedef {"trusted" | "valid" | "invalid" | "none"} C2paBadgeState
+ */
+
+/**
+ * Map a lexicon `c2paValidationState` token to gallery badge inputs.
+ *
+ * @param {string | undefined} state - Cached C2PA validation state from a photo record.
+ * @returns {C2paBadgeState} Badge state consumed by `selectPhotoBadges`.
+ */
+export function mapC2paValidationState(state) {
+  if (state === "trusted") {
+    return "trusted";
+  }
+
+  if (state === "invalid") {
+    return "invalid";
+  }
+
+  if (state === "wellFormed" || state === "valid") {
+    return "valid";
+  }
+
+  return "none";
+}
+
+/**
+ * Select badge labels for a gallery media card.
+ *
+ * @param {object} options - Badge inputs.
+ * @param {"public" | "unlisted" | "permissioned"} options.visibility - Photo visibility.
+ * @param {C2paBadgeState} options.c2paState - C2PA validation summary.
+ * @returns {string[]} Badge labels to render on the card.
+ */
+export function selectPhotoBadges({ visibility, c2paState }) {
+  if (visibility === "permissioned") {
+    return ["Private"];
+  }
+
+  if (c2paState === "invalid") {
+    return ["Invalid"];
+  }
+
+  if (c2paState === "trusted") {
+    return ["Trusted", "Valid"];
+  }
+
+  if (c2paState === "valid") {
+    return ["Valid"];
+  }
+
+  return [];
+}
+
+/**
+ * Map a badge label to a CSS modifier class.
+ *
+ * @param {string} label - Badge label text.
+ * @returns {string} Status chip modifier class suffix.
+ */
+export function badgeClassForLabel(label) {
+  const mapping = {
+    Trusted: "trusted",
+    Valid: "wellformed",
+    Invalid: "invalid",
+    Private: "permissioned",
+  };
+
+  return mapping[label] ?? "public";
+}

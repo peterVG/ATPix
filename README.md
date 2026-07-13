@@ -16,7 +16,7 @@ Galleries populate two ways:
 
 Sharing supports **public**, **unlisted**, and **permissioned** albums; permissioned collections use [HappyView Permissioned Spaces](https://happyview.dev/experimental/spaces) (ATP-0016) so only invited members can view curated private albums.
 
-Product language (gallery, album) maps to atproto primitives (queries, `net.atpix.gallery.*` records, space repos) in the [PRD](docs/prd.md#product-terms--at-protocol-primitives) and [Lexicon README](docs/lexicon/net.atpix.gallery.md).
+Product language (gallery, album) maps to atproto primitives (queries, `net.atpix.gallery.*` records, space repos) in the [PRD](docs/overview/002-prd.md#product-terms--at-protocol-primitives) and [Lexicon README](docs/lexicon/net.atpix.gallery.md).
 
 ## Metadata
  Photo metadata maps to [Dublin Core](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/) and [Schema.org](https://schema.org/docs/schemas.html) terms in `net.atpix.gallery.*` Lexicons; image files embed [C2PA 2.2](https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html) Content Credentials for tamper-evident provenance. 
@@ -63,11 +63,11 @@ Browser (ATPix) → HappyView (OAuth + XRPC proxy) → user's PDS
 
 ## Requirements and verification
 
-- **[Product vision](docs/product-vision.md)** — problem, users, value proposition
-- **[PRD v1.5](docs/prd.md)** — F-001–F-016 functional requirements, NFRs, technical constraints
-- **[SRS v1.0](docs/srs.md)** — technical specs with 100% PRD traceability
-- **[Implementation plan](docs/plan.md)** — global roadmap; module checklists in [apps/frontend/docs/plan.md](apps/frontend/docs/plan.md) and [apps/backend/docs/plan.md](apps/backend/docs/plan.md)
-- **[UI requirements v1.0](docs/ui-requirements.md)** — screens, components, and mockups ([UX guide](docs/references/000-UX-guide.md))
+- **[Product vision](docs/overview/001-product-vision.md)** — problem, users, value proposition
+- **[PRD v1.5](docs/overview/002-prd.md)** — F-001–F-016 functional requirements, NFRs, technical constraints
+- **[SRS v1.0](docs/overview/003-srs.md)** — technical specs with 100% PRD traceability
+- **[Implementation plan](docs/overview/005-plan.md)** — global roadmap; module checklists in [apps/frontend/docs/plan.md](apps/frontend/docs/plan.md) and [apps/backend/docs/plan.md](apps/backend/docs/plan.md)
+- **[UI requirements v1.0](docs/overview/004-ui-requirements.md)** — screens, components, and mockups ([UX guide](docs/references/000-UX-guide.md))
 - **BDD features** — Gherkin scenarios under `apps/frontend/tests/features/` (UI/auth/gallery) and `apps/backend/tests/features/` (C2PA, lexicon, spaces, performance)
 - **Architecture** — [ADRs 001–011](docs/architecture/) including OAuth ([006](docs/architecture/006-oauth-dpop-authentication.md)), HappyView integration ([007](docs/architecture/007-happyview-app-view-integration.md)), C2PA ([008](docs/architecture/008-c2pa-sdk-and-signing.md)), lexicon authority ([009](docs/architecture/009-lexicon-namespace-authority.md)), permissioned spaces ([010](docs/architecture/010-permissioned-spaces-storage.md)), SQLite index ([011](docs/architecture/011-sqlite-index-database.md))
 
@@ -126,7 +126,7 @@ Open [http://127.0.0.1:5173](http://127.0.0.1:5173). API health: [http://127.0.0
 
 ### Test current functionality (Tasks 1.2 + 1.3 + 2.1 + 3.1)
 
-**What works today:** HappyView provisioning (lexicons + spaces flag), OAuth client metadata at `/oauth-client-metadata.json`, **atproto OAuth sign-in** with application shell (header, sidebar, theme toggle), **C2PA manifest embedding before upload** (backend `POST /c2pa/manifest/embed` + upload workspace UI), and backend health. **Not yet:** `uploadBlob` / personal gallery / albums (Task 3.2+).
+**What works today:** HappyView provisioning (lexicons + spaces flag), OAuth client metadata at `/oauth-client-metadata.json`, **atproto OAuth sign-in** with application shell (header, sidebar, theme toggle), **C2PA manifest embedding before upload** (backend `POST /c2pa/manifest/embed` + upload workspace UI), **public-path photo upload** (`uploadBlob` → `createPhoto` via HappyView OAuth proxy), **My Gallery grid** with cursor pagination and empty state (UI-SCR-001), and backend health. **Not yet:** albums and permissioned uploads (Task 3.3+).
 
 **Prerequisites:** Docker running, Python 3.11+, Node.js 22+, an atproto account (Bluesky handle works for HappyView admin login).
 
@@ -250,7 +250,7 @@ Vite is configured with `envDir` pointing at the repo root, so `npm run dev` fro
 
 7. **Restart** `npm run dev` (Vite reads `.env` at startup).
 
-**Important:** `hv_*` = admin automation (provisioning). `hvc_*` = browser app identity on every XRPC call. Never put `hv_*` on XRPC routes ([TC-006](docs/prd.md#tc-006-api-client-identification)).
+**Important:** `hv_*` = admin automation (provisioning). `hvc_*` = browser app identity on every XRPC call. Never put `hv_*` on XRPC routes ([TC-006](docs/overview/002-prd.md#tc-006-api-client-identification)).
 
 #### Step 7 — Sign in and verify application shell (Task 2.1)
 
@@ -312,7 +312,7 @@ Behave writes Allure results to `apps/backend/tests/allure-results/` via `apps/b
 
 #### What you cannot test yet
 
-- **`uploadBlob`, personal gallery grid, and albums** — Task 3.2+.
+- **Albums and permissioned uploads** — Task 3.3+ (public-path `uploadBlob` → `createPhoto` and My Gallery grid ship in Task 3.2).
 - **Permissioned spaces UI** — Task 5.1.
 
 #### Permissioned albums and `appAccess` (preview for Task 5.1)
@@ -397,7 +397,7 @@ The PDS hostname, user handles, marketing site, and lexicon authority are **sepa
 |---------------|------|-----------|
 | `atpix.net` | Project homepage (marketing) | [atpix-homepage repo](#step-1--github-pages-atpixnet-homepage) |
 | `docs.atpix.net` | Project documentation | [ATPix `docs/`](#step-1b--github-pages-docsatpixnet) |
-| `pds.atpix.net` | Self-hosted PDS (one instance, many accounts) | [DigitalOcean VPS](#step-2--digitalocean-vps--pdsatpixnet) |
+| `pds.atpix.net` | Self-hosted PDS (one instance, many accounts) | [OVHcloud VPS (EU)](#step-2--ovhcloud-vps-eu--pdsatpixnet) |
 | `alice.atpix.net`, `bob.atpix.net` | Test handles → DIDs on your PDS | [Handle DNS](#step-3--handle-dns-aliceatpixnet--bobatpixnet) |
 | `_lexicon.gallery.atpix.net` | Lexicon authority for `net.atpix.gallery.*` | [Lexicon authority](#step-4--lexicon-authority-_lexicongalleryatpixnet) |
 
@@ -411,8 +411,8 @@ At your domain registrar, create these records. Registrar UIs usually show only 
 | `@` | `A` | `185.199.111.153` | Step 1 |
 | `www` | `CNAME` | `peterVG.github.io` | Step 1 (optional; GitHub redirects `www` ↔ apex) |
 | `docs` | `CNAME` | `peterVG.github.io` | Step 1b (`docs.atpix.net` documentation) |
-| `pds` | `A` | `<droplet-public-ipv4>` | Step 2 (before PDS install) |
-| `*.pds` | `A` | `<droplet-public-ipv4>` | Step 2 (wildcard for `*.pds.atpix.net` handles) |
+| `pds` | `A` | `<vps-public-ipv4>` | Step 2 (before PDS install) |
+| `*.pds` | `A` | `<vps-public-ipv4>` | Step 2 (wildcard for `*.pds.atpix.net` handles) |
 | `_atproto.alice` | `TXT` | `did=<alice-did>` | Step 3 (after account creation) |
 | `_atproto.bob` | `TXT` | `did=<bob-did>` | Step 3 |
 | `_lexicon.gallery` | `TXT` | `did=<authority-did>` | Step 4 (after authority account exists) |
@@ -459,31 +459,32 @@ dig docs.atpix.net +short -t CNAME
 
 References: [Managing a custom domain for GitHub Pages](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site), [About custom domains and GitHub Pages](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/about-custom-domains-and-github-pages).
 
-### Step 2 — DigitalOcean VPS + `pds.atpix.net`
+### Step 2 — OVHcloud VPS (EU) + `pds.atpix.net`
 
-Run one [reference PDS](https://github.com/bluesky-social/pds) on a VPS. Use hostname **`pds.atpix.net`** (not the apex `atpix.net`).
+Run one [reference PDS](https://github.com/bluesky-social/pds) on an **EU-region** [OVHcloud VPS](https://www.ovhcloud.com/en-ie/vps/). Use hostname **`pds.atpix.net`** (not the apex `atpix.net`).
 
-#### 2a. Create the Droplet
+#### 2a. Order the VPS (EU datacenter)
 
-1. In [DigitalOcean](https://cloud.digitalocean.com/): **Create → Droplets**.
-2. **Image:** Ubuntu 24.04 LTS. **Size:** at least 1 GB RAM / 1 vCPU / 20 GB SSD ([PDS recommendations](https://github.com/bluesky-social/pds#deploying-a-pds-onto-a-vps)).
-3. **Authentication:** SSH key (recommended) or password. Note the **public IPv4** address after creation.
-4. **Firewall:** create or attach a cloud firewall allowing **inbound TCP 80 and 443** from anywhere. Restrict **SSH (22)** to your IP if possible ([DO firewall docs](https://docs.digitalocean.com/products/networking/firewalls/)).
-5. SSH in: `ssh root@<droplet-public-ipv4>`.
+1. Sign in to the [OVHcloud Control Panel](https://www.ovh.com/manager/) and order a **VPS** ([getting started guide](https://help.ovhcloud.com/csm/en-ie-vps-getting-started?id=kb_article_view&sysparm_article=KB0047625)).
+2. **Location:** choose an **EU datacenter** (for example Gravelines, Roubaix, Frankfurt, or Warsaw) so PDS data stays in the EU.
+3. **Image:** Ubuntu 24.04 LTS. **Size:** at least 1 GB RAM / 1 vCPU / 20 GB SSD ([PDS recommendations](https://github.com/bluesky-social/pds#deploying-a-pds-onto-a-vps)).
+4. **Authentication:** SSH key (recommended). Note the **public IPv4** address after provisioning ([find your VPS IP](https://help.ovhcloud.com/csm/en-ie-vps-getting-started?id=kb_article_view&sysparm_article=KB0047625)).
+5. **Firewall:** enable the [OVH Network Firewall](https://help.ovhcloud.com/csm/en-ie-vps-network-firewall?id=kb_article_view&sysparm_article=KB0047548) (or equivalent host rules) allowing **inbound TCP 80 and 443** from anywhere. Restrict **SSH (22)** to your IP where possible.
+6. SSH in: `ssh ubuntu@<vps-public-ipv4>` (or `root@…` if your image uses root).
 
 #### 2b. DNS before install
 
-Add the Step 0 records `pds` and `*.pds` → `<droplet-public-ipv4>`. Confirm:
+Add the Step 0 records `pds` and `*.pds` → `<vps-public-ipv4>`. Confirm:
 
 ```bash
 dig pds.atpix.net +short -t A
 dig test123.pds.atpix.net +short -t A
-# Both should return the Droplet IP
+# Both should return the VPS public IPv4
 ```
 
 #### 2c. Run the PDS installer
 
-On the Droplet ([PDS install guide](https://github.com/bluesky-social/pds#installing-on-ubuntu-200422042404-and-debian-111213)):
+On the VPS ([PDS install guide](https://github.com/bluesky-social/pds#installing-on-ubuntu-200422042404-and-debian-111213)):
 
 ```bash
 curl -O https://raw.githubusercontent.com/bluesky-social/pds/main/installer.sh
@@ -640,7 +641,7 @@ python3 scripts/provision_happyview.py
 python3 scripts/provision_happyview.py --verify-only
 ```
 
-See [docs/lexicon/net.atpix.gallery.md](docs/lexicon/net.atpix.gallery.md) for upload order and [system architecture](docs/architecture.md) for how PDS, HappyView, and DNS roles fit together.
+See [docs/lexicon/net.atpix.gallery.md](docs/lexicon/net.atpix.gallery.md) for upload order and [system architecture](docs/overview/000-architecture.md) for how PDS, HappyView, and DNS roles fit together.
 
 ## Deploy to Production
 
@@ -648,4 +649,4 @@ Deploy ATPix apps per [Run the application](#run-the-application): HappyView (`d
 
 ## Monitor and Update
 
-Use the observability stack in [View logs](#view-logs) for ATPix containers. Monitor the DigitalOcean PDS VPS separately (disk, TLS expiry, PDS logs). Re-run provisioning after lexicon changes and document HappyView `feature.spaces_enabled` status in test reports per [SRS NFR-013](docs/srs.md).
+Use the observability stack in [View logs](#view-logs) for ATPix containers. Monitor the OVHcloud PDS VPS separately (disk, TLS expiry, PDS logs; [OVH monitoring and alerts](https://help.ovhcloud.com/csm/en-ie-vps-monitoring?id=kb_article_view&sysparm_article=KB0047626)). Re-run provisioning after lexicon changes and document HappyView `feature.spaces_enabled` status in test reports per [SRS NFR-013](docs/overview/003-srs.md).

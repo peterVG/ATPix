@@ -13,7 +13,7 @@ This skill enables the agent to translate Product Requirement Document (PRD) spe
 
 ## When to Use This Skill
 
-- When asked to "Draft Gherkin scenarios" using @docs/srs.md and @docs/prd.md
+- When asked to "Draft Gherkin scenarios" using @docs/overview/003-srs.md and @docs/overview/002-prd.md
 - When translating SRS requirements into behavioral specifications
 - When creating `.feature` files for BDD testing
 - When the user references this skill explicitly
@@ -312,7 +312,7 @@ When asked to draft feature scenarios, the agent MUST adjust its output format a
 USER: Using the SRS, write 5 scenarios for file upload.
 
 AGENT: [Activates Feature Writer skill]
-AGENT: [Reads @docs/srs.md]
+AGENT: [Reads @docs/overview/003-srs.md]
 AGENT: [Identifies relevant requirements: SRS-UPLOAD-001, SRS-SEC-002, SRS-PERF-001]
 AGENT: [Checks repository for mix.exs] -> (Detects Python/JS Stack)
 AGENT: [Creates tests/features/file_upload.feature]

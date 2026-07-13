@@ -41,6 +41,16 @@ body {
   color: #0d1117;
 }
 
+.docs-toc-header a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.docs-toc-header a:hover,
+.docs-toc-header a:focus-visible {
+  text-decoration: underline;
+}
+
 .docs-toc nav {
   font-size: 0.9rem;
 }

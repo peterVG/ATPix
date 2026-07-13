@@ -12,12 +12,12 @@ Accepted
 
 ## Context / Requirement Reference
 
-[docs/srs.md](../srs.md) defines technical behavior for F-001–F-016 and NFRs. [docs/references/000-UX-guide.md](../references/000-UX-guide.md) defines design tokens and component styling. Six v1 screen mockups ([docs/references/mockups/](../references/mockups/)) specify layouts for Gallery, Discovery, Photo Detail, Album, Upload, and Permissioned Space admin. [holistic-ui.md](../../.agents/rules/holistic-ui.md) requires holistic UI planning across tasks.
+[docs/overview/003-srs.md](../overview/003-srs.md) defines technical behavior for F-001–F-016 and NFRs. [docs/references/000-UX-guide.md](../references/000-UX-guide.md) defines design tokens and component styling. Six v1 screen mockups ([docs/references/mockups/](../references/mockups/)) specify layouts for Gallery, Discovery, Photo Detail, Album, Upload, and Permissioned Space admin. [holistic-ui.md](../../.agents/rules/holistic-ui.md) requires holistic UI planning across tasks.
 
 ## Decision
 
-- **`docs/ui-requirements.md`** is the canonical UI/UX requirements artifact (UI-SHELL-*, UI-SCR-*, UI-CMP-* IDs).
-- **`docs/srs.md`** retains protocol, API, and behavioral MUSTs; links to UI spec for presentation-layer detail.
+- **`docs/overview/004-ui-requirements.md`** is the canonical UI/UX requirements artifact (UI-SHELL-*, UI-SCR-*, UI-CMP-* IDs).
+- **`docs/overview/003-srs.md`** retains protocol, API, and behavioral MUSTs; links to UI spec for presentation-layer detail.
 - **`docs/references/000-UX-guide.md`** remains the design-system token source (colors, typography, spacing)—not duplicated in SRS.
 - **Mockups** live under `docs/references/mockups/` with descriptive filenames for portable relative linking.
 
@@ -36,8 +36,8 @@ Mockups are directional; implementation MUST correct PRD conflicts (e.g., no "en
 
 ## Consequences / Implications
 
-Frontend tasks MUST read `docs/ui-requirements.md` and `docs/srs.md` together per holistic-ui rule. New screens require UI-SCR entries and SRS cross-links before implementation.
+Frontend tasks MUST read `docs/overview/004-ui-requirements.md` and `docs/overview/003-srs.md` together per holistic-ui rule. New screens require UI-SCR entries and SRS cross-links before implementation.
 
 ## Related Decisions / Notes
 
-[008-c2pa-sdk-and-signing.md](./008-c2pa-sdk-and-signing.md), [010-permissioned-spaces-storage.md](./010-permissioned-spaces-storage.md), [ui-requirements.md](../ui-requirements.md)
+[008-c2pa-sdk-and-signing.md](./008-c2pa-sdk-and-signing.md), [010-permissioned-spaces-storage.md](./010-permissioned-spaces-storage.md), [004-ui-requirements.md](../overview/004-ui-requirements.md)

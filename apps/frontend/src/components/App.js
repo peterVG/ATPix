@@ -51,6 +51,8 @@ export async function bootstrapApp({ mount, happyviewUrl, oauthClient }) {
   let identity = null;
   let route = parseRouteFromHash();
   let colorPreference = getStoredColorScheme();
+  /** @type {(() => void) | null} */
+  let destroyActivePanel = null;
   /** @type {() => void} */
   let render = () => {};
 
@@ -68,6 +70,8 @@ export async function bootstrapApp({ mount, happyviewUrl, oauthClient }) {
   });
 
   const teardown = () => {
+    destroyActivePanel?.();
+    destroyActivePanel = null;
     stopSystemWatch();
     stopBreakpointWatch();
     stopRouteWatch();
@@ -86,6 +90,8 @@ export async function bootstrapApp({ mount, happyviewUrl, oauthClient }) {
   }
 
   render = () => {
+    destroyActivePanel?.();
+    destroyActivePanel = null;
     mount.innerHTML = "";
 
     if (!identity) {
@@ -104,6 +110,9 @@ export async function bootstrapApp({ mount, happyviewUrl, oauthClient }) {
       identity,
       route,
       colorPreference,
+      registerPanelDestroy: (destroy) => {
+        destroyActivePanel = destroy;
+      },
       onNavigate: (nextRoute) => {
         navigateToRoute(nextRoute);
       },

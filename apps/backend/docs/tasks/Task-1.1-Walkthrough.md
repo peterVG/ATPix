@@ -2,7 +2,7 @@
 
 **Branch:** `task/1.1-verify-scaffold`
 **Date:** 2026-07-12
-**Related requirements:** [NFR-006](../../../../docs/prd.md#nfr-006-testability-and-quality-gates), [NFR-007](../../../../docs/prd.md#nfr-007-zero-friction-local-setup), [TC-007](../../../../docs/prd.md#tc-007-standalone-production-code)
+**Related requirements:** [NFR-006](../../../../docs/overview/002-prd.md#nfr-006-testability-and-quality-gates), [NFR-007](../../../../docs/overview/002-prd.md#nfr-007-zero-friction-local-setup), [TC-007](../../../../docs/overview/002-prd.md#tc-007-standalone-production-code)
 **ADRs:** [001](../../../../docs/architecture/001-test-runners-and-reporting.md), [004](../../../../docs/architecture/004-coding-style-and-linting.md), [005](../../../../docs/architecture/005-application-architecture.md)
 
 ## Summary

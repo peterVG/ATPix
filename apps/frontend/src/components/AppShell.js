@@ -1,6 +1,7 @@
 import { routeHref } from "../router/router.js";
 import { escapeHtml } from "../utils/html.js";
 
+import { renderGalleryPanel } from "./GalleryPanel.js";
 import { bindAppearanceControls, renderRouteContent } from "./GalleryPlaceholder.js";
 import { renderUploadPanel } from "./UploadPanel.js";
 
@@ -16,6 +17,7 @@ import { renderUploadPanel } from "./UploadPanel.js";
  * @param {() => void} options.onSignOut - Sign-out handler.
  * @param {() => void} options.onThemeToggle - Header theme toggle handler.
  * @param {(scheme: "dark" | "light" | "system") => void} options.onSchemeSelect - Settings appearance handler.
+ * @param {(destroy: () => void) => void} [options.registerPanelDestroy] - Panel teardown registrar.
  * @returns {HTMLElement} Shell root element.
  */
 export function renderAppShell({
@@ -27,6 +29,7 @@ export function renderAppShell({
   onSignOut,
   onThemeToggle,
   onSchemeSelect,
+  registerPanelDestroy,
 }) {
   const displayHandle = identity.handle ? `@${identity.handle}` : identity.did;
   const safeHandle = escapeHtml(displayHandle);
@@ -175,11 +178,18 @@ export function renderAppShell({
   if (main instanceof HTMLElement) {
     if (route === "upload") {
       renderUploadPanel({ mount: main, identity });
+    } else if (route === "gallery") {
+      const panel = renderGalleryPanel({
+        mount: main,
+        identity,
+        onUpload: openUpload,
+      });
+      registerPanelDestroy?.(panel.destroy);
     } else {
       renderRouteContent({
         mount: main,
         route,
-        showBadges: route === "gallery",
+        showBadges: false,
       });
     }
 

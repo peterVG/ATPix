@@ -97,7 +97,7 @@ export function createOAuthClient() {
 
   return {
     async restoreSession() {
-      const restored = await browserClient.initRestore();
+      const restored = await browserClient.init();
       return sessionIdentity(restored?.session);
     },
     async signIn(handle) {

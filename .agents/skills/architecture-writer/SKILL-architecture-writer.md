@@ -10,7 +10,7 @@ allowed-tools:
 
 ## Purpose
 
-This skill enables the agent to synthesize the project's requirements (PRD/SRS), codebase structure, and Architecture Decision Records (ADRs) into a single, cohesive `docs/architecture.md` file (based on `docs/templates/architecture-template.md`). It provides developers and stakeholders with a high-level "map of the territory," ensuring documentation always reflects reality.
+This skill enables the agent to synthesize the project's requirements (PRD/SRS), codebase structure, and Architecture Decision Records (ADRs) into a single, cohesive `docs/overview/000-architecture.md` file (based on `docs/templates/architecture-template.md`). It provides developers and stakeholders with a high-level "map of the territory," ensuring documentation always reflects reality.
 
 ## When to Use This Skill
 
@@ -53,7 +53,7 @@ Read the structure provided in `@docs/templates/architecture-template.md`. The o
 
 ### Step 2: Read Core Context
 
-Review the latest `@docs/prd.md` and `@docs/srs.md` to understand the stakeholder concerns and system boundaries.
+Review the latest `@docs/overview/002-prd.md` and `@docs/overview/003-srs.md` to understand the stakeholder concerns and system boundaries.
 
 ### Step 3: Analyze Codebase Reality
 
@@ -65,15 +65,15 @@ Read all files matching `docs/architecture/*.md` (excluding templates/directorie
 
 ### Step 5: Draft the Document & Diagrams
 
-Write the new `docs/architecture.md`. For each ISO 42010 Viewpoint section, meticulously construct the required Mermaid diagram representing the current state of the system based on Steps 2-4. Populate all tables and tech stack summaries.
+Write the new `docs/overview/000-architecture.md`. For each ISO 42010 Viewpoint section, meticulously construct the required Mermaid diagram representing the current state of the system based on Steps 2-4. Populate all tables and tech stack summaries.
 
 ### Step 6: Verify and Save
 
-Save the output to `docs/architecture.md`. Ensure all links to PRD/SRS/ADRs use correct relative formatting (e.g. `[PRD](./prd.md)` format). DO NOT use absolute paths.
+Save the output to `docs/overview/000-architecture.md`. Ensure links use the actual relative filenames, e.g. `[PRD](./002-prd.md)`, `[SRS](./003-srs.md)`, and `[ADR](../architecture/[ADR].md)`. DO NOT use absolute paths.
 
 ## Success Criteria
 
-- ✅ File successfully created/updated at `docs/architecture.md`.
+- ✅ File successfully created/updated at `docs/overview/000-architecture.md`.
 - ✅ File perfectly follows the ISO 42010 header structure from the template.
 - ✅ Contains at least 4 distinct, valid Mermaid diagrams (Context, Logical, Data, Deployment).
 - ✅ Explicitly cites the project ADRs in the Technology Decisions Summary table.

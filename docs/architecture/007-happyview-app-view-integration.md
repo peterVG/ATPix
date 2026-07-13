@@ -12,7 +12,7 @@ Accepted
 
 ## Context / Requirement Reference
 
-[docs/prd.md](../prd.md) TC-001 and TC-012 prohibit custom App View servers and standalone firehose consumers. F-010, F-011, and the Gallery Population Model require Jetstream + backfill via HappyView. [docs/srs.md](../srs.md) SRS-TC-001 and SRS-TC-012.
+[docs/overview/002-prd.md](../overview/002-prd.md) TC-001 and TC-012 prohibit custom App View servers and standalone firehose consumers. F-010, F-011, and the Gallery Population Model require Jetstream + backfill via HappyView. [docs/overview/003-srs.md](../overview/003-srs.md) SRS-TC-001 and SRS-TC-012.
 
 ## Decision
 

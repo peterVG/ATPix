@@ -30,7 +30,7 @@ This skill demonstrates **progressive disclosure** by:
 
 ### Step 1: Read the PRD
 ```
-AGENT: [Reads @docs/prd.md]
+AGENT: [Reads @docs/overview/002-prd.md]
 AGENT: [Identifies core features and business requirements]
 ```
 
@@ -48,14 +48,14 @@ AGENT: [Uses google_search to ensure SRS uses the most current versions of softw
 
 ### Step 4: Validate Constraints
 ```
-AGENT: [Checks @docs/prd.md for budget, technical and other constraints]
+AGENT: [Checks @docs/overview/002-prd.md for budget, technical and other constraints]
 AGENT: [Verifies that technical approach meets all constraints from PRD]
 ```
 
 ### Step 5: Generate SRS
 ```
-AGENT: [Creates docs/srs.md]
-AGENT: [Maps all PRD requirements to the SRS using a dedicated **Source** section at the end of each requirement block. Format: `- [[source ID]](../prd.md) [source name]`]
+AGENT: [Creates docs/overview/003-srs.md]
+AGENT: [Maps all PRD requirements to the SRS using a dedicated **Source** section at the end of each requirement block. Format: `- [[source ID]](../002-prd.md) [source name]`]
 AGENT: [**CRITICAL**: Do not omit Non-Functional Requirements (NFRs) or Technical Constraints (TCs). Every single item in the PRD—including architecture rules, performance limits, and framework restrictions—MUST be mapped 1:1 to an explicit SRS requirement block to guarantee 100% forward traceability.]
 AGENT: [Ensures forward-traceability by defining an expected **Tests** section mapping to all target Gherkin, integration, performance, ui, and unit test files. Format MUST respect the monorepo bounds defined in `.agents/rules/workspace-boundaries.md` by dynamically mapping to the active technology stack's idiomatic isolated testing vocabulary (e.g. `- [[filename]](../apps/backend/tests/features/[filename])` for Python/JS tracking, or `- [[filename]](../apps/my_app_web/test/features/[filename])` for BEAM/Elixir tracking)]
 AGENT: [If an SRS requirement cannot be validated via a standard BDD feature file (e.g., overarching NFRs or Technical Constraints), the **Tests** block MUST define alternative automated verification strategies locally. Examples include: CI/CD configuration files, static code analysis tools, locus testing bounds, or explicit UI assertions.]
@@ -95,7 +95,7 @@ The system MUST support file uploads up to 500MB.
 - Transaction format per references/arweave/transaction-format.md
 
 **Source**
-- `[prd.md](../prd.md)` F-001 File Upload
+- `[prd.md](./002-prd.md)` F-001 File Upload
 
 **Tests**
 - [`large_file_upload_SRS-UPLOAD-001.feature`](../tests/features/large_file_upload_SRS-UPLOAD-001.feature)
@@ -109,7 +109,7 @@ Files MUST be stored permanently on Arweave.
 - 40 files/month = $100/month ✅ Within budget
 
 **Source**
-- `[prd.md](../prd.md)` F-001 File Upload
+- `[prd.md](./002-prd.md)` F-001 File Upload
 
 **Tests**
 - [`large_file_upload_SRS-UPLOAD-001.feature`](../tests/features/large_file_upload_SRS-UPLOAD-001.feature)
@@ -123,7 +123,7 @@ Files larger than 100MB MUST be chunked.
 - Implement resumable uploads per SRS-PERF-003
 
 **Source**
-- `[prd.md](../prd.md)` F-001 File Upload
+- `[prd.md](./002-prd.md)` F-001 File Upload
 
 **Tests**
 - [`large_file_upload_SRS-UPLOAD-001.feature`](../tests/features/large_file_upload_SRS-UPLOAD-001.feature)
@@ -151,15 +151,15 @@ AGENT: [Accurate SRS with verified technical specs]
 ## Integration with AI Agent Workflow
 
 ```
-USER: @AGENTS.md Generate a baseline SRS in /docs based on @docs/prd.md and the manifesto principles in the AGENTS.md file. Use the "Gherkin Writer" skill to generate Gherkin scenarios for each unique requirement in @docs/srs.md and @docs/prd.md
+USER: @AGENTS.md Generate a baseline SRS in /docs based on @docs/overview/002-prd.md and the manifesto principles in the AGENTS.md file. Use the "Gherkin Writer" skill to generate Gherkin scenarios for each unique requirement in @docs/overview/003-srs.md and @docs/overview/002-prd.md
 AGENT: [Activates SRS Generator skill]
 AGENT: [Reads AGENTS.md for AI Agent principles]
-AGENT: [Reads docs/prd.md for business, functional and non-functional requirements and constraints]
+AGENT: [Reads docs/overview/002-prd.md for business, functional and non-functional requirements and constraints]
 AGENT: [Loads @docs/references for technical specifications and context]
 AGENT: [Uses google_search to verify current library versions]
-AGENT: [Creates docs/srs.md with accurate technical specifications]
+AGENT: [Creates docs/overview/003-srs.md with accurate technical specifications]
 AGENT: [Activates Gherkin Writer skill]
-AGENT: [Creates Gherkin .feature files in the tests/features folder for each unique requirement in docs/srs.md and docs/prd.md]
+AGENT: [Creates Gherkin .feature files under the active stack's app-specific feature directories (for this monorepo, apps/frontend/tests/features/ and apps/backend/tests/features/) for each unique requirement in docs/overview/003-srs.md and docs/overview/002-prd.md]
 ```
 
 ## Success Criteria

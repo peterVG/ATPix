@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { COLOR_SCHEME_STORAGE_KEY } from "../../src/theme/colorScheme.js";
+import { TEST_GALLERY_MANY_KEY } from "../../src/gallery/testGalleryStub.js";
 
 import { loadProductionBuild } from "./helpers/loadProductionBuild.js";
 
@@ -25,23 +26,28 @@ describe("UI-SHELL-003 color scheme toggle (production build)", () => {
   });
 
   it("preserves semantic badge colors in light mode", async () => {
+    localStorage.setItem(TEST_GALLERY_MANY_KEY, "true");
     await loadProductionBuild({ url: "http://127.0.0.1:5173/#/gallery" });
+
+    const deadline = Date.now() + 3000;
+    while (Date.now() < deadline) {
+      if (document.querySelector('[data-testid="gallery-card"]')) {
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
 
     document
       .querySelector('[data-testid="theme-toggle"]')
       ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
-    const publicBadge = document.querySelector('[data-testid="badge-public"]');
     const trustedBadge = document.querySelector('[data-testid="badge-trusted"]');
-    const invalidBadge = document.querySelector('[data-testid="badge-invalid"]');
+    const validBadge = document.querySelector('[data-testid="badge-valid"]');
 
-    expect(publicBadge).not.toBeNull();
     expect(trustedBadge).not.toBeNull();
-    expect(invalidBadge).not.toBeNull();
-
-    expect(publicBadge?.classList.contains("status-chip--public")).toBe(true);
+    expect(validBadge).not.toBeNull();
     expect(trustedBadge?.classList.contains("status-chip--trusted")).toBe(true);
-    expect(invalidBadge?.classList.contains("status-chip--invalid")).toBe(true);
+    expect(validBadge?.classList.contains("status-chip--wellformed")).toBe(true);
     expect(
       getComputedStyle(document.documentElement).getPropertyValue("--status-public").trim(),
     ).toBe("#10b981");

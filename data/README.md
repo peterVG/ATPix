@@ -12,4 +12,4 @@ This directory stores local Docker bind-mount data excluded from version control
 | `data/redpanda_data/` | Redpanda | Kafka-compatible log buffer |
 | `data/happyview_data/` | HappyView (`docker-compose.happyview.yml`) | SQLite index, OAuth sessions, lexicon registry |
 
-User photo libraries are **not** stored here — canonical records and blobs live on each user's remote PDS (and permissioned space repos). See [docs/architecture.md](../docs/architecture.md#54-local-storage-bind-mounts).
+User photo libraries are **not** stored here — canonical records and blobs live on each user's remote PDS (and permissioned space repos). See [docs/overview/000-architecture.md](../docs/overview/000-architecture.md#54-local-storage-bind-mounts).
