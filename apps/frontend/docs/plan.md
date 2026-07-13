@@ -28,7 +28,7 @@ Granular checklist for the Vite vanilla JS client. Global sequencing: [docs/plan
   - **Related Tests:** [`happyview.test.js`](../tests/unit/happyview.test.js)
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task FE-1.2. Work in apps/frontend/. Invoke @feature-writer if extending BDD. Walkthrough, check off, commit, push.`
 
-- [ ] **Task FE-1.3: OAuth client metadata endpoint**
+- [x] **Task FE-1.3: OAuth client metadata endpoint**
   - **Description:** Serve `oauth-client-metadata.json` at deployment origin for HappyView OAuth `clientId` and space `appAccess` allowList per [ADR-010](../../../docs/architecture/010-permissioned-spaces-storage.md).
   - **Estimated Time:** 2 hours
   - **Dependencies:** Task FE-1.2

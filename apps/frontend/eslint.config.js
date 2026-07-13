@@ -16,6 +16,14 @@ export default [
     },
   },
   {
+    files: ["plugins/**/*.js", "vite.config.js", "vitest.config.js"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
+  {
     ignores: ["dist/**", "node_modules/**", "tests/allure-results/**"],
   },
 ];

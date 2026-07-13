@@ -1,8 +1,11 @@
 import { defineConfig } from "vite";
 
+import { oauthClientMetadataPlugin } from "./plugins/oauthClientMetadataPlugin.js";
+
 export default defineConfig({
   root: ".",
   publicDir: "public",
+  plugins: [oauthClientMetadataPlugin()],
   server: {
     port: 5173,
     strictPort: true,
