@@ -29,6 +29,8 @@
     "srs.md": "overview/003-srs.md",
     "ui-requirements.md": "overview/004-ui-requirements.md",
     "plan.md": "overview/005-plan.md",
+    "references/README.md": "references/000-README.md",
+    "lexicon/README.md": "lexicon/net.atpix.gallery.md",
   };
 
   /**

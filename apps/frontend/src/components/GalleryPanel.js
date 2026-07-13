@@ -347,6 +347,8 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
         pendingCursor = page.cursor;
       }
       nextCursor = undefined;
+      cursorHistory = [];
+      pageNumber = 1;
     } catch (error) {
       errorMessage = error instanceof Error ? error.message : "Unable to search gallery";
     } finally {

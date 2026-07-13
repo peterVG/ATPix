@@ -38,6 +38,15 @@ describe("selectPhotoBadges", () => {
       }),
     ).toEqual(["Valid"]);
   });
+
+  it("omits C2PA badges when validation state is none", () => {
+    expect(
+      selectPhotoBadges({
+        visibility: "public",
+        c2paState: "none",
+      }),
+    ).toEqual([]);
+  });
 });
 
 describe("mapC2paValidationState", () => {
@@ -45,6 +54,8 @@ describe("mapC2paValidationState", () => {
     expect(mapC2paValidationState("trusted")).toBe("trusted");
     expect(mapC2paValidationState("invalid")).toBe("invalid");
     expect(mapC2paValidationState("wellFormed")).toBe("valid");
-    expect(mapC2paValidationState(undefined)).toBe("valid");
+    expect(mapC2paValidationState("valid")).toBe("valid");
+    expect(mapC2paValidationState("none")).toBe("none");
+    expect(mapC2paValidationState(undefined)).toBe("none");
   });
 });

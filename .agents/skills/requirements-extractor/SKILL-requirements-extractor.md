@@ -24,7 +24,7 @@ When listing an extracted requirement, you must append an exact citation includi
 2. The specific page number, section number, or heading where the requirement was found.
 
 **Format:**
-`[Requirement Description] (Source: [[filename]](../references/[filename]), Section/Page: [X])`
+`[Requirement Description] (Source: [[filename]](../../../docs/references/[filename]), Section/Page: [X])`
 
 ## Workflow
 

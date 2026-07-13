@@ -70,6 +70,8 @@ export async function bootstrapApp({ mount, happyviewUrl, oauthClient }) {
   });
 
   const teardown = () => {
+    destroyActivePanel?.();
+    destroyActivePanel = null;
     stopSystemWatch();
     stopBreakpointWatch();
     stopRouteWatch();

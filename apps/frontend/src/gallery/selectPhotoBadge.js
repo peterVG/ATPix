@@ -3,7 +3,7 @@
  */
 
 /**
- * @typedef {"trusted" | "valid" | "invalid"} C2paBadgeState
+ * @typedef {"trusted" | "valid" | "invalid" | "none"} C2paBadgeState
  */
 
 /**
@@ -21,7 +21,11 @@ export function mapC2paValidationState(state) {
     return "invalid";
   }
 
-  return "valid";
+  if (state === "wellFormed" || state === "valid") {
+    return "valid";
+  }
+
+  return "none";
 }
 
 /**
@@ -45,7 +49,11 @@ export function selectPhotoBadges({ visibility, c2paState }) {
     return ["Trusted", "Valid"];
   }
 
-  return ["Valid"];
+  if (c2paState === "valid") {
+    return ["Valid"];
+  }
+
+  return [];
 }
 
 /**

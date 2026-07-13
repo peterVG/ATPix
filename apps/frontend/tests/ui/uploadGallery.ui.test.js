@@ -18,8 +18,12 @@ describe("upload to gallery flow (SRS-F-002)", () => {
     Object.defineProperty(input, "files", { configurable: true, value: [file] });
     input.dispatchEvent(new Event("change", { bubbles: true }));
 
+    let sawUploadProgress = false;
     const deadline = Date.now() + 5000;
     while (Date.now() < deadline) {
+      if (document.querySelector('[data-testid="upload-progress"]')) {
+        sawUploadProgress = true;
+      }
       const complete = document.querySelector('[data-testid="upload-complete"]');
       if (complete) {
         break;
@@ -27,6 +31,7 @@ describe("upload to gallery flow (SRS-F-002)", () => {
       await new Promise((resolve) => setTimeout(resolve, 25));
     }
 
+    expect(sawUploadProgress).toBe(true);
     expect(document.querySelector('[data-testid="upload-complete"]')).not.toBeNull();
 
     window.location.hash = "/gallery";
