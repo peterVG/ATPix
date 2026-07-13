@@ -1,0 +1,10 @@
+# Jekyll configuration for GitHub Pages (docs.atpix.net).
+# Only index.md is processed as a Jekyll page; all other .md files are
+# served as static assets for client-side rendering in the docs portal.
+theme: null
+plugins: []
+markdown: kramdown
+kramdown:
+  input: GFM
+exclude:
+  - .DS_Store
