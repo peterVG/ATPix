@@ -16,7 +16,7 @@ Galleries populate two ways:
 
 Sharing supports **public**, **unlisted**, and **permissioned** albums; permissioned collections use [HappyView Permissioned Spaces](https://happyview.dev/experimental/spaces) (ATP-0016) so only invited members can view curated private albums.
 
-Product language (gallery, album) maps to atproto primitives (queries, `net.atpix.gallery.*` records, space repos) in the [PRD](docs/prd.md#product-terms--at-protocol-primitives) and [Lexicon README](docs/lexicon/README.md).
+Product language (gallery, album) maps to atproto primitives (queries, `net.atpix.gallery.*` records, space repos) in the [PRD](docs/prd.md#product-terms--at-protocol-primitives) and [Lexicon README](docs/lexicon/net.atpix.gallery.md).
 
 ## Metadata
  Photo metadata maps to [Dublin Core](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/) and [Schema.org](https://schema.org/docs/schemas.html) terms in `net.atpix.gallery.*` Lexicons; image files embed [C2PA 2.2](https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html) Content Credentials for tamper-evident provenance. 
@@ -105,7 +105,7 @@ python3 scripts/provision_happyview.py --verify-only   # confirm provisioning
 # Or export inline: HAPPYVIEW_ADMIN_KEY=hv_... python3 scripts/provision_happyview.py
 ```
 
-See [docs/lexicon/README.md](docs/lexicon/README.md) for lexicon upload order and [happyview.dev](https://happyview.dev) for full App View docs.
+See [docs/lexicon/net.atpix.gallery.md](docs/lexicon/net.atpix.gallery.md) for lexicon upload order and [happyview.dev](https://happyview.dev) for full App View docs.
 
 **Backend** (from `apps/backend/`):
 
@@ -640,7 +640,7 @@ python3 scripts/provision_happyview.py
 python3 scripts/provision_happyview.py --verify-only
 ```
 
-See [docs/lexicon/README.md](docs/lexicon/README.md) for upload order and [system architecture](docs/architecture.md) for how PDS, HappyView, and DNS roles fit together.
+See [docs/lexicon/net.atpix.gallery.md](docs/lexicon/net.atpix.gallery.md) for upload order and [system architecture](docs/architecture.md) for how PDS, HappyView, and DNS roles fit together.
 
 ## Deploy to Production
 

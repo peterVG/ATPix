@@ -43,4 +43,4 @@ Lexicon changes require coordinated HappyView re-upload and documentation update
 
 ## Related Decisions / Notes
 
-[007-happyview-app-view-integration.md](./007-happyview-app-view-integration.md), [lexicon README](../lexicon/README.md), [010-permissioned-spaces-storage.md](./010-permissioned-spaces-storage.md)
+[007-happyview-app-view-integration.md](./007-happyview-app-view-integration.md), [lexicon net.atpix.gallery](../lexicon/net.atpix.gallery.md), [010-permissioned-spaces-storage.md](./010-permissioned-spaces-storage.md)
