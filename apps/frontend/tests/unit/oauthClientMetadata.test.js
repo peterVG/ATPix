@@ -11,6 +11,7 @@ import {
   getOAuthClientId,
   getOAuthRedirectUri,
   isLoopbackOrigin,
+  loopbackHostForRedirectUri,
   normalizeOrigin,
 } from "../../src/config/oauthClientMetadata.js";
 
@@ -44,6 +45,17 @@ describe("oauthClientMetadata", () => {
 
   it("builds loopback redirect URI at 127.0.0.1", () => {
     expect(getOAuthRedirectUri(loopbackOrigin)).toBe(`http://127.0.0.1:5173${OAUTH_CALLBACK_PATH}`);
+  });
+
+  it("preserves IPv6 loopback host in client_id and redirect URI", () => {
+    const ipv6Origin = "http://[::1]:5173";
+
+    expect(isLoopbackOrigin(ipv6Origin)).toBe(true);
+    expect(loopbackHostForRedirectUri("::1")).toBe("[::1]");
+    expect(getOAuthRedirectUri(ipv6Origin)).toBe(`http://[::1]:5173${OAUTH_CALLBACK_PATH}`);
+
+    const clientId = getOAuthClientId(ipv6Origin);
+    expect(decodeURIComponent(clientId)).toContain(`http://[::1]:5173${OAUTH_CALLBACK_PATH}`);
   });
 
   it("returns metadata required by ADR-006 and HappyView OAuth docs", () => {

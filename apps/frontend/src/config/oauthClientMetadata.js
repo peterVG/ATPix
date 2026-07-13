@@ -81,6 +81,36 @@ export function loopbackLocationFromOrigin(origin) {
 }
 
 /**
+ * Format a loopback hostname for use in an HTTP redirect URI.
+ *
+ * IPv6 addresses are bracketed per RFC 3986 (`http://[::1]:port/...`).
+ *
+ * @param {string} hostname - Hostname from a parsed loopback origin.
+ * @returns {string} Host string suitable for `http://{host}:{port}{path}`.
+ */
+export function loopbackHostForRedirectUri(hostname) {
+  if (hostname === "::1" || hostname === "[::1]") {
+    return "[::1]";
+  }
+
+  return hostname;
+}
+
+/**
+ * Map a loopback hostname to the `localhost` argument for `buildLoopbackClientId`.
+ *
+ * @param {string} hostname - Hostname from a parsed loopback origin.
+ * @returns {string} Host passed as the second argument to `buildLoopbackClientId`.
+ */
+export function loopbackHostForClientId(hostname) {
+  if (hostname === "::1" || hostname === "[::1]") {
+    return "::1";
+  }
+
+  return hostname;
+}
+
+/**
  * Resolve the deployment origin for OAuth client metadata.
  *
  * Prefers the browser location in client code; falls back to
@@ -117,7 +147,9 @@ export function getOAuthClientId(origin) {
   const normalized = normalizeOrigin(origin);
 
   if (isLoopbackOrigin(normalized)) {
-    return buildLoopbackClientId(loopbackLocationFromOrigin(normalized));
+    const location = loopbackLocationFromOrigin(normalized);
+    const localhost = loopbackHostForClientId(location.hostname);
+    return buildLoopbackClientId(location, localhost);
   }
 
   return `${normalized}${OAUTH_CLIENT_METADATA_PATH}`;
@@ -133,9 +165,10 @@ export function getOAuthRedirectUri(origin) {
   const normalized = normalizeOrigin(origin);
 
   if (isLoopbackOrigin(normalized)) {
-    const { port } = loopbackLocationFromOrigin(normalized);
-    const portSuffix = port ? `:${port}` : "";
-    return `http://127.0.0.1${portSuffix}${OAUTH_CALLBACK_PATH}`;
+    const location = loopbackLocationFromOrigin(normalized);
+    const host = loopbackHostForRedirectUri(location.hostname);
+    const portSuffix = location.port ? `:${location.port}` : "";
+    return `http://${host}${portSuffix}${OAUTH_CALLBACK_PATH}`;
   }
 
   return `${normalized}${OAUTH_CALLBACK_PATH}`;
