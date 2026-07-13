@@ -34,6 +34,12 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=[
+        "X-C2PA-First-Action",
+        "X-C2PA-Creator-Did",
+        "X-C2PA-Embedded",
+        "X-C2PA-Byte-Size",
+    ],
 )
 
 app.include_router(health_router)

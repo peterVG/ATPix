@@ -52,7 +52,7 @@ Granular checklist for the Vite vanilla JS client. Global sequencing: [docs/plan
 
 ## Phase FE-3: Upload & Personal Gallery (Path A)
 
-- [ ] **Task FE-3.1: C2PA pre-upload client integration**
+- [x] **Task FE-3.1: C2PA pre-upload client integration**
   - **Description:** Call `apps/backend` C2PA API to embed manifest before `uploadBlob`. Wire upload UI step indicator (UI-SCR-005). Handle 50MB client-side rejection.
   - **Estimated Time:** 4 hours
   - **Dependencies:** Task FE-2.1; backend BE-3.1

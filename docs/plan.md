@@ -54,7 +54,7 @@ This document is the **global execution roadmap** for ATPix v1. It sequences wor
 
 ## Phase 3: Core Gallery — Path A (Own Uploads)
 
-- [ ] **Task 3.1: C2PA manifest generation pipeline (cross-module)**
+- [x] **Task 3.1: C2PA manifest generation pipeline (cross-module)**
   - **Description:** Implement F-012 backend C2PA SDK and frontend pre-upload integration. JPEG/PNG embedding before `uploadBlob` per [ADR-008](./architecture/008-c2pa-sdk-and-signing.md).
   - **Estimated Time:** 12 hours
   - **Dependencies:** Task 2.1

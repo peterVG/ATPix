@@ -7,14 +7,11 @@ import os
 from dotenv import load_dotenv
 
 
-def test_dotenv_parses_export_prefix_and_strips_inline_comments(
-    tmp_path, monkeypatch
-) -> None:
+def test_dotenv_parses_export_prefix_and_strips_inline_comments(tmp_path, monkeypatch) -> None:
     """python-dotenv must handle export KEY= and inline comments used in .env files."""
     env_file = tmp_path / ".env"
     env_file.write_text(
-        "export HAPPYVIEW_ADMIN_KEY=hv_test\n"
-        "HAPPYVIEW_URL=http://127.0.0.1:3001 # local\n",
+        "export HAPPYVIEW_ADMIN_KEY=hv_test\nHAPPYVIEW_URL=http://127.0.0.1:3001 # local\n",
         encoding="utf-8",
     )
     monkeypatch.delenv("HAPPYVIEW_ADMIN_KEY", raising=False)

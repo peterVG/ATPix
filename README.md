@@ -122,9 +122,9 @@ npm run dev
 
 Open [http://127.0.0.1:5173](http://127.0.0.1:5173). API health: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health).
 
-### Test current functionality (Tasks 1.2 + 1.3 + 2.1)
+### Test current functionality (Tasks 1.2 + 1.3 + 2.1 + 3.1)
 
-**What works today:** HappyView provisioning (lexicons + spaces flag), OAuth client metadata at `/oauth-client-metadata.json`, **atproto OAuth sign-in** with application shell (header, sidebar, theme toggle), and backend health. **Not yet:** photo upload, personal gallery, or albums (Task 3.x+).
+**What works today:** HappyView provisioning (lexicons + spaces flag), OAuth client metadata at `/oauth-client-metadata.json`, **atproto OAuth sign-in** with application shell (header, sidebar, theme toggle), **C2PA manifest embedding before upload** (backend `POST /c2pa/manifest/embed` + upload workspace UI), and backend health. **Not yet:** `uploadBlob` / personal gallery / albums (Task 3.2+).
 
 **Prerequisites:** Docker running, Python 3.11+, Node.js 22+, an atproto account (Bluesky handle works for HappyView admin login).
 
@@ -145,6 +145,7 @@ Open `.env` in an editor. You will fill in keys in later steps; for now confirm 
 | `VITE_DEPLOYMENT_ORIGIN` | `http://127.0.0.1:5173` | Public URL of the ATPix UI (OAuth `client_id` origin) |
 | `HAPPYVIEW_ADMIN_KEY` | *(empty until Step 3)* | `hv_*` admin key for provisioning |
 | `VITE_HAPPYVIEW_CLIENT_KEY` | *(empty until Step 6)* | `hvc_*` client key for XRPC |
+| `VITE_BACKEND_URL` | `http://127.0.0.1:8000` | FastAPI C2PA + health API |
 
 #### Step 2 — Start HappyView and verify health
 
@@ -267,22 +268,49 @@ Prerequisites: Steps 2–6 complete (`hvc_*` key in `.env`, `npm run dev` restar
 
 **OAuth callback path:** `http://127.0.0.1:5173/oauth/callback` (Vite SPA fallback serves the app).
 
-#### Step 8 — Run automated tests (optional)
+#### Step 8 — C2PA pre-upload signing (Task 3.1)
+
+Prerequisites: Steps 2–7 complete; **backend API running** on port 8000.
+
+1. In a second terminal, start the backend API on port 8000:
+   - macOS/Linux: `cd apps/backend && source .venv/bin/activate && uvicorn app.main:app --reload --port 8000`
+   - Windows: `cd apps/backend && .venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000`
+2. Confirm C2PA status: `curl -sS http://127.0.0.1:8000/c2pa/status`
+3. In the signed-in shell, click **Upload Media** (header ↑ or sidebar button).
+4. Select a JPEG or PNG (≤ 50 MB). The upload workspace runs **C2PA signing before blob upload** and shows a **C2PA** badge on signed queue items.
+5. Optional API check:
+
+```bash
+curl -sS -o /tmp/atpix-signed.jpg \
+  -F "file=@apps/backend/tests/fixtures/c2pa/A.jpg;type=image/jpeg" \
+  -F "creator_did=did:plc:manual-test" \
+  http://127.0.0.1:8000/c2pa/manifest/embed
+```
+
+The backend loads environment variables from the repository-root `.env` automatically. For local development, set `C2PA_ALLOW_DEV_SIGNING=true` to use CAI test certificates from `apps/backend/tests/fixtures/c2pa/`. Production deployments must provide `C2PA_SIGNING_CERTS_PATH` and `C2PA_SIGNING_KEY_PATH` with org-issued claim-signing credentials and keep `C2PA_ALLOW_DEV_SIGNING=false`.
+
+#### Step 9 — Run automated tests (optional)
 
 ```bash
 cd apps/frontend && npm run lint && npm run test:unit && npm run test:ui
+cd ../backend
+# macOS/Linux: source .venv/bin/activate
+# Windows: .venv\Scripts\activate
+ruff check . --fix && ruff format .
+pytest tests/unit/test_c2pa_service.py tests/integration/test_c2pa_api.py -v --alluredir=tests/allure-results --clean-alluredir
+behave tests/features/c2pa_manifest_generation_SRS-F-012.feature
 cd ../..
 # With HappyView up and HAPPYVIEW_ADMIN_KEY set:
-cd apps/backend && python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements-dev.txt
-pytest tests/integration/test_happyview_provision.py -v
+cd apps/backend && pytest tests/integration/test_happyview_provision.py -v
 ```
+
+Behave writes Allure results to `apps/backend/tests/allure-results/` via `apps/backend/.behaverc`.
 
 `npm run test:ui` builds production artifacts (`vite build --mode test`) and runs vitest DOM assertions against `dist/` per [ADR-001](docs/architecture/001-test-runners-and-reporting.md).
 
 #### What you cannot test yet
 
-- **Upload photos / personal gallery / albums** — Tasks 3.x.
+- **`uploadBlob`, personal gallery grid, and albums** — Task 3.2+.
 - **Permissioned spaces UI** — Task 5.1.
 
 #### Permissioned albums and `appAccess` (preview for Task 5.1)

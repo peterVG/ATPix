@@ -1,5 +1,5 @@
 /** @constant {string[]} Primary shell navigation route ids. */
-export const SHELL_ROUTES = ["gallery", "discovery", "albums", "settings"];
+export const SHELL_ROUTES = ["gallery", "discovery", "albums", "upload", "settings"];
 
 /**
  * Parse the active hash route from the current location.

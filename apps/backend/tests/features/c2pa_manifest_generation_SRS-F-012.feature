@@ -30,11 +30,21 @@ Feature: C2PA Manifest Generation on Upload
     When the manifest is signed
     Then the assertion net.atpix.gallery.creatorDid should record did:plc:example
 
-  Scenario: User opts out of sensitive metadata
-    Given the user declines GPS and device metadata
+  Scenario: Optional metadata omitted by default
     When the manifest is signed
     Then optional location and device assertions should be omitted
     And required actions and hash assertions should remain
+
+  Scenario: User opts in to sensitive metadata
+    Given the user opts in to GPS and device metadata
+    When the manifest is signed
+    Then optional location and device assertions should be present
+    And required actions and hash assertions should remain
+
+  Scenario: Unsupported image type is rejected
+    Given the C2PA signing service is configured
+    When the API receives an unsupported upload content type
+    Then the embed request should be rejected before signing
 
 # Source
 # - srs.md SRS-F-012, SRS-NFR-014, SRS-NFR-015, SRS-TC-009, SRS-TC-010
