@@ -1,6 +1,6 @@
 # ATPix UI mockups
 
-Directional screen captures for [ui-requirements.md](../../ui-requirements.md). Styling tokens: [000-UX-guide.md](../000-UX-guide.md).
+Directional screen captures for [ui-requirements.md](../../overview/004-ui-requirements.md). Styling tokens: [000-UX-guide.md](../000-UX-guide.md).
 
 ## Current assets (dark mode)
 
@@ -49,4 +49,4 @@ All six images are **dark-mode only** and do **not** show the color-scheme toggl
 | `02-my-gallery-light.jpg` | Light-theme gallery chrome validation |
 | `07-settings-appearance.jpg` | Settings → Appearance (Dark / Light / System) |
 
-See [Mockup inventory](../../ui-requirements.md#mockup-inventory) in the UI requirements spec.
+See [Mockup inventory](../../overview/004-ui-requirements.md#mockup-inventory) in the UI requirements spec.

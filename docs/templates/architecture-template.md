@@ -6,9 +6,9 @@
 ### 1.2 Scope
 [Define what aspects of the system this architecture covers]
 ### 1.3 References
-- **PRD:** [PRD](../prd.md)
-- **SRS:** [SRS](../srs.md)
-- **Implementation Plan:** [Project Plan](../plan.md)
+- **PRD:** [PRD](../overview/002-prd.md)
+- **SRS:** [SRS](../overview/003-srs.md)
+- **Implementation Plan:** [Project Plan](../overview/005-plan.md)
 - **ADRs:** [ADRs](../architecture/)
 
 ### 1.4 Architectural Principles

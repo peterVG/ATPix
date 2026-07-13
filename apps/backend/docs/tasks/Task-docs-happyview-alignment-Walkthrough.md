@@ -11,10 +11,10 @@ Closed HappyView Permissioned Spaces alignment gaps across product vision, PRD, 
 
 | File | Changes |
 |------|---------|
-| `docs/product-vision.md` | Key Constraints: public-by-default + permissioned spaces; blob/space model in Technical Stack |
-| `docs/prd.md` | Terminology table fix; F-002 dual upload paths + `getBlob`; F-008 `appAccess`/`config`/`acceptInvite`/auth modes; NFR-001 blob vs record split |
-| `docs/srs.md` | SRS-F-002.1 permissioned path; SRS-F-008.1 `appAccess`/`config`; SRS-F-008.2 `acceptInvite`; new SRS-F-008.3 auth modes; renumbered index isolation to SRS-F-008.4; SRS-NFR-001 clarified |
-| `docs/ui-requirements.md` | UI-SCR-006 role mapping (Authority/Contributor/Viewer); mint policy enum; token + direct invite flows |
+| `docs/overview/001-product-vision.md` | Key Constraints: public-by-default + permissioned spaces; blob/space model in Technical Stack |
+| `docs/overview/002-prd.md` | Terminology table fix; F-002 dual upload paths + `getBlob`; F-008 `appAccess`/`config`/`acceptInvite`/auth modes; NFR-001 blob vs record split |
+| `docs/overview/003-srs.md` | SRS-F-002.1 permissioned path; SRS-F-008.1 `appAccess`/`config`; SRS-F-008.2 `acceptInvite`; new SRS-F-008.3 auth modes; renumbered index isolation to SRS-F-008.4; SRS-NFR-001 clarified |
+| `docs/overview/004-ui-requirements.md` | UI-SCR-006 role mapping (Authority/Contributor/Viewer); mint policy enum; token + direct invite flows |
 | `docs/architecture/010-permissioned-spaces-storage.md` | Synced with PRD/SRS decisions |
 
 ## Verification
@@ -22,10 +22,10 @@ Closed HappyView Permissioned Spaces alignment gaps across product vision, PRD, 
 ```text
 $ git diff --stat
  docs/architecture/010-permissioned-spaces-storage.md |  5 ++--
- docs/prd.md                                        | 25 ++++++++--------
- docs/product-vision.md                             |  4 +--
- docs/srs.md                                        | 33 ++++++++++++++++------
- docs/ui-requirements.md                            | 18 ++++++++----
+ docs/overview/002-prd.md                                        | 25 ++++++++--------
+ docs/overview/001-product-vision.md                             |  4 +--
+ docs/overview/003-srs.md                                        | 33 ++++++++++++++++------
+ docs/overview/004-ui-requirements.md                            | 18 ++++++++----
  5 files changed, 56 insertions(+), 29 deletions(-)
 ```
 

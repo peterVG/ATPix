@@ -16,5 +16,5 @@ permalink: /
   </p>
   <p>It is intentionally verbose to implement a docs-as-code vibe-engineering practice supported by our new AI overlords.
   </p>
-  <p>A good place to start for a human is the <a href="https://docs.atpix.net/#architecture.md">Architecture Overview.</a>
+  <p>A good place to start for a human is the <a href="#overview/000-architecture.md">Architecture Overview</a>.</p>
 </article>

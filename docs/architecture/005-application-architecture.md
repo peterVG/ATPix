@@ -12,7 +12,7 @@ Accepted
 
 ## Context / Requirement Reference
 
-[docs/prd.md](../prd.md) Technology Stack and TC-001: gallery XRPC, OAuth, and indexing MUST run on **HappyView**, not a custom App View. Frontend uses vanilla HTML/CSS/JS with `@happyview/lex-agent` and `@happyview/oauth-client-browser`. C2PA claim generation/validation (F-012–F-016) suits a Python auxiliary API.
+[docs/overview/002-prd.md](../overview/002-prd.md) Technology Stack and TC-001: gallery XRPC, OAuth, and indexing MUST run on **HappyView**, not a custom App View. Frontend uses vanilla HTML/CSS/JS with `@happyview/lex-agent` and `@happyview/oauth-client-browser`. C2PA claim generation/validation (F-012–F-016) suits a Python auxiliary API.
 
 ## Decision
 
@@ -39,4 +39,4 @@ Frontend developers must understand HappyView vs backend boundaries. Two dev ser
 
 ## Related Decisions / Notes
 
-[003-observability-stack.md](./003-observability-stack.md), [Product terms mapping](../prd.md#product-terms--at-protocol-primitives) when PRD is present on branch.
+[003-observability-stack.md](./003-observability-stack.md), [Product terms mapping](../overview/002-prd.md#product-terms--at-protocol-primitives) when PRD is present on branch.

@@ -12,7 +12,7 @@ Accepted
 
 ## Context / Requirement Reference
 
-[docs/prd.md](../prd.md) F-008 (mandatory v1), TC-004, TC-008, and NFR-013 require HappyView Permissioned Spaces for select-user album sharing without client-side encryption. [docs/srs.md](../srs.md) SRS-F-008.
+[docs/overview/002-prd.md](../overview/002-prd.md) F-008 (mandatory v1), TC-004, TC-008, and NFR-013 require HappyView Permissioned Spaces for select-user album sharing without client-side encryption. [docs/overview/003-srs.md](../overview/003-srs.md) SRS-F-008.
 
 ## Decision
 

@@ -2,7 +2,7 @@
 
 **Branch:** `task/1.3-oauth-client-metadata`  
 **Date:** 2026-07-13  
-**Related requirements:** [F-001](../../../../docs/prd.md#f-001-atproto-oauth-sign-in), [F-008](../../../../docs/prd.md#f-008-permissioned-gallery--album-access-happyview-permissioned-spaces-validation), [TC-006](../../../../docs/prd.md#tc-006-api-client-identification), [SRS-F-001](../../../../docs/srs.md#srs-f-001-atproto-oauth-sign-in), [SRS-F-008.1](../../../../docs/srs.md#srs-f-008-permissioned-album-access-happyview-spaces)  
+**Related requirements:** [F-001](../../../../docs/overview/002-prd.md#f-001-atproto-oauth-sign-in), [F-008](../../../../docs/overview/002-prd.md#f-008-permissioned-gallery--album-access-happyview-permissioned-spaces-validation), [TC-006](../../../../docs/overview/002-prd.md#tc-006-api-client-identification), [SRS-F-001](../../../../docs/overview/003-srs.md#srs-f-001-atproto-oauth-sign-in), [SRS-F-008.1](../../../../docs/overview/003-srs.md#srs-f-008-permissioned-album-access-happyview-spaces)  
 **ADRs:** [006-oauth-dpop-authentication.md](../../../../docs/architecture/006-oauth-dpop-authentication.md), [010-permissioned-spaces-storage.md](../../../../docs/architecture/010-permissioned-spaces-storage.md)
 
 ## Summary
@@ -13,7 +13,7 @@ Implemented atproto OAuth client metadata for ATPix per ADR-006:
 - `plugins/oauthClientMetadataPlugin.js` — serves `/oauth-client-metadata.json` in Vite dev/preview; emits static JSON at build time from `VITE_DEPLOYMENT_ORIGIN`
 - Unit tests in `tests/unit/oauthClientMetadata.test.js`
 - `.env.example` and README updated with deployment origin and HappyView API client registration steps
-- Checked off Task 1.3 in `docs/plan.md` and FE-1.3 in `apps/frontend/docs/plan.md`
+- Checked off Task 1.3 in `docs/overview/005-plan.md` and FE-1.3 in `apps/frontend/docs/plan.md`
 
 ## Lint
 
