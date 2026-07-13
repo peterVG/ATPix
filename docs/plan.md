@@ -42,7 +42,7 @@ This document is the **global execution roadmap** for ATPix v1. It sequences wor
 
 ## Phase 2: Authentication & Application Shell
 
-- [ ] **Task 2.1: OAuth sign-in and global shell (cross-module)**
+- [x] **Task 2.1: OAuth sign-in and global shell (cross-module)**
   - **Description:** Deliver F-001 OAuth flow, UI-SHELL-001 chrome, UI-SHELL-003 theme toggle, and DPoP + `X-Client-Key` on all HappyView XRPC calls. Coordinate [frontend plan Task FE-2.1](../apps/frontend/docs/plan.md) and security verification.
   - **Estimated Time:** 8 hours
   - **Dependencies:** Task 1.3

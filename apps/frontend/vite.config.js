@@ -3,6 +3,7 @@ import { defineConfig } from "vite";
 import { oauthClientMetadataPlugin } from "./plugins/oauthClientMetadataPlugin.js";
 
 export default defineConfig({
+  appType: "spa",
   root: ".",
   publicDir: "public",
   plugins: [oauthClientMetadataPlugin()],

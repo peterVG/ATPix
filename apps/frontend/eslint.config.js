@@ -16,7 +16,7 @@ export default [
     },
   },
   {
-    files: ["plugins/**/*.js", "vite.config.js", "vitest.config.js"],
+    files: ["plugins/**/*.js", "vite.config.js", "vitest.config.js", "vitest.ui.config.js"],
     languageOptions: {
       globals: {
         ...globals.node,

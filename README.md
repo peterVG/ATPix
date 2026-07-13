@@ -122,9 +122,9 @@ npm run dev
 
 Open [http://127.0.0.1:5173](http://127.0.0.1:5173). API health: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health).
 
-### Test current functionality (Tasks 1.2 + 1.3)
+### Test current functionality (Tasks 1.2 + 1.3 + 2.1)
 
-**What works on `main` today:** HappyView provisioning (lexicons + spaces flag), OAuth client metadata at `/oauth-client-metadata.json`, frontend landing page, backend health. **Not yet:** OAuth sign-in button, photo upload, or galleries (Task 2.1+).
+**What works today:** HappyView provisioning (lexicons + spaces flag), OAuth client metadata at `/oauth-client-metadata.json`, **atproto OAuth sign-in** with application shell (header, sidebar, theme toggle), and backend health. **Not yet:** photo upload, personal gallery, or albums (Task 3.x+).
 
 **Prerequisites:** Docker running, Python 3.11+, Node.js 22+, an atproto account (Bluesky handle works for HappyView admin login).
 
@@ -210,7 +210,7 @@ curl -sS http://127.0.0.1:5173/oauth-client-metadata.json
 
 Production builds (`VITE_DEPLOYMENT_ORIGIN=https://your-domain`) emit `client_id` as `https://your-domain/oauth-client-metadata.json` instead.
 
-Open **http://127.0.0.1:5173/** in a browser — you should see the R&D overview page with **HappyView endpoint: `http://127.0.0.1:3001`**.
+Open **http://127.0.0.1:5173/** in a browser — you should see the **Sign in to ATPix** panel with **HappyView endpoint: `http://127.0.0.1:3001`**.
 
 **Production build check (optional):**
 
@@ -220,7 +220,7 @@ VITE_DEPLOYMENT_ORIGIN=http://127.0.0.1:5173 npm run build
 grep client_id dist/oauth-client-metadata.json
 ```
 
-#### Step 6 — Register ATPix API client in HappyView (before Task 2.1 sign-in)
+#### Step 6 — Register ATPix API client in HappyView (required for sign-in)
 
 HappyView must know about your app **before** users can sign in via OAuth. You register it as an **API Client** (different from the admin `hv_*` key).
 
@@ -247,10 +247,28 @@ VITE_HAPPYVIEW_CLIENT_KEY=hvc_paste_your_key_here
 
 **Important:** `hv_*` = admin automation (provisioning). `hvc_*` = browser app identity on every XRPC call. Never put `hv_*` on XRPC routes ([TC-006](docs/prd.md#tc-006-api-client-identification)).
 
-#### Step 7 — Run automated tests (optional)
+#### Step 7 — Sign in and verify application shell (Task 2.1)
+
+Prerequisites: Steps 2–6 complete (`hvc_*` key in `.env`, `npm run dev` restarted).
+
+1. Open **http://127.0.0.1:5173/** — confirm the sign-in panel shows **Sign in with atproto**.
+2. Enter your atproto handle (e.g. `you.bsky.social`) and submit.
+3. Complete OAuth on your PDS; you should return to ATPix at `/oauth/callback` then land on **My Gallery** inside the shell.
+4. Verify shell chrome:
+   - Header tabs: **Gallery**, **Discovery**, **Albums**
+   - Sidebar: your **@handle** or **DID**, **Upload Media**, **Sign Out**
+   - Header utilities: color-scheme toggle (◐), search, upload, notifications, avatar
+5. Click **Discovery** — the Discovery tab should show as active.
+6. Toggle the header color-scheme control — chrome switches between dark and light; photo area uses placeholder cards only.
+7. Open **Settings** (sidebar) → **Appearance** → select **Light**, **Dark**, or **System** — preference persists in `localStorage` key `atpix-color-scheme`.
+8. Click **Sign Out** — you should return to the sign-in panel.
+
+**OAuth callback path:** `http://127.0.0.1:5173/oauth/callback` (Vite SPA fallback serves the app).
+
+#### Step 8 — Run automated tests (optional)
 
 ```bash
-cd apps/frontend && npm run lint && npm run test:unit
+cd apps/frontend && npm run lint && npm run test:unit && npm run test:ui
 cd ../..
 # With HappyView up and HAPPYVIEW_ADMIN_KEY set:
 cd apps/backend && python3 -m venv .venv && source .venv/bin/activate
@@ -258,10 +276,12 @@ pip install -r requirements-dev.txt
 pytest tests/integration/test_happyview_provision.py -v
 ```
 
+`npm run test:ui` builds production artifacts (`vite build --mode test`) and runs vitest DOM assertions against `dist/` per [ADR-001](docs/architecture/001-test-runners-and-reporting.md).
+
 #### What you cannot test yet
 
-- **Sign in with OAuth** — UI arrives in Task 2.1; metadata + `hvc_*` key are prerequisites only.
-- **Upload photos / albums / permissioned spaces UI** — Tasks 3.x and 5.x.
+- **Upload photos / personal gallery / albums** — Tasks 3.x.
+- **Permissioned spaces UI** — Task 5.1.
 
 #### Permissioned albums and `appAccess` (preview for Task 5.1)
 

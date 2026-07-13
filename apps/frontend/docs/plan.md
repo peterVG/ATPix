@@ -40,7 +40,7 @@ Granular checklist for the Vite vanilla JS client. Global sequencing: [docs/plan
 
 ## Phase FE-2: Authentication & Shell
 
-- [ ] **Task FE-2.1: OAuth sign-in, shell chrome, and theme toggle (holistic)**
+- [x] **Task FE-2.1: OAuth sign-in, shell chrome, and theme toggle (holistic)**
   - **Description:** Replace placeholder `App.js` with UI-SHELL-001 header/sidebar/nav, OAuth redirect/callback via `@happyview/oauth-client-browser`, identity card, sign-out, UI-SHELL-003 dark/light/system toggle with `localStorage` key `atpix-color-scheme`. Responsive UI-SHELL-002 breakpoints.
   - **Estimated Time:** 10 hours
   - **Dependencies:** Task FE-1.3
@@ -92,7 +92,7 @@ Granular checklist for the Vite vanilla JS client. Global sequencing: [docs/plan
 
 ---
 
-## Phase FE-5: Discovery & Sharing *(deferred post–spaces validation)*
+## Phase FE-5: Discovery & Sharing _(deferred post–spaces validation)_
 
 - [ ] **Task FE-4.1: Discovery feed (Path B)**
   - **Description:** UI-SCR-002 Following/Hashtags tabs; `listFeedPhotos` + `collectionRule` management preview; add Path B photos to albums.

@@ -21,3 +21,17 @@ export function getHappyViewUrl() {
 export function getClientKey() {
   return import.meta.env.VITE_HAPPYVIEW_CLIENT_KEY;
 }
+
+/**
+ * Build XRPC request headers including client identification (SRS-F-001.2).
+ *
+ * @returns {Record<string, string>} Headers object for HappyView XRPC calls.
+ */
+export function buildXrpcHeaders() {
+  const clientKey = getClientKey();
+  if (typeof clientKey !== "string" || clientKey.length === 0) {
+    return {};
+  }
+
+  return { "X-Client-Key": clientKey };
+}
