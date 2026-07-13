@@ -14,7 +14,7 @@ Galleries populate two ways:
 **(a)** direct PDS upload and 
 **(b)** photos already indexed on the network via follow-graph and hashtag rules—Path B uses only HappyView Jetstream sync, not a custom firehose. 
 
-Sharing supports **public**, **unlisted**, and **permissioned** albums; permissioned collections use [HappyView Permissioned Spaces]([https://happyview.dev/experimental/spaces/index](https://happyview.dev/experimental/spaces)) (ATP-0016) so only invited members can view curated private albums.
+Sharing supports **public**, **unlisted**, and **permissioned** albums; permissioned collections use [HappyView Permissioned Spaces](https://happyview.dev/experimental/spaces) (ATP-0016) so only invited members can view curated private albums.
 
 Product language (gallery, album) maps to atproto primitives (queries, `net.atpix.gallery.*` records, space repos) in the [PRD](docs/prd.md#product-terms--at-protocol-primitives) and [Lexicon README](docs/lexicon/README.md).
 
@@ -28,6 +28,31 @@ Product language (gallery, album) maps to atproto primitives (queries, `net.atpi
 | `docs/lexicon/` | `net.atpix.gallery.*` schema artifacts | [009](docs/architecture/009-lexicon-namespace-authority.md) |
 
 Observability (Promtail → Redpanda → Loki, Prometheus, Grafana) runs via root `docker-compose.yml` per [003](docs/architecture/003-observability-stack.md). Tests use pytest/behave, vitest/playwright, and **Allure** reporting per [001](docs/architecture/001-test-runners-and-reporting.md).
+
+## Where user data lives (PDS vs App View)
+
+ATPix follows the standard [AT Protocol](https://atproto.com) split: a **Personal Data Server (PDS)** hosts each user's signed repository; an **App View** indexes and serves that data for apps. **ATPix does not run or host user PDSes** — neither the monorepo Docker stack nor HappyView replaces account storage.
+
+| Layer | Role in ATPix | Canonical user photos & records? |
+|-------|---------------|----------------------------------|
+| **User PDS** (remote) | Hosts blobs + `net.atpix.gallery.*` records for each account | **Yes** — source of truth |
+| **HappyView** (external, port 3001) | App View: index, OAuth write proxy, XRPC, permissioned spaces | No — index/cache + proxy only |
+| **`apps/backend/`** | C2PA claim generation/validation, health | No |
+| **`apps/frontend/`** | Gallery UI, OAuth client | No — browser session state only |
+
+**Users bring their own PDS.** Sign-in uses atproto OAuth against an identity that already exists on a PDS (e.g. a Bluesky account, another hoster, or a self-hosted PDS you run separately). HappyView proxies `uploadBlob` and record writes to that user's PDS; it does not provision new atproto accounts. See [ADR-006](docs/architecture/006-oauth-dpop-authentication.md) and [ADR-007](docs/architecture/007-happyview-app-view-integration.md).
+
+Typical write path once the gallery UI is implemented:
+
+```
+Browser (ATPix) → HappyView (OAuth + XRPC proxy) → user's PDS
+```
+
+**Permissioned albums** ([ADR-010](docs/architecture/010-permissioned-spaces-storage.md)): some album **records** may live in a HappyView **space repo**, but **image blobs remain on the author's PDS** and are served via `com.atproto.space.getBlob` with membership checks.
+
+**Local Docker persistence:** HappyView stores its own SQLite index, OAuth sessions, and provisioned lexicons under `./data/happyview_data/` (bind-mounted in `docker-compose.happyview.yml`). Stopping the container does **not** delete user PDS data. Wiping `./data/happyview_data/` loses local index and sessions only — records on users' PDSes remain; re-run [provisioning](#run-the-application) and backfill to rebuild the index.
+
+**New test accounts:** use an existing atproto identity or sign up with a PDS provider / self-hosted PDS outside this repo before exercising upload flows.
 
 ## Requirements and verification
 
