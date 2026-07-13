@@ -1,14 +1,20 @@
 {
   "lexicon": 1,
-  "id": "com.atpix.gallery.listFeedPhotos",
+  "id": "net.atpix.gallery.listPhotos",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Social gallery feed from active collectionRules (follow graph + hashtags). Requires authenticated caller for follow graph resolution.",
+      "description": "List photos with optional filters by author, album, tag, or visibility.",
       "parameters": {
         "type": "params",
         "properties": {
-          "ruleUri": { "type": "string", "format": "at-uri" },
+          "did": { "type": "string", "format": "did" },
+          "albumUri": { "type": "string", "format": "at-uri" },
+          "tag": { "type": "string", "maxLength": 64 },
+          "visibility": {
+            "type": "string",
+            "enum": ["public", "unlisted", "permissioned"]
+          },
           "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 },
           "cursor": { "type": "string" }
         }
@@ -22,7 +28,7 @@
             "cursor": { "type": "string" },
             "photos": {
               "type": "array",
-              "items": { "type": "ref", "ref": "com.atpix.gallery.defs#photoView" }
+              "items": { "type": "ref", "ref": "net.atpix.gallery.defs#photoView" }
             }
           }
         }

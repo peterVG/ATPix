@@ -1,25 +1,26 @@
 {
   "lexicon": 1,
-  "id": "com.atpix.gallery.createCollectionRule",
+  "id": "net.atpix.gallery.updateCollectionRule",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Create a collection rule for follow-graph and/or hashtag sourcing.",
+      "description": "Update an existing collection rule.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["name", "targetScope"],
+          "required": ["uri"],
           "properties": {
+            "uri": { "type": "string", "format": "at-uri" },
             "name": { "type": "string", "maxLength": 200 },
             "description": { "type": "string", "maxLength": 2000 },
-            "targetScope": { "type": "ref", "ref": "com.atpix.gallery.defs#targetScope" },
+            "targetScope": { "type": "ref", "ref": "net.atpix.gallery.defs#targetScope" },
             "targetAlbumUri": { "type": "string", "format": "at-uri" },
-            "useFollowGraph": { "type": "boolean", "default": false },
-            "followedActors": { "type": "array", "maxLength": 500, "items": { "type": "string", "format": "did" } },
-            "hashtags": { "type": "array", "maxLength": 50, "items": { "type": "string", "maxLength": 64 } },
-            "includeOwnPhotos": { "type": "boolean", "default": true },
-            "active": { "type": "boolean", "default": true }
+            "useFollowGraph": { "type": "boolean" },
+            "followedActors": { "type": "array", "items": { "type": "string", "format": "did" } },
+            "hashtags": { "type": "array", "items": { "type": "string", "maxLength": 64 } },
+            "includeOwnPhotos": { "type": "boolean" },
+            "active": { "type": "boolean" }
           }
         }
       },

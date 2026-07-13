@@ -4,7 +4,7 @@
 
 ## Title
 
-`com.atpix.gallery.*` Lexicon namespace and publication strategy
+`net.atpix.gallery.*` Lexicon namespace and publication strategy
 
 ## Status
 
@@ -16,11 +16,11 @@ Accepted
 
 ## Decision
 
-- **Namespace:** All ATPix gallery Lexicons use NSID prefix `com.atpix.gallery.*`.
+- **Namespace:** All ATPix gallery Lexicons use NSID prefix `net.atpix.gallery.*`.
 - **Artifacts:** Source of truth in `docs/lexicon/*.json`; uploaded to HappyView with `backfill: true` for network-wide indexing.
 - **Collections:** `photo`, `album`, `albumItem`, `collectionRule` records; space type `albumSpace` per ATP-0016 (not a repo collection).
 - **Immutability:** Published Lexicons follow atproto immutability—breaking changes require new NSIDs.
-- **Authority:** Production SHOULD publish DNS `_lexicon` TXT for `com.atpix.gallery` (registrar domain TBD).
+- **Authority:** Production SHOULD publish DNS `_lexicon` TXT for `net.atpix.gallery` on **atpix.net** (reverse-DNS authority for `net.atpix.*`).
 - **Provenance fields:** Photo records store C2PA summary fields alongside Dublin Core / Schema.org mapped attributes per lexicon defs.
 
 ## Rationale
@@ -29,11 +29,12 @@ Open schemas enable third-party clients and validate the product vision unfair a
 
 ## Assumptions
 
-HappyView indexes all declared collections via Jetstream. DNS authority domain will be acquired before public network launch.
+HappyView indexes all declared collections via Jetstream. Lexicon DNS authority is **atpix.net** (owned).
 
 ## Alternatives Considered
 
-- **`app.atpix.*` or third-party NSID:** Rejected; `com.atpix.gallery` matches existing artifact set and README lexicon section.
+- **`com.atpix.*` (atpix.com):** Rejected; domain not owned. **`world.atpix.*` (atpix.world):** Rejected; **atpix.net** is the owned authority domain.
+- **`app.atpix.*` or third-party NSID:** Rejected; `net.atpix.gallery` matches artifact set and reverse-DNS rules for atpix.net.
 - **Gallery as record type:** Rejected; gallery is a query/view per PRD vocabulary mapping.
 
 ## Consequences / Implications

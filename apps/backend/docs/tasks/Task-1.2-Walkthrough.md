@@ -10,11 +10,12 @@
 Configured external HappyView provisioning for ATPix per ADR-007:
 
 - `docker-compose.happyview.yml` — HappyView on port **3001** (`ghcr.io/gamesgamesgamesgamesgames/happyview:latest`, SQLite)
-- `config/happyview/provision-manifest.json` — ordered upload of 23 `com.atpix.gallery.*` lexicons with `backfill` / `target_collection`
+- `config/happyview/provision-manifest.json` — ordered upload of 23 `net.atpix.gallery.*` lexicons with `backfill` / `target_collection`
 - `scripts/provision_happyview.py` — uploads lexicons and enables `feature.spaces_enabled`
 - BDD `happyview_provisioning_SRS-TC-008.feature` + behave steps
 - Unit/integration pytest coverage for offline manifest validation
 - README and `.env.example` updated with `HAPPYVIEW_ADMIN_KEY`
+- Lexicon namespace migrated **`com.atpix.gallery.*` → `net.atpix.gallery.*`** (authority domain **atpix.net** per ADR-009)
 
 ## Provision manifest check (offline)
 

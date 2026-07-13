@@ -23,7 +23,7 @@ This document is the **global execution roadmap** for ATPix v1. It sequences wor
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task 1.1. Verify scaffold across apps/frontend/ and apps/backend/ per ADRs 001, 004, 005. Run lint and existing unit tests in each module directory. Upon completion, generate apps/backend/docs/tasks/Task-1.1-Walkthrough.md with raw CLI output, delete transient Plan/ToDos, check off this box in docs/plan.md, commit, and push to origin.`
 
 - [x] **Task 1.2: Provision HappyView with ATPix lexicons and spaces flag**
-  - **Description:** Deploy HappyView (port **3001**); upload `com.atpix.gallery.*` lexicons from [docs/lexicon/](./lexicon/) with `backfill: true`; enable `feature.spaces_enabled` for permissioned album work ([TC-008](./prd.md#tc-008-permissioned-spaces-feature-flag)).
+  - **Description:** Deploy HappyView (port **3001**); upload `net.atpix.gallery.*` lexicons from [docs/lexicon/](./lexicon/) with `backfill: true`; enable `feature.spaces_enabled` for permissioned album work ([TC-008](./prd.md#tc-008-permissioned-spaces-feature-flag)).
   - **Estimated Time:** 4 hours
   - **Dependencies:** Task 1.1
   - **Related Requirements:** [F-011](./prd.md#f-011-lexicon-publication-and-network-indexing), [TC-001](./prd.md#tc-001-happyview-app-view), [TC-008](./prd.md#tc-008-permissioned-spaces-feature-flag), [SRS-F-011](./srs.md#srs-f-011-lexicon-publication-and-network-indexing)

@@ -291,7 +291,7 @@ Upload failures and >50MB rejections MUST show actionable errors with **Retry** 
 
 ### Space metadata card
 
-- **SPACE DID** and **RECORD TYPE** (`com.atpix.gallery.albumSpace`) in `metadata-code`.
+- **SPACE DID** and **RECORD TYPE** (`net.atpix.gallery.albumSpace`) in `metadata-code`.
 - Status badge: **GATED** (`status-permissioned`).
 
 ### Member directory

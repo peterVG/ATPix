@@ -6,7 +6,7 @@ Feature: HappyView Provisioning for ATPix
   So that permissioned album development can proceed on a configured App View
 
   # Happy Path
-  Scenario: All com.atpix.gallery lexicons are registered with backfill on records
+  Scenario: All net.atpix.gallery lexicons are registered with backfill on records
     Given HappyView is running with lexicon upload capability
     When lexicons are uploaded to HappyView with backfill true
     Then each record lexicon should have backfill enabled on HappyView

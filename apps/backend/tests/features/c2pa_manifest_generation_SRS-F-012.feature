@@ -28,7 +28,7 @@ Feature: C2PA Manifest Generation on Upload
   Scenario: Creator DID assertion is recorded
     Given the uploader DID is did:plc:example
     When the manifest is signed
-    Then the assertion com.atpix.gallery.creatorDid should record did:plc:example
+    Then the assertion net.atpix.gallery.creatorDid should record did:plc:example
 
   Scenario: User opts out of sensitive metadata
     Given the user declines GPS and device metadata

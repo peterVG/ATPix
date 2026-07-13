@@ -16,7 +16,7 @@ Galleries populate two ways:
 
 Sharing supports **public**, **unlisted**, and **permissioned** albums; permissioned collections use [HappyView Permissioned Spaces]([https://happyview.dev/experimental/spaces/index](https://happyview.dev/experimental/spaces)) (ATP-0016) so only invited members can view curated private albums.
 
-Product language (gallery, album) maps to atproto primitives (queries, `com.atpix.gallery.*` records, space repos) in the [PRD](docs/prd.md#product-terms--at-protocol-primitives) and [Lexicon README](docs/lexicon/README.md).
+Product language (gallery, album) maps to atproto primitives (queries, `net.atpix.gallery.*` records, space repos) in the [PRD](docs/prd.md#product-terms--at-protocol-primitives) and [Lexicon README](docs/lexicon/README.md).
 
 ## Repository layout
 
@@ -25,7 +25,7 @@ Product language (gallery, album) maps to atproto primitives (queries, `com.atpi
 | `apps/frontend/` | Vite vanilla JS; OAuth, gallery UI, HappyView XRPC | [005](docs/architecture/005-application-architecture.md), [006](docs/architecture/006-oauth-dpop-authentication.md) |
 | `apps/backend/` | FastAPI; C2PA claim generation/validation, health | [008](docs/architecture/008-c2pa-sdk-and-signing.md) |
 | HappyView (external) | Indexing, OAuth proxy, XRPC, spaces | [007](docs/architecture/007-happyview-app-view-integration.md) |
-| `docs/lexicon/` | `com.atpix.gallery.*` schema artifacts | [009](docs/architecture/009-lexicon-namespace-authority.md) |
+| `docs/lexicon/` | `net.atpix.gallery.*` schema artifacts | [009](docs/architecture/009-lexicon-namespace-authority.md) |
 
 Observability (Promtail → Redpanda → Loki, Prometheus, Grafana) runs via root `docker-compose.yml` per [003](docs/architecture/003-observability-stack.md). Tests use pytest/behave, vitest/playwright, and **Allure** reporting per [001](docs/architecture/001-test-runners-and-reporting.md).
 
@@ -52,7 +52,7 @@ Install runtimes using a version manager ([mise](https://mise.jdx.dev/), [asdf](
 | Docker | latest | [docs.docker.com](https://docs.docker.com/get-docker/) |
 
 ## Metadata
- Photo metadata maps to [Dublin Core](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/) and [Schema.org](https://schema.org/docs/schemas.html) terms in `com.atpix.gallery.*` Lexicons; image files embed [C2PA 2.2](https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html) Content Credentials for tamper-evident provenance. 
+ Photo metadata maps to [Dublin Core](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/) and [Schema.org](https://schema.org/docs/schemas.html) terms in `net.atpix.gallery.*` Lexicons; image files embed [C2PA 2.2](https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html) Content Credentials for tamper-evident provenance. 
  
  Photos and metadata remain user-owned and portable across the Atmosphere—not locked in a proprietary CDN or siloed account system.
 

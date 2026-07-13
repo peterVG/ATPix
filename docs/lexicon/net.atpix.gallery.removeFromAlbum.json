@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atpix.gallery.removeFromAlbum",
+  "id": "net.atpix.gallery.removeFromAlbum",
   "defs": {
     "main": {
       "type": "procedure",
@@ -14,7 +14,7 @@
             "uri": {
               "type": "string",
               "format": "at-uri",
-              "description": "Specific com.atpix.gallery.albumItem record URI. When set, removes only this junction record."
+              "description": "Specific net.atpix.gallery.albumItem record URI. When set, removes only this junction record."
             },
             "albumUri": { "type": "string", "format": "at-uri" },
             "photoUri": {

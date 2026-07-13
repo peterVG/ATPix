@@ -57,7 +57,7 @@ export function renderApp({ mount, happyviewUrl }) {
         <ul>
           <li>
             <strong>Protocol:</strong> AT Protocol records, PDS blobs, OAuth + DPoP,
-            <code>com.atpix.gallery.*</code> Lexicons.
+            <code>net.atpix.gallery.*</code> Lexicons.
           </li>
           <li>
             <strong>Spaces:</strong>
@@ -99,7 +99,7 @@ export function renderApp({ mount, happyviewUrl }) {
           <li>Traceable PRD → SRS → BDD coverage for permissioned album lifecycles.</li>
           <li>Walkthrough test logs and Allure reports documenting space scenarios and flag status.</li>
           <li>Documented gaps between HappyView docs and application-layer patterns (e.g. album <code>spaceUri</code> linking).</li>
-          <li>Lexicon artifacts (<code>com.atpix.gallery.*</code>) usable by third-party clients regardless of ATPix UI.</li>
+          <li>Lexicon artifacts (<code>net.atpix.gallery.*</code>) usable by third-party clients regardless of ATPix UI.</li>
         </ul>
       </section>
 

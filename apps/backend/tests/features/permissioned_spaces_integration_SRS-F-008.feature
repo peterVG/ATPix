@@ -10,7 +10,7 @@ Feature: Permissioned Spaces Integration
 
   Scenario: Create space and permissioned album
     When the owner creates a permissioned album
-    Then a space should be created with type com.atpix.gallery.albumSpace
+    Then a space should be created with type net.atpix.gallery.albumSpace
     And the album record should link a spaceUri
 
   Scenario: Invite member and authorized read succeeds

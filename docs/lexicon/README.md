@@ -1,4 +1,4 @@
-# ATPix Lexicon (`com.atpix.gallery.*`)
+# ATPix Lexicon (`net.atpix.gallery.*`)
 
 Machine-readable Lexicon JSON for the ATPix photo record App View. Upload these schemas to HappyView via the dashboard or `POST /admin/lexicons`.
 
@@ -10,71 +10,71 @@ Machine-readable Lexicon JSON for the ATPix photo record App View. Upload these 
 
 Lexicon NSIDs use semantic product names (`gallery`, `album`). Storage and sync follow standard atproto **repositories**, **collections**, **records**, and **blobs**. User-facing UI keeps gallery/album language; this README uses protocol vocabulary.
 
-> **Gallery** = **query/view** over `com.atpix.gallery.photo` records (no gallery record exists). **Album** = `com.atpix.gallery.album` **record** + `albumItem` junction records.
+> **Gallery** = **query/view** over `net.atpix.gallery.photo` records (no gallery record exists). **Album** = `net.atpix.gallery.album` **record** + `albumItem` junction records.
 
 | Product term | AT Protocol primitive | NSID / mechanism |
 |--------------|----------------------|------------------|
-| **My Gallery** | Query over author's photo records | `com.atpix.gallery.listPhotos?did=<author-did>` |
-| **Public profile gallery** | Same query, different DID | `listPhotos` over indexed `com.atpix.gallery.photo` for target DID |
+| **My Gallery** | Query over author's photo records | `net.atpix.gallery.listPhotos?did=<author-did>` |
+| **Public profile gallery** | Same query, different DID | `listPhotos` over indexed `net.atpix.gallery.photo` for target DID |
 | **Following / Hashtags feed** | Multi-repo index query + rules | `listFeedPhotos` + `collectionRule` records |
-| **Photo** | Record + blob | Collection `com.atpix.gallery.photo`; blob via `uploadBlob` |
-| **Album** | Container record | Collection `com.atpix.gallery.album` in owner's PDS **repo** |
-| **Album membership** | Junction records | Collection `com.atpix.gallery.albumItem`; optional `photo.albumUris[]` |
-| **Permissioned album** | Permissioned **space repo** | `ats://…`; space type `com.atpix.gallery.albumSpace` |
+| **Photo** | Record + blob | Collection `net.atpix.gallery.photo`; blob via `uploadBlob` |
+| **Album** | Container record | Collection `net.atpix.gallery.album` in owner's PDS **repo** |
+| **Album membership** | Junction records | Collection `net.atpix.gallery.albumItem`; optional `photo.albumUris[]` |
+| **Permissioned album** | Permissioned **space repo** | `ats://…`; space type `net.atpix.gallery.albumSpace` |
 | **Share link** | UI route + visibility | `visibility` on album/photo records |
 
 ### Record collections and repo placement
 
 | Collection NSID | Record role | Typical repo |
 |-----------------|-------------|--------------|
-| `com.atpix.gallery.photo` | Image metadata + blob ref | User PDS repo, or permissioned space repo |
-| `com.atpix.gallery.album` | Named curated container | User PDS repo; `spaceUri` when permissioned |
-| `com.atpix.gallery.albumItem` | Ordered album ↔ photo link | Same repo as parent album / photos |
-| `com.atpix.gallery.collectionRule` | Follow/hashtag source rules | Owner's public PDS repo |
+| `net.atpix.gallery.photo` | Image metadata + blob ref | User PDS repo, or permissioned space repo |
+| `net.atpix.gallery.album` | Named curated container | User PDS repo; `spaceUri` when permissioned |
+| `net.atpix.gallery.albumItem` | Ordered album ↔ photo link | Same repo as parent album / photos |
+| `net.atpix.gallery.collectionRule` | Follow/hashtag source rules | Owner's public PDS repo |
 
-**Note on `collectionRule`:** The NSID contains "collection" in the product sense (sourcing/curating photos). It is a record in the `com.atpix.gallery.collectionRule` **collection**—not a separate atproto storage primitive.
+**Note on `collectionRule`:** The NSID contains "collection" in the product sense (sourcing/curating photos). It is a record in the `net.atpix.gallery.collectionRule` **collection**—not a separate atproto storage primitive.
 
 ## Namespace
 
 | Item | Value |
 |------|-------|
-| Authority NSID | `com.atpix.gallery` |
-| DNS `_lexicon` host | TBD (e.g. `_lexicon.gallery.atpix.example.com`) |
-| Space type NSID | `com.atpix.gallery.albumSpace` (Permissioned Spaces / ATP-0016) |
+| Authority NSID | `net.atpix.gallery` |
+| DNS `_lexicon` host | `_lexicon.gallery.atpix.net` (publish before network lexicon resolution) |
+| Space type NSID | `net.atpix.gallery.albumSpace` (Permissioned Spaces / ATP-0016) |
 
 ## Files
 
 | File | NSID | Lexicon type |
 |------|------|--------------|
-| [com.atpix.gallery.defs.json](./com.atpix.gallery.defs.json) | `com.atpix.gallery.defs` | Shared tokens & objects |
-| [com.atpix.gallery.photo.json](./com.atpix.gallery.photo.json) | `com.atpix.gallery.photo` | `record` |
-| [com.atpix.gallery.album.json](./com.atpix.gallery.album.json) | `com.atpix.gallery.album` | `record` |
-| [com.atpix.gallery.albumItem.json](./com.atpix.gallery.albumItem.json) | `com.atpix.gallery.albumItem` | `record` |
-| [com.atpix.gallery.collectionRule.json](./com.atpix.gallery.collectionRule.json) | `com.atpix.gallery.collectionRule` | `record` |
-| [com.atpix.gallery.listPhotos.json](./com.atpix.gallery.listPhotos.json) | `com.atpix.gallery.listPhotos` | `query` |
-| [com.atpix.gallery.getPhoto.json](./com.atpix.gallery.getPhoto.json) | `com.atpix.gallery.getPhoto` | `query` |
-| [com.atpix.gallery.listAlbums.json](./com.atpix.gallery.listAlbums.json) | `com.atpix.gallery.listAlbums` | `query` |
-| [com.atpix.gallery.getAlbum.json](./com.atpix.gallery.getAlbum.json) | `com.atpix.gallery.getAlbum` | `query` |
-| [com.atpix.gallery.listAlbumItems.json](./com.atpix.gallery.listAlbumItems.json) | `com.atpix.gallery.listAlbumItems` | `query` |
-| [com.atpix.gallery.listFeedPhotos.json](./com.atpix.gallery.listFeedPhotos.json) | `com.atpix.gallery.listFeedPhotos` | `query` |
-| [com.atpix.gallery.listCollectionRules.json](./com.atpix.gallery.listCollectionRules.json) | `com.atpix.gallery.listCollectionRules` | `query` |
-| [com.atpix.gallery.createPhoto.json](./com.atpix.gallery.createPhoto.json) | `com.atpix.gallery.createPhoto` | `procedure` |
-| [com.atpix.gallery.updatePhoto.json](./com.atpix.gallery.updatePhoto.json) | `com.atpix.gallery.updatePhoto` | `procedure` |
-| [com.atpix.gallery.deletePhoto.json](./com.atpix.gallery.deletePhoto.json) | `com.atpix.gallery.deletePhoto` | `procedure` |
-| [com.atpix.gallery.createAlbum.json](./com.atpix.gallery.createAlbum.json) | `com.atpix.gallery.createAlbum` | `procedure` |
-| [com.atpix.gallery.updateAlbum.json](./com.atpix.gallery.updateAlbum.json) | `com.atpix.gallery.updateAlbum` | `procedure` |
-| [com.atpix.gallery.deleteAlbum.json](./com.atpix.gallery.deleteAlbum.json) | `com.atpix.gallery.deleteAlbum` | `procedure` |
-| [com.atpix.gallery.addToAlbum.json](./com.atpix.gallery.addToAlbum.json) | `com.atpix.gallery.addToAlbum` | `procedure` |
-| [com.atpix.gallery.removeFromAlbum.json](./com.atpix.gallery.removeFromAlbum.json) | `com.atpix.gallery.removeFromAlbum` | `procedure` |
-| [com.atpix.gallery.createCollectionRule.json](./com.atpix.gallery.createCollectionRule.json) | `com.atpix.gallery.createCollectionRule` | `procedure` |
-| [com.atpix.gallery.updateCollectionRule.json](./com.atpix.gallery.updateCollectionRule.json) | `com.atpix.gallery.updateCollectionRule` | `procedure` |
-| [com.atpix.gallery.deleteCollectionRule.json](./com.atpix.gallery.deleteCollectionRule.json) | `com.atpix.gallery.deleteCollectionRule` | `procedure` |
+| [net.atpix.gallery.defs.json](./net.atpix.gallery.defs.json) | `net.atpix.gallery.defs` | Shared tokens & objects |
+| [net.atpix.gallery.photo.json](./net.atpix.gallery.photo.json) | `net.atpix.gallery.photo` | `record` |
+| [net.atpix.gallery.album.json](./net.atpix.gallery.album.json) | `net.atpix.gallery.album` | `record` |
+| [net.atpix.gallery.albumItem.json](./net.atpix.gallery.albumItem.json) | `net.atpix.gallery.albumItem` | `record` |
+| [net.atpix.gallery.collectionRule.json](./net.atpix.gallery.collectionRule.json) | `net.atpix.gallery.collectionRule` | `record` |
+| [net.atpix.gallery.listPhotos.json](./net.atpix.gallery.listPhotos.json) | `net.atpix.gallery.listPhotos` | `query` |
+| [net.atpix.gallery.getPhoto.json](./net.atpix.gallery.getPhoto.json) | `net.atpix.gallery.getPhoto` | `query` |
+| [net.atpix.gallery.listAlbums.json](./net.atpix.gallery.listAlbums.json) | `net.atpix.gallery.listAlbums` | `query` |
+| [net.atpix.gallery.getAlbum.json](./net.atpix.gallery.getAlbum.json) | `net.atpix.gallery.getAlbum` | `query` |
+| [net.atpix.gallery.listAlbumItems.json](./net.atpix.gallery.listAlbumItems.json) | `net.atpix.gallery.listAlbumItems` | `query` |
+| [net.atpix.gallery.listFeedPhotos.json](./net.atpix.gallery.listFeedPhotos.json) | `net.atpix.gallery.listFeedPhotos` | `query` |
+| [net.atpix.gallery.listCollectionRules.json](./net.atpix.gallery.listCollectionRules.json) | `net.atpix.gallery.listCollectionRules` | `query` |
+| [net.atpix.gallery.createPhoto.json](./net.atpix.gallery.createPhoto.json) | `net.atpix.gallery.createPhoto` | `procedure` |
+| [net.atpix.gallery.updatePhoto.json](./net.atpix.gallery.updatePhoto.json) | `net.atpix.gallery.updatePhoto` | `procedure` |
+| [net.atpix.gallery.deletePhoto.json](./net.atpix.gallery.deletePhoto.json) | `net.atpix.gallery.deletePhoto` | `procedure` |
+| [net.atpix.gallery.createAlbum.json](./net.atpix.gallery.createAlbum.json) | `net.atpix.gallery.createAlbum` | `procedure` |
+| [net.atpix.gallery.updateAlbum.json](./net.atpix.gallery.updateAlbum.json) | `net.atpix.gallery.updateAlbum` | `procedure` |
+| [net.atpix.gallery.deleteAlbum.json](./net.atpix.gallery.deleteAlbum.json) | `net.atpix.gallery.deleteAlbum` | `procedure` |
+| [net.atpix.gallery.addToAlbum.json](./net.atpix.gallery.addToAlbum.json) | `net.atpix.gallery.addToAlbum` | `procedure` |
+| [net.atpix.gallery.removeFromAlbum.json](./net.atpix.gallery.removeFromAlbum.json) | `net.atpix.gallery.removeFromAlbum` | `procedure` |
+| [net.atpix.gallery.createCollectionRule.json](./net.atpix.gallery.createCollectionRule.json) | `net.atpix.gallery.createCollectionRule` | `procedure` |
+| [net.atpix.gallery.updateCollectionRule.json](./net.atpix.gallery.updateCollectionRule.json) | `net.atpix.gallery.updateCollectionRule` | `procedure` |
+| [net.atpix.gallery.deleteCollectionRule.json](./net.atpix.gallery.deleteCollectionRule.json) | `net.atpix.gallery.deleteCollectionRule` | `procedure` |
 
 ## Metadata provenance
 
 Fields are named for atproto camelCase conventions. The table below maps each user-facing metadata field to its semantic source.
 
-### `com.atpix.gallery.photo`
+### `net.atpix.gallery.photo`
 
 | Field | Source | Standard term |
 |-------|--------|---------------|
@@ -108,11 +108,11 @@ Fields are named for atproto camelCase conventions. The table below maps each us
 
 | Assertion | Source | Purpose |
 |-----------|--------|---------|
-| `com.atpix.gallery.creatorDid` | **ATPix** · C2PA §6.2.1 | Bind manifest to uploader atproto DID |
+| `net.atpix.gallery.creatorDid` | **ATPix** · C2PA §6.2.1 | Bind manifest to uploader atproto DID |
 
 See [c2pa.md](../../.agents/kb/c2pa.md) for claim-generator and validator workflows.
 
-### `com.atpix.gallery.album`
+### `net.atpix.gallery.album`
 
 | Field | Source | Standard term |
 |-------|--------|---------------|
@@ -126,7 +126,7 @@ See [c2pa.md](../../.agents/kb/c2pa.md) for claim-generator and validator workfl
 | `spaceUri` | **ATPix** · ATP-0016 | Linked permissioned space |
 | `collectionRuleUris` | **ATPix** | Rules seeding this album |
 
-### `com.atpix.gallery.collectionRule`
+### `net.atpix.gallery.collectionRule`
 
 | Field | Source | Notes |
 |-------|--------|-------|
@@ -143,4 +143,4 @@ See [c2pa.md](../../.agents/kb/c2pa.md) for claim-generator and validator workfl
 2. Set `target_collection` on each **query** and **procedure** lexicon.
 3. Attach Lua scripts for `listFeedPhotos` (rule evaluation + follow graph) and `createAlbum` (permissioned space provisioning).
 4. Enable `feature.spaces_enabled` before testing permissioned albums.
-5. Permissioned photos use `com.atproto.space.*` endpoints with `collection: com.atpix.gallery.photo` inside the album's `spaceUri`.
+5. Permissioned photos use `com.atproto.space.*` endpoints with `collection: net.atpix.gallery.photo` inside the album's `spaceUri`.

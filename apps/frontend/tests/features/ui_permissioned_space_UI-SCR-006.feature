@@ -15,7 +15,7 @@ Feature: Permissioned space administration presentation
 
   Scenario: Space metadata card shows DID and record type
     Then I should see the space DID in monospaced metadata style
-    And I should see record type com.atpix.gallery.albumSpace
+    And I should see record type net.atpix.gallery.albumSpace
     And I should see a Gated status badge
 
   Scenario: Member directory lists roles and actions

@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atpix.gallery.listAlbums",
+  "id": "net.atpix.gallery.listAlbums",
   "defs": {
     "main": {
       "type": "query",
@@ -27,7 +27,7 @@
             "cursor": { "type": "string" },
             "albums": {
               "type": "array",
-              "items": { "type": "ref", "ref": "com.atpix.gallery.defs#albumView" }
+              "items": { "type": "ref", "ref": "net.atpix.gallery.defs#albumView" }
             }
           }
         }

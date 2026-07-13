@@ -10,7 +10,7 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[4]
 LEXICON_DIR = REPO_ROOT / "docs" / "lexicon"
 MANIFEST_PATH = REPO_ROOT / "config" / "happyview" / "provision-manifest.json"
-NAMESPACE = "com.atpix.gallery"
+NAMESPACE = "net.atpix.gallery"
 RECORD_TYPES = frozenset({"record"})
 QUERY_PROCEDURE_TYPES = frozenset({"query", "procedure"})
 
@@ -76,7 +76,7 @@ def test_lexicon_json_structure(filename: str) -> None:
 
 def test_photo_record_cbor_size_headroom() -> None:
     """Photo metadata with blob refs should stay well under 1 MiB (SRS-TC-005)."""
-    path = LEXICON_DIR / "com.atpix.gallery.photo.json"
+    path = LEXICON_DIR / "net.atpix.gallery.photo.json"
     with path.open(encoding="utf-8") as handle:
         photo_lexicon = json.load(handle)
 

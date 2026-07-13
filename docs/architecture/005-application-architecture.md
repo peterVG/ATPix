@@ -26,7 +26,7 @@ Honors PRD constraint against custom App View servers while satisfying the Open 
 
 ## Assumptions
 
-HappyView instance is provisioned separately with `com.atpix.gallery.*` lexicons uploaded.
+HappyView instance is provisioned separately with `net.atpix.gallery.*` lexicons uploaded.
 
 ## Alternatives Considered
 

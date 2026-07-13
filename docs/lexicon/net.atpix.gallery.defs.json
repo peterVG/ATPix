@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atpix.gallery.defs",
+  "id": "net.atpix.gallery.defs",
   "defs": {
     "visibility": {
       "type": "string",
@@ -43,7 +43,7 @@
     },
     "photo": {
       "type": "object",
-      "description": "Hydrated photo record view (subset of com.atpix.gallery.photo fields).",
+      "description": "Hydrated photo record view (subset of net.atpix.gallery.photo fields).",
       "required": ["image", "createdAt"],
       "properties": {
         "title": { "type": "string", "maxLength": 500 },

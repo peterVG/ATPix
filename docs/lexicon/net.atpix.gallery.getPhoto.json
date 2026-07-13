@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atpix.gallery.getPhoto",
+  "id": "net.atpix.gallery.getPhoto",
   "defs": {
     "main": {
       "type": "query",
@@ -18,7 +18,7 @@
           "type": "object",
           "required": ["photo"],
           "properties": {
-            "photo": { "type": "ref", "ref": "com.atpix.gallery.defs#photoView" }
+            "photo": { "type": "ref", "ref": "net.atpix.gallery.defs#photoView" }
           }
         }
       }

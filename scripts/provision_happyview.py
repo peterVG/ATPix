@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Provision HappyView with ATPix lexicons and feature flags (Task 1.2 / ADR-007).
 
-Uploads ``com.atpix.gallery.*`` lexicons from ``docs/lexicon/`` per
+Uploads ``net.atpix.gallery.*`` lexicons from ``docs/lexicon/`` per
 ``config/happyview/provision-manifest.json`` and enables ``feature.spaces_enabled``.
 
 Environment:

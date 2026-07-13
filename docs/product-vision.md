@@ -75,4 +75,4 @@ ATPix eliminates the traditional photo-app tradeoff between ease of use and data
 
 - Bluesky/HappyView ecosystem (Jetstream, relay, PDS)
 - Project observability stack in repo `docker-compose.yml`
-- Domain for `com.atpix.gallery` NSID authority (TBD)
+- Domain for `net.atpix.gallery` NSID authority (TBD)

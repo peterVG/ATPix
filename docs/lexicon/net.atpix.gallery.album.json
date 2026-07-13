@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atpix.gallery.album",
+  "id": "net.atpix.gallery.album",
   "description": "ATPix album container. Maps to schema:ImageGallery / schema:Collection conceptually.",
   "defs": {
     "main": {
@@ -33,13 +33,13 @@
           },
           "visibility": {
             "type": "ref",
-            "ref": "com.atpix.gallery.defs#visibility",
+            "ref": "net.atpix.gallery.defs#visibility",
             "description": "ATPix — public, unlisted, or permissioned."
           },
           "spaceUri": {
             "type": "string",
             "maxLength": 512,
-            "description": "ATPix · ATP-0016 — ats:// URI for permissioned albums (type com.atpix.gallery.albumSpace)."
+            "description": "ATPix · ATP-0016 — ats:// URI for permissioned albums (type net.atpix.gallery.albumSpace)."
           },
           "spaceKey": {
             "type": "string",

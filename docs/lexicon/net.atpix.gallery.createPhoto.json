@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atpix.gallery.createPhoto",
+  "id": "net.atpix.gallery.createPhoto",
   "defs": {
     "main": {
       "type": "procedure",
@@ -28,13 +28,13 @@
             "source": { "type": "string", "format": "at-uri" },
             "contributor": { "type": "string", "format": "did" },
             "inLanguage": { "type": "string", "maxLength": 35 },
-            "locationCreated": { "type": "ref", "ref": "com.atpix.gallery.defs#geoPlace" },
+            "locationCreated": { "type": "ref", "ref": "net.atpix.gallery.defs#geoPlace" },
             "albumUris": {
               "type": "array",
               "maxLength": 100,
               "items": { "type": "string", "format": "at-uri" }
             },
-            "visibility": { "type": "ref", "ref": "com.atpix.gallery.defs#visibility" },
+            "visibility": { "type": "ref", "ref": "net.atpix.gallery.defs#visibility" },
             "spaceUri": { "type": "string", "maxLength": 512 }
           }
         }

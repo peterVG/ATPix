@@ -20,7 +20,7 @@ Accepted
 - **Specification target:** C2PA Technical Specification **2.2** (2025-05-01); no Appendix C deprecated constructs.
 - **Signing:** X.509 credentials with Extended Key Usage `c2pa-kp-claimSigning` (OID 1.3.6.1.4.1.62558.2.1). Development uses CAI test certificates; production uses org-issued certs via secure secret store.
 - **Embedding:** Default path embeds manifest store in JPEG/PNG per Appendix A before `uploadBlob`.
-- **Custom assertion:** `com.atpix.gallery.creatorDid` records uploader atproto DID in manifest assertion store.
+- **Custom assertion:** `net.atpix.gallery.creatorDid` records uploader atproto DID in manifest assertion store.
 - **Frontend role:** Calls backend C2PA API before upload; displays Level 1–3 validation per F-014; trust list UI per F-016.
 
 ## Rationale

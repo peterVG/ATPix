@@ -238,7 +238,7 @@ Phases (order flexible per spec text):
 - Target **C2PA 2.2** for new ATPix work.
 - Use `c2pa.actions.v2` for new manifests when possible; support reading v1.
 - Deprecated constructs MUST NOT be written by claim generators (Appendix C).
-- Custom assertions/namespaces: reverse-DNS prefix (e.g. `com.atpix.gallery.creatorDid`) per §6.2.1 namespacing.
+- Custom assertions/namespaces: reverse-DNS prefix (e.g. `net.atpix.gallery.creatorDid`) per §6.2.1 namespacing.
 
 ---
 
@@ -270,8 +270,8 @@ Phases (order flexible per spec text):
 | C2PA field | ATPix bridge |
 |------------|--------------|
 | `claim_generator_info.name` | "ATPix" + version |
-| Custom assertion `com.atpix.gallery.creatorDid` | Author's atproto DID |
-| Custom assertion `com.atpix.gallery.photoUri` | `at://` record URI after publish |
+| Custom assertion `net.atpix.gallery.creatorDid` | Author's atproto DID |
+| Custom assertion `net.atpix.gallery.photoUri` | `at://` record URI after publish |
 | `c2pa.published` action | Triggered when visibility → public |
 
 ---

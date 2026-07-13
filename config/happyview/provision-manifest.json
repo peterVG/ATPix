@@ -1,98 +1,98 @@
 {
-  "namespace": "com.atpix.gallery",
+  "namespace": "net.atpix.gallery",
   "lexicon_dir": "docs/lexicon",
   "upload_order": [
     {
-      "file": "com.atpix.gallery.defs.json",
+      "file": "net.atpix.gallery.defs.json",
       "backfill": false
     },
     {
-      "file": "com.atpix.gallery.photo.json",
+      "file": "net.atpix.gallery.photo.json",
       "backfill": true
     },
     {
-      "file": "com.atpix.gallery.album.json",
+      "file": "net.atpix.gallery.album.json",
       "backfill": true
     },
     {
-      "file": "com.atpix.gallery.albumItem.json",
+      "file": "net.atpix.gallery.albumItem.json",
       "backfill": true
     },
     {
-      "file": "com.atpix.gallery.collectionRule.json",
+      "file": "net.atpix.gallery.collectionRule.json",
       "backfill": true
     },
     {
-      "file": "com.atpix.gallery.listPhotos.json",
-      "target_collection": "com.atpix.gallery.photo"
+      "file": "net.atpix.gallery.listPhotos.json",
+      "target_collection": "net.atpix.gallery.photo"
     },
     {
-      "file": "com.atpix.gallery.getPhoto.json",
-      "target_collection": "com.atpix.gallery.photo"
+      "file": "net.atpix.gallery.getPhoto.json",
+      "target_collection": "net.atpix.gallery.photo"
     },
     {
-      "file": "com.atpix.gallery.listAlbums.json",
-      "target_collection": "com.atpix.gallery.album"
+      "file": "net.atpix.gallery.listAlbums.json",
+      "target_collection": "net.atpix.gallery.album"
     },
     {
-      "file": "com.atpix.gallery.getAlbum.json",
-      "target_collection": "com.atpix.gallery.album"
+      "file": "net.atpix.gallery.getAlbum.json",
+      "target_collection": "net.atpix.gallery.album"
     },
     {
-      "file": "com.atpix.gallery.listAlbumItems.json",
-      "target_collection": "com.atpix.gallery.albumItem"
+      "file": "net.atpix.gallery.listAlbumItems.json",
+      "target_collection": "net.atpix.gallery.albumItem"
     },
     {
-      "file": "com.atpix.gallery.listFeedPhotos.json",
-      "target_collection": "com.atpix.gallery.photo"
+      "file": "net.atpix.gallery.listFeedPhotos.json",
+      "target_collection": "net.atpix.gallery.photo"
     },
     {
-      "file": "com.atpix.gallery.listCollectionRules.json",
-      "target_collection": "com.atpix.gallery.collectionRule"
+      "file": "net.atpix.gallery.listCollectionRules.json",
+      "target_collection": "net.atpix.gallery.collectionRule"
     },
     {
-      "file": "com.atpix.gallery.createPhoto.json",
-      "target_collection": "com.atpix.gallery.photo"
+      "file": "net.atpix.gallery.createPhoto.json",
+      "target_collection": "net.atpix.gallery.photo"
     },
     {
-      "file": "com.atpix.gallery.updatePhoto.json",
-      "target_collection": "com.atpix.gallery.photo"
+      "file": "net.atpix.gallery.updatePhoto.json",
+      "target_collection": "net.atpix.gallery.photo"
     },
     {
-      "file": "com.atpix.gallery.deletePhoto.json",
-      "target_collection": "com.atpix.gallery.photo"
+      "file": "net.atpix.gallery.deletePhoto.json",
+      "target_collection": "net.atpix.gallery.photo"
     },
     {
-      "file": "com.atpix.gallery.createAlbum.json",
-      "target_collection": "com.atpix.gallery.album"
+      "file": "net.atpix.gallery.createAlbum.json",
+      "target_collection": "net.atpix.gallery.album"
     },
     {
-      "file": "com.atpix.gallery.updateAlbum.json",
-      "target_collection": "com.atpix.gallery.album"
+      "file": "net.atpix.gallery.updateAlbum.json",
+      "target_collection": "net.atpix.gallery.album"
     },
     {
-      "file": "com.atpix.gallery.deleteAlbum.json",
-      "target_collection": "com.atpix.gallery.album"
+      "file": "net.atpix.gallery.deleteAlbum.json",
+      "target_collection": "net.atpix.gallery.album"
     },
     {
-      "file": "com.atpix.gallery.addToAlbum.json",
-      "target_collection": "com.atpix.gallery.albumItem"
+      "file": "net.atpix.gallery.addToAlbum.json",
+      "target_collection": "net.atpix.gallery.albumItem"
     },
     {
-      "file": "com.atpix.gallery.removeFromAlbum.json",
-      "target_collection": "com.atpix.gallery.albumItem"
+      "file": "net.atpix.gallery.removeFromAlbum.json",
+      "target_collection": "net.atpix.gallery.albumItem"
     },
     {
-      "file": "com.atpix.gallery.createCollectionRule.json",
-      "target_collection": "com.atpix.gallery.collectionRule"
+      "file": "net.atpix.gallery.createCollectionRule.json",
+      "target_collection": "net.atpix.gallery.collectionRule"
     },
     {
-      "file": "com.atpix.gallery.updateCollectionRule.json",
-      "target_collection": "com.atpix.gallery.collectionRule"
+      "file": "net.atpix.gallery.updateCollectionRule.json",
+      "target_collection": "net.atpix.gallery.collectionRule"
     },
     {
-      "file": "com.atpix.gallery.deleteCollectionRule.json",
-      "target_collection": "com.atpix.gallery.collectionRule"
+      "file": "net.atpix.gallery.deleteCollectionRule.json",
+      "target_collection": "net.atpix.gallery.collectionRule"
     }
   ],
   "feature_flags": {

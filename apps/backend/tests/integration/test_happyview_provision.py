@@ -64,7 +64,7 @@ def test_happyview_health() -> None:
 
 @requires_happyview
 def test_gallery_lexicons_uploaded() -> None:
-    """All com.atpix.gallery lexicons from manifest are registered on HappyView."""
+    """All net.atpix.gallery lexicons from manifest are registered on HappyView."""
     with MANIFEST_PATH.open(encoding="utf-8") as handle:
         manifest = json.load(handle)
 
