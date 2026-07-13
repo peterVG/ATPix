@@ -80,12 +80,28 @@ This document is the **global execution roadmap** for ATPix v1. It sequences wor
 
 ---
 
-## Phase 4: Discovery, Sharing & Public Galleries
+> **Execution priority (R&D):** Phase 4 (permissioned spaces) runs **before** Phase 5 (discovery & public sharing). Task IDs `4.x` / `5.x` are unchanged for PRD/SRS/BDD traceability. Phase 5 is **deferred until after HappyView Permissioned Spaces validation** (F-008 / RC-007) — it does not block the core research question.
+
+## Phase 4: Permissioned Albums (HappyView Spaces)
+
+- [ ] **Task 5.1: Permissioned album lifecycle and space admin**
+  - **Description:** Deliver mandatory F-008 end-to-end: `createSpace`, permissioned upload path, `getBlob`, invites (`createInvite`/`acceptInvite`), membership, UI-SCR-006. Validate RC-007.
+  - **Estimated Time:** 16 hours
+  - **Dependencies:** Task 3.3
+  - **Related Requirements:** [F-008](./prd.md#f-008-permissioned-gallery--album-access-happyview-permissioned-spaces-validation), [TC-004](./prd.md#tc-004-repo-vs-space-storage-model), [NFR-013](./prd.md#nfr-013-permissioned-spaces-reference-validation), [SRS-F-008](./srs.md#srs-f-008-permissioned-album-access-happyview-spaces), [ADR-010](./architecture/010-permissioned-spaces-storage.md)
+  - **Related Tests:** [`permissioned_albums_SRS-F-008.feature`](../apps/frontend/tests/features/permissioned_albums_SRS-F-008.feature), [`permissioned_spaces_integration_SRS-F-008.feature`](../apps/backend/tests/features/permissioned_spaces_integration_SRS-F-008.feature), [`ui_permissioned_space_UI-SCR-006.feature`](../apps/frontend/tests/features/ui_permissioned_space_UI-SCR-006.feature)
+  - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task 5.1. Execute FE-5.1 and BE-4.1. Multi-account integration tests against live HappyView with feature.spaces_enabled=true. Walkthrough with raw CLI, check off, commit, push.`
+
+---
+
+## Phase 5: Discovery, Sharing & Public Galleries *(deferred post–spaces validation)*
+
+Discovery (Path B), public profiles, shareable links, and unified photo detail/deletion ship **after** permissioned-space R&D is complete. Requires only Path A uploads and basic albums from Phase 3 until Task 5.1 lands.
 
 - [ ] **Task 4.1: Network discovery feed — Path B**
   - **Description:** Deliver F-010 Following/Hashtags feed (UI-SCR-002) via HappyView index only—no custom firehose ([TC-012](./prd.md#tc-012-happyview-only-network-sync)).
   - **Estimated Time:** 8 hours
-  - **Dependencies:** Task 3.3
+  - **Dependencies:** Task 5.1
   - **Related Requirements:** [F-010](./prd.md#f-010-network-discovery-feed-and-album-sourcing-path-b--happyview-index), [SRS-F-010](./srs.md#srs-f-010-network-discovery-feed-path-b)
   - **Related Tests:** [`network_discovery_SRS-F-010.feature`](../apps/frontend/tests/features/network_discovery_SRS-F-010.feature), [`ui_discovery_feed_UI-SCR-002.feature`](../apps/frontend/tests/features/ui_discovery_feed_UI-SCR-002.feature), [`happyview_only_sync_SRS-TC-012.feature`](../apps/backend/tests/features/happyview_only_sync_SRS-TC-012.feature)
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task 4.1. Execute FE-4.1. Verify no relay firehose code. Walkthrough, check off, commit, push.`
@@ -99,7 +115,7 @@ This document is the **global execution roadmap** for ATPix v1. It sequences wor
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task 4.2. Execute FE-4.2. Walkthrough, check off, commit, push.`
 
 - [ ] **Task 4.3: Photo detail, deletion, and provenance display**
-  - **Description:** Deliver F-009 deletion/membership management, UI-SCR-003 photo detail with visibility and dual provenance surfacing ([TC-011](./prd.md#tc-011-dual-provenance-model)).
+  - **Description:** Deliver F-009 deletion/membership management, UI-SCR-003 photo detail with visibility and dual provenance surfacing ([TC-011](./prd.md#tc-011-dual-provenance-model)). Unifies public, unlisted, and permissioned photo UX after Task 5.1.
   - **Estimated Time:** 8 hours
   - **Dependencies:** Task 4.2
   - **Related Requirements:** [F-009](./prd.md#f-009-photo-deletion-and-album-membership-management), [SRS-F-009](./srs.md#srs-f-009-photo-deletion-and-album-membership), [UI-SCR-003](./ui-requirements.md#ui-scr-003-photo-detail)
@@ -108,24 +124,12 @@ This document is the **global execution roadmap** for ATPix v1. It sequences wor
 
 ---
 
-## Phase 5: Permissioned Albums (HappyView Spaces)
-
-- [ ] **Task 5.1: Permissioned album lifecycle and space admin**
-  - **Description:** Deliver mandatory F-008 end-to-end: `createSpace`, permissioned upload path, `getBlob`, invites (`createInvite`/`acceptInvite`), membership, UI-SCR-006. Validate RC-007.
-  - **Estimated Time:** 16 hours
-  - **Dependencies:** Task 4.3
-  - **Related Requirements:** [F-008](./prd.md#f-008-permissioned-gallery--album-access-happyview-permissioned-spaces-validation), [TC-004](./prd.md#tc-004-repo-vs-space-storage-model), [NFR-013](./prd.md#nfr-013-permissioned-spaces-reference-validation), [SRS-F-008](./srs.md#srs-f-008-permissioned-album-access-happyview-spaces), [ADR-010](./architecture/010-permissioned-spaces-storage.md)
-  - **Related Tests:** [`permissioned_albums_SRS-F-008.feature`](../apps/frontend/tests/features/permissioned_albums_SRS-F-008.feature), [`permissioned_spaces_integration_SRS-F-008.feature`](../apps/backend/tests/features/permissioned_spaces_integration_SRS-F-008.feature), [`ui_permissioned_space_UI-SCR-006.feature`](../apps/frontend/tests/features/ui_permissioned_space_UI-SCR-006.feature)
-  - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task 5.1. Execute FE-5.1 and BE-4.1. Multi-account integration tests against live HappyView with feature.spaces_enabled=true. Walkthrough with raw CLI, check off, commit, push.`
-
----
-
 ## Phase 6: C2PA Edit, Validation & Trust
 
 - [ ] **Task 6.1: C2PA edit chain and validation UI (cross-module)**
   - **Description:** Deliver F-013 edit provenance, F-014 validation UI (Levels 1–3), F-015 ingredients, F-016 trust config (UI-SCR-008). Neutral trust copy per NFR-016.
   - **Estimated Time:** 14 hours
-  - **Dependencies:** Task 5.1
+  - **Dependencies:** Task 4.3
   - **Related Requirements:** [F-013](./prd.md#f-013-c2pa-provenance-on-edit-and-publish) through [F-016](./prd.md#f-016-c2pa-trust-configuration), [NFR-014](./prd.md#nfr-014-c2pa-22-conformance) through [NFR-017](./prd.md#nfr-017-c2pa-validation-performance)
   - **Related Tests:** [`c2pa_provenance_edit_SRS-F-013.feature`](../apps/backend/tests/features/c2pa_provenance_edit_SRS-F-013.feature), [`c2pa_ingredient_handling_SRS-F-015.feature`](../apps/backend/tests/features/c2pa_ingredient_handling_SRS-F-015.feature), [`c2pa_validation_ui_SRS-F-014.feature`](../apps/frontend/tests/features/c2pa_validation_ui_SRS-F-014.feature), [`c2pa_trust_config_SRS-F-016.feature`](../apps/frontend/tests/features/c2pa_trust_config_SRS-F-016.feature)
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task 6.1. Execute BE-6.1 and FE-6.1. Walkthrough, check off, commit, push.`
@@ -179,11 +183,11 @@ This document is the **global execution roadmap** for ATPix v1. It sequences wor
 | 1 | Foundation & HappyView | 8 |
 | 2 | Auth & shell | 8 |
 | 3 | Core gallery (Path A) | 32 |
-| 4 | Discovery & sharing | 22 |
-| 5 | Permissioned spaces | 16 |
+| 4 | Permissioned spaces (R&D priority) | 16 |
+| 5 | Discovery & sharing *(post-spaces)* | 22 |
 | 6 | C2PA edit/validation | 14 |
 | 7 | Verification & performance | 12 |
 | 8 | Docs & architecture | 7 |
 
 - **Total Estimated Time:** ~119 hours
-- **Critical Path:** HappyView provision → OAuth shell → C2PA upload → gallery/albums → permissioned spaces → C2PA validation → RC verification → architecture doc
+- **Critical Path:** HappyView provision → OAuth shell → C2PA upload → gallery/albums → **permissioned spaces (RC-007)** → discovery & sharing → C2PA validation → RC verification → architecture doc
