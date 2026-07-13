@@ -12,7 +12,7 @@ Accepted
 
 ## Context / Requirement Reference
 
-[AGENTS.md](../../AGENTS.md) mandates unit, integration, UI, BDD, and performance tests with structured reporting. [docs/prd.md](../prd.md) NFR-006 requires traceable tests for every MUST requirement. The init-python-js skill defines symmetrical test taxonomy under `apps/frontend/tests/` and `apps/backend/tests/`.
+[AGENTS.md](../../AGENTS.md) mandates unit, integration, UI, BDD, and performance tests with structured reporting. [docs/overview/002-prd.md](../overview/002-prd.md) NFR-006 requires traceable tests for every MUST requirement. The init-python-js skill defines symmetrical test taxonomy under `apps/frontend/tests/` and `apps/backend/tests/`.
 
 ## Decision
 

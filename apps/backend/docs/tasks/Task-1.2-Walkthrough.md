@@ -2,7 +2,7 @@
 
 **Branch:** `task/1.2-happyview-provisioning`  
 **Date:** 2026-07-13  
-**Related requirements:** [F-011](../../../../docs/prd.md#f-011-lexicon-publication-and-network-indexing), [TC-001](../../../../docs/prd.md#tc-001-happyview-app-view), [TC-008](../../../../docs/prd.md#tc-008-permissioned-spaces-feature-flag), [SRS-F-011](../../../../docs/srs.md#srs-f-011-lexicon-publication-and-network-indexing)  
+**Related requirements:** [F-011](../../../../docs/overview/002-prd.md#f-011-lexicon-publication-and-network-indexing), [TC-001](../../../../docs/overview/002-prd.md#tc-001-happyview-app-view), [TC-008](../../../../docs/overview/002-prd.md#tc-008-permissioned-spaces-feature-flag), [SRS-F-011](../../../../docs/overview/003-srs.md#srs-f-011-lexicon-publication-and-network-indexing)  
 **ADR:** [007-happyview-app-view-integration.md](../../../../docs/architecture/007-happyview-app-view-integration.md)
 
 ## Summary
@@ -112,4 +112,4 @@ ruff check tests/features/steps/happyview_steps.py tests/unit/test_lexicon_artif
 | `apps/backend/tests/features/environment.py` | Behave environment hooks |
 | `README.md` | HappyView setup + provision steps |
 | `.env.example` | `HAPPYVIEW_ADMIN_KEY` |
-| `docs/plan.md` | Task 1.2 checked off |
+| `docs/overview/005-plan.md` | Task 1.2 checked off |

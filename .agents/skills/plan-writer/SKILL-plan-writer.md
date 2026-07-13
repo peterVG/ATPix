@@ -32,7 +32,7 @@ Every task MUST be formatted as an interactive Markdown checkbox so that progres
 
 ### 2. Module-Specific Task Prefixes
 
-When generating implementation plans that are NOT in the global root `docs/plan.md` (e.g., module-specific plans like `apps/[Module Name]/docs/plan.md`), you MUST prefix all Task numbers with the capitalized initials of the module name.
+When generating implementation plans that are NOT in the global root `docs/overview/005-plan.md` (e.g., module-specific plans like `apps/[Module Name]/docs/plan.md`), you MUST prefix all Task numbers with the capitalized initials of the module name.
 For example:
 - **arkrim_engine** task 1.1 = `Task AE-1.1`
 - **arkrim_upload** task 3.5 = `Task AU-3.5`
@@ -52,7 +52,7 @@ Every task MUST explicitly link back to its originating requirements (PRD/SRS).
   - **Dependencies:** Task 2.3
   - **Related Requirements:** [SRS-SEC-001](../srs.md#srs-sec-001-local-sovereignty--transparency), [NFR-002](../prd.md#nfr-002-api-transparency)
   - **Related Tests:** [`local_sovereignty_SRS-SEC-001_test.exs`](../../test/features/local_sovereignty_SRS-SEC-001_test.exs)
-  - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task [Task ID]. Then begin development, executing all commands strictly within the isolated apps/[Module Name]/ directory (if applicable). Upon completion, YOU MUST perfectly construct the apps/[Module Name]/docs/tasks/Task-[Task ID]-Walkthrough.md file linking explicit SRS mappings (including BOTH the ID and full human-readable title text) in heading position 2 exclusively, and delete the Plan.md and ToDos.md files to preserve zero tracking cruft natively. Then check off the Markdown box locally in the appropriate docs/plan.md, commit your changes, and push the branch to origin.`
+  - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task [Task ID]. Then begin development, executing all commands strictly within the isolated apps/[Module Name]/ directory (if applicable). Upon completion, YOU MUST perfectly construct the apps/[Module Name]/docs/tasks/Task-[Task ID]-Walkthrough.md file linking explicit SRS mappings (including BOTH the ID and full human-readable title text) in heading position 2 exclusively, and delete the Plan.md and ToDos.md files to preserve zero tracking cruft natively. Then check off the Markdown box locally in the appropriate docs/overview/005-plan.md, commit your changes, and push the branch to origin.`
 ```
 
 _If a task is purely structural (e.g., setting up a repository) and has no specific tests, mark Related Tests as `N/A`._
@@ -66,7 +66,7 @@ For tasks that involve external dependencies (APIs, databases, filesystems), the
 The implementation plan MUST include a dedicated task in the Verification phase to write and execute Performance/Load tests (e.g., Locust) using the framework specified in the ADRs.
 For all functional implementation tasks (e.g., business logic, UI features), the prompt MUST explicitly instruct the executing agent to **invoke the `@feature-writer` skill to translate SRS requirements into executable BDD feature tests.**
 Additionally, the Agent Prompt for all testing tasks MUST explicitly instruct the developer to output test results using the Test Reporting framework (e.g., Allure) specified in the ADRs, AND to copy the raw CLI output of the test runs into a permanent `apps/[Module Name]/docs/tasks/Task-[Task ID]-Walkthrough.md` file. **Crucially, the prompt MUST mandate that this file is saved directly into the project's `apps/[Module Name]/docs/tasks/` folder and NEVER in an internal agent scratchpad.**
-Crucially, the prompt MUST also explicitly instruct the agent to check off the `- [ ]` markdown box locally inside the appropriate `docs/plan.md` the moment the task is confirmed complete, commit its changes, and push its feature branch to `origin`.
+Crucially, the prompt MUST also explicitly instruct the agent to check off the `- [ ]` markdown box locally inside the appropriate `docs/overview/005-plan.md` the moment the task is confirmed complete, commit its changes, and push its feature branch to `origin`.
 
 ### 5. Phased, Dependency-Aware Approach
 
@@ -91,7 +91,7 @@ This document outlines the step-by-step implementation plan...
   - **Dependencies:** [Previous tasks, e.g., Task 1.1 or None]
   - **Related Requirements:** [[SRS/PRD mapping]](../srs.md)
   - **Related Tests:** [[Path to formal test specification file or N/A]](../../test/)
-  - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task [Task ID]. Then begin development (ensuring all tool commands are run inside apps/[Module Name]/ if applicable)... Additionally, invoke the @feature-writer skill to translate SRS requirements into executable BDD feature tests. Upon completion, YOU MUST generate apps/[Module Name]/docs/tasks/Task-[Task ID]-Walkthrough.md directly in the project repository with clear SRS mapping (including BOTH the ID and full human-readable title text) in the secondary section, and strictly delete the internal tracking Plan/ToDos documents before checking off the Markdown box locally in the appropriate docs/plan.md. Then commit your changes and push the branch to origin.`
+  - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task [Task ID]. Then begin development (ensuring all tool commands are run inside apps/[Module Name]/ if applicable)... Additionally, invoke the @feature-writer skill to translate SRS requirements into executable BDD feature tests. Upon completion, YOU MUST generate apps/[Module Name]/docs/tasks/Task-[Task ID]-Walkthrough.md directly in the project repository with clear SRS mapping (including BOTH the ID and full human-readable title text) in the secondary section, and strictly delete the internal tracking Plan/ToDos documents before checking off the Markdown box locally in the appropriate docs/overview/005-plan.md. Then commit your changes and push the branch to origin.`
 
 ## Summary Timeline
 
@@ -130,7 +130,7 @@ This document outlines the step-by-step implementation plan...
   - **Dependencies:** Task 1.1
   - **Related Requirements:** SRS-DATA-001, TC-002
   - **Related Tests:** `test/features/database_persistence_SRS-DATA-001_test.exs`
-  - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task [Task ID]. Then begin development within apps/[Module Name]/. Additionally, invoke the @feature-writer skill to translate SRS requirements into executable BDD feature tests. Upon completion, YOU MUST generate apps/[Module Name]/docs/tasks/Task-[Task ID]-Walkthrough.md directly in the project repository with the native SRS cross-references (including BOTH the ID and full human-readable title text) anchored at heading slot 2 exclusively. Then delete the transient Plan.md and ToDos.md files completely. If this task introduces new dependencies or changes run commands, you MUST update the root README.md Setup instructions. After completion, check off the Markdown box locally in the appropriate docs/plan.md. Then commit your changes and push the branch to origin.`
+  - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task [Task ID]. Then begin development within apps/[Module Name]/. Additionally, invoke the @feature-writer skill to translate SRS requirements into executable BDD feature tests. Upon completion, YOU MUST generate apps/[Module Name]/docs/tasks/Task-[Task ID]-Walkthrough.md directly in the project repository with the native SRS cross-references (including BOTH the ID and full human-readable title text) anchored at heading slot 2 exclusively. Then delete the transient Plan.md and ToDos.md files completely. If this task introduces new dependencies or changes run commands, you MUST update the root README.md Setup instructions. After completion, check off the Markdown box locally in the appropriate docs/overview/005-plan.md. Then commit your changes and push the branch to origin.`
 ```
 
 ## Workflow: PRD/SRS/ADRs → Plan
@@ -152,7 +152,7 @@ Draft the plan using the interactive `- [ ]` markdown syntax.
 > **CRITICAL ARTIFACT ISOLATION OVERRIDE:** You MUST save the generated checklists directly into the project's permanent file structure depending on the plan's scope, and NEVER as an `implementation_plan.md` artifact hidden in your internal system/brain directory.
 > 
 > When architecting a system or fulfilling a holistic PRD mandate across a monorepo, you MUST generate the plans in this specific sequential order:
-> 1. **Global Project Plan:** First, generate the high-level project roadmap and save it to `docs/plan.md` in the repository root.
+> 1. **Global Project Plan:** First, generate the high-level project roadmap and save it to `docs/overview/005-plan.md` in the repository root.
 > 2. **Module-Specific Plans:** Then, generate customized, highly-detailed implementation plans for each specific application/module and save them directly to `apps/[Module Name]/docs/plan.md`.
 
 ### Step 5: Map Tests and Requirements
@@ -168,10 +168,10 @@ Review the final plan, SRS, and ADRs to identify all necessary third-party libra
 Ensure the final Phase of the implementation plan includes a task to populate or update the main `README.md` sections (Development Environment, Viewing Developer Documentation, Production Environment, etc.) based on the finalized tech stack and any Architecture Decision Records (ADRs).
 For this final task, you MUST use the following exact Agent Prompt:
 `@AGENTS.md Begin by creating a new feature branch. Then read the project's Architecture Decision Records (ADRs) and the finalized tech stack to populate or update the 'Setup Development Environment' (including 'Run the Application' and 'Run tests') and 'Setup Production Environment' (including 'Deploy to Production' and 'Monitor and Update') sections of the README.md file. Ensure installation instructions are platform-agnostic (e.g., don't assume macOS/Homebrew) or explicitly accommodate multiple operating systems as required by the ADRs. However, if the project requires Dockerization, ensure the final Phase of the implementation plan includes a task to populate or update the `Dockerfile` based on the finalized tech stack and ADRs as well as include a "How to Dockerize" section in the README.md file that includes a basic overview of how Docker works and its main components.`
-Make sure to check off the task as complete in the appropriate docs/plan.md once finished. Then commit your changes and push the branch to origin.`
+Make sure to check off the task as complete in the appropriate docs/overview/005-plan.md once finished. Then commit your changes and push the branch to origin.`
 
 ### Step 8: Architecture Synthesis
 
 Ensure the _absolute final task_ of the implementation plan invokes the Architecture Writer skill to map the completed system.
 For this final task, you MUST use the following exact Agent Prompt:
-`@AGENTS.md Begin by creating a new feature branch. Then invoke the @architecture-writer skill. Read its instructions entirely, then execute all steps to synthesize the @docs/prd.md, @docs/srs.md, all srs.md files in apps/[Module Name]/docs/ and ADRs in the @docs/architecture/ folder and an in-depth scan of the codebase reality into a comprehensive @docs/architecture.md file featuring ISO 42010 viewpoints and Mermaid diagrams. Make sure to check off the task as complete in the appropriate @docs/plan.md once finished. Then commit your changes and push the branch to origin.`
+`@AGENTS.md Begin by creating a new feature branch. Then invoke the @architecture-writer skill. Read its instructions entirely, then execute all steps to synthesize the @docs/overview/002-prd.md, @docs/overview/003-srs.md, all srs.md files in apps/[Module Name]/docs/ and ADRs in the @docs/architecture/ folder and an in-depth scan of the codebase reality into a comprehensive @docs/overview/000-architecture.md file featuring ISO 42010 viewpoints and Mermaid diagrams. Make sure to check off the task as complete in the appropriate @docs/overview/005-plan.md once finished. Then commit your changes and push the branch to origin.`

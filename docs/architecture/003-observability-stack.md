@@ -12,7 +12,7 @@ Accepted
 
 ## Context / Requirement Reference
 
-[AGENTS.md](../../AGENTS.md) Centralized Logging & Observability mandates stdout-only application logs routed through Promtail → Redpanda → Loki with Prometheus metrics and Grafana dashboards. [docs/prd.md](../prd.md) NFR-004 and RC-005 repeat this requirement. Root [docker-compose.yml](../../docker-compose.yml) already provisions the stack.
+[AGENTS.md](../../AGENTS.md) Centralized Logging & Observability mandates stdout-only application logs routed through Promtail → Redpanda → Loki with Prometheus metrics and Grafana dashboards. [docs/overview/002-prd.md](../overview/002-prd.md) NFR-004 and RC-005 repeat this requirement. Root [docker-compose.yml](../../docker-compose.yml) already provisions the stack.
 
 ## Decision
 

@@ -12,7 +12,7 @@ Accepted
 
 ## Context / Requirement Reference
 
-[docs/product-vision.md](../product-vision.md) and [docs/prd.md](../prd.md) Technology Stack specify SQLite for dev index; Postgres MAY be used in production. NFR-009 and NFR-010 favor minimal dependencies and scale-to-zero. NFR-011 sets gallery query performance targets against single-instance SQLite.
+[docs/overview/001-product-vision.md](../overview/001-product-vision.md) and [docs/overview/002-prd.md](../overview/002-prd.md) Technology Stack specify SQLite for dev index; Postgres MAY be used in production. NFR-009 and NFR-010 favor minimal dependencies and scale-to-zero. NFR-011 sets gallery query performance targets against single-instance SQLite.
 
 ## Decision
 
@@ -40,4 +40,4 @@ Performance tests target HappyView SQLite locally. Production ADR update may be 
 
 ## Related Decisions / Notes
 
-[007-happyview-app-view-integration.md](./007-happyview-app-view-integration.md), [NFR-010 scale-to-zero](../prd.md#nfr-010-scale-to-zero-orientation), [`gallery_query_performance_SRS-NFR-011.feature`](../../apps/backend/tests/features/gallery_query_performance_SRS-NFR-011.feature)
+[007-happyview-app-view-integration.md](./007-happyview-app-view-integration.md), [NFR-010 scale-to-zero](../overview/002-prd.md#nfr-010-scale-to-zero-orientation), [`gallery_query_performance_SRS-NFR-011.feature`](../../apps/backend/tests/features/gallery_query_performance_SRS-NFR-011.feature)

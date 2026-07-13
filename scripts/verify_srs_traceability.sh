@@ -5,7 +5,7 @@ set -e
 
 echo "Starting PRD/SRS Bi-directional Traceability Validation..."
 
-PRD_FILE="docs/prd.md"
+PRD_FILE="docs/overview/002-prd.md"
 SRS_FILES=$(find apps -name "srs.md" 2>/dev/null)
 
 if [ ! -f "$PRD_FILE" ]; then

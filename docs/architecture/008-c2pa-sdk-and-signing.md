@@ -12,7 +12,7 @@ Accepted
 
 ## Context / Requirement Reference
 
-[docs/prd.md](../prd.md) F-012–F-016 and NFR-014 require C2PA 2.2 Content Credentials on JPEG/PNG uploads, edits, and validation UI. TC-009 mandates in-file manifest embedding by default. Technology Stack lists C2PA Rust/JS SDK as TBD. [docs/srs.md](../srs.md) SRS-F-012 through SRS-F-016, SRS-NFR-017.
+[docs/overview/002-prd.md](../overview/002-prd.md) F-012–F-016 and NFR-014 require C2PA 2.2 Content Credentials on JPEG/PNG uploads, edits, and validation UI. TC-009 mandates in-file manifest embedding by default. Technology Stack lists C2PA Rust/JS SDK as TBD. [docs/overview/003-srs.md](../overview/003-srs.md) SRS-F-012 through SRS-F-016, SRS-NFR-017.
 
 ## Decision
 

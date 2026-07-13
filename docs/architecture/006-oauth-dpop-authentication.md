@@ -12,7 +12,7 @@ Accepted
 
 ## Context / Requirement Reference
 
-[docs/prd.md](../prd.md) F-001 requires atproto OAuth (not app passwords). NFR-003 mandates DPoP-bound tokens and prohibits plaintext credential storage. TC-006 requires `X-Client-Key` on all XRPC. [docs/srs.md](../srs.md) SRS-F-001 and SRS-NFR-003 derive verification via frontend BDD and security integration tests.
+[docs/overview/002-prd.md](../overview/002-prd.md) F-001 requires atproto OAuth (not app passwords). NFR-003 mandates DPoP-bound tokens and prohibits plaintext credential storage. TC-006 requires `X-Client-Key` on all XRPC. [docs/overview/003-srs.md](../overview/003-srs.md) SRS-F-001 and SRS-NFR-003 derive verification via frontend BDD and security integration tests.
 
 ## Decision
 

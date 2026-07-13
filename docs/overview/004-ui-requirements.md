@@ -3,29 +3,29 @@
 **Version:** 1.0  
 **Last Updated:** 2026-07-12T23:00:00Z  
 **Status:** Draft — aligned with UX guide and v1 mockups  
-**Sources:** [UX Guide](./references/000-UX-guide.md) · [SRS](./srs.md) · [PRD](./prd.md) · [Mockups](./references/mockups/)
+**Sources:** [UX Guide](../references/000-UX-guide.md) · [SRS](./003-srs.md) · [PRD](./002-prd.md) · [Mockups](../references/mockups/)
 
 ---
 
 # Purpose and document split
 
-This document defines **verifiable user-interface requirements** for ATPix: layouts, components, interaction patterns, accessibility, and visual semantics. It complements—not replaces—the [SRS](./srs.md).
+This document defines **verifiable user-interface requirements** for ATPix: layouts, components, interaction patterns, accessibility, and visual semantics. It complements—not replaces—the [SRS](./003-srs.md).
 
 | Document | Owns | Audience |
 |----------|------|----------|
-| **[SRS](./srs.md)** | Technical behavior, APIs, data flows, performance limits | Engineers, QA, integrators |
+| **[SRS](./003-srs.md)** | Technical behavior, APIs, data flows, performance limits | Engineers, QA, integrators |
 | **This UI spec** | Screens, components, states, visual tokens, interaction models | Frontend, design, UI test authors |
-| **[000-UX-guide.md](./references/000-UX-guide.md)** | Design tokens, brand principles, component styling | Design system implementers |
+| **[000-UX-guide.md](../references/000-UX-guide.md)** | Design tokens, brand principles, component styling | Design system implementers |
 
-**Rationale:** ISO/IEC/IEEE 29148 treats the SRS as a technical specification. Visual design tokens and screen-level layout belong in a dedicated UI requirements artifact so the SRS stays testable against protocol behavior without hundreds of pixel-level entries. The holistic-ui rule requires reviewing **both** `docs/srs.md` and this document before any frontend task.
+**Rationale:** ISO/IEC/IEEE 29148 treats the SRS as a technical specification. Visual design tokens and screen-level layout belong in a dedicated UI requirements artifact so the SRS stays testable against protocol behavior without hundreds of pixel-level entries. The holistic-ui rule requires reviewing **both** `docs/overview/003-srs.md` and this document before any frontend task.
 
 ---
 
 # Design system baseline
 
-All screens MUST implement tokens and principles from [000-UX-guide.md](./references/000-UX-guide.md):
+All screens MUST implement tokens and principles from [000-UX-guide.md](../references/000-UX-guide.md):
 
-- **Theme:** Dark mode default (`background: #10131b`, `slate-900` surfaces); light mode via `themes.light` tokens in [000-UX-guide.md](./references/000-UX-guide.md). User MUST be able to toggle dark/light (UI-SHELL-003).
+- **Theme:** Dark mode default (`background: #10131b`, `slate-900` surfaces); light mode via `themes.light` tokens in [000-UX-guide.md](../references/000-UX-guide.md). User MUST be able to toggle dark/light (UI-SHELL-003).
 - **Typography:** Hanken Grotesk (headings), Inter (body), JetBrains Mono (DIDs, hashes, manifest data).
 - **Primary action color:** `atproto-blue` (#0085FF).
 - **Neutral trust:** C2PA and visibility labels MUST NOT use subjective language ("authentic", "fake") per SRS-NFR-016.
@@ -49,7 +49,7 @@ The application MUST provide persistent chrome across Gallery, Discovery, and Al
 
 **Source:** UX guide Layout & Components; mockups 01–06  
 **SRS:** SRS-F-001.3, SRS-NFR-008  
-**Tests:** [`oauth_sign_in_SRS-F-001.feature`](../apps/frontend/tests/features/oauth_sign_in_SRS-F-001.feature), [`ui_app_shell_UI-SHELL-001.feature`](../apps/frontend/tests/features/ui_app_shell_UI-SHELL-001.feature)
+**Tests:** [`oauth_sign_in_SRS-F-001.feature`](../../apps/frontend/tests/features/oauth_sign_in_SRS-F-001.feature), [`ui_app_shell_UI-SHELL-001.feature`](../../apps/frontend/tests/features/ui_app_shell_UI-SHELL-001.feature)
 
 ## UI-SHELL-002: Responsive behavior
 
@@ -64,7 +64,7 @@ The application MUST provide persistent chrome across Gallery, Discovery, and Al
 
 ## UI-SHELL-003: Dark / light color scheme toggle
 
-Users MUST be able to switch between **dark** and **light** appearance while preserving semantic status and C2PA colors per [000-UX-guide.md](./references/000-UX-guide.md) Theme modes.
+Users MUST be able to switch between **dark** and **light** appearance while preserving semantic status and C2PA colors per [000-UX-guide.md](../references/000-UX-guide.md) Theme modes.
 
 | Requirement | Detail |
 |-------------|--------|
@@ -79,9 +79,9 @@ Users MUST be able to switch between **dark** and **light** appearance while pre
 
 **Mockup gap:** None of the v1 mockups (01–06) show the color-scheme toggle or Settings → Appearance. Those screens predate UI-SHELL-003. See [Mockup inventory](#mockup-inventory) for planned supplemental assets.
 
-**Source:** [000-UX-guide.md](./references/000-UX-guide.md) Theme toggle, Theme modes  
+**Source:** [000-UX-guide.md](../references/000-UX-guide.md) Theme toggle, Theme modes  
 **SRS:** SRS-NFR-016 (neutral trust labels unchanged across themes)  
-**Tests:** [`ui_theme_toggle_UI-SHELL-003.feature`](../apps/frontend/tests/features/ui_theme_toggle_UI-SHELL-003.feature)
+**Tests:** [`ui_theme_toggle_UI-SHELL-003.feature`](../../apps/frontend/tests/features/ui_theme_toggle_UI-SHELL-003.feature)
 
 ---
 
@@ -89,7 +89,7 @@ Users MUST be able to switch between **dark** and **light** appearance while pre
 
 ## UI-SCR-001: My Gallery (Path A)
 
-**Mockup:** [02-my-gallery.jpg](./references/mockups/02-my-gallery.jpg)  
+**Mockup:** [02-my-gallery.jpg](../references/mockups/02-my-gallery.jpg)  
 **Route:** `/gallery` (authenticated)  
 **SRS:** SRS-F-003
 
@@ -123,13 +123,13 @@ Cursor pagination MUST render numbered pages with prev/next controls; default pa
 
 Zero photos MUST show actionable guidance (e.g., "Upload your first photo") with primary Upload CTA.
 
-**Tests:** [`personal_gallery_SRS-F-003.feature`](../apps/frontend/tests/features/personal_gallery_SRS-F-003.feature), [`photo_upload_SRS-F-002.feature`](../apps/frontend/tests/features/photo_upload_SRS-F-002.feature)
+**Tests:** [`personal_gallery_SRS-F-003.feature`](../../apps/frontend/tests/features/personal_gallery_SRS-F-003.feature), [`photo_upload_SRS-F-002.feature`](../../apps/frontend/tests/features/photo_upload_SRS-F-002.feature)
 
 ---
 
 ## UI-SCR-002: Discovery feed (Path B)
 
-**Mockup:** [01-discovery-feed.jpg](./references/mockups/01-discovery-feed.jpg)  
+**Mockup:** [01-discovery-feed.jpg](../references/mockups/01-discovery-feed.jpg)  
 **Route:** `/discovery`  
 **SRS:** SRS-F-010
 
@@ -157,13 +157,13 @@ Zero photos MUST show actionable guidance (e.g., "Upload your first photo") with
 
 Empty follow graph or hashtag with no matches MUST show guidance, not error pages (SRS-F-010.3).
 
-**Tests:** [`network_discovery_SRS-F-010.feature`](../apps/frontend/tests/features/network_discovery_SRS-F-010.feature)
+**Tests:** [`network_discovery_SRS-F-010.feature`](../../apps/frontend/tests/features/network_discovery_SRS-F-010.feature)
 
 ---
 
 ## UI-SCR-003: Photo detail
 
-**Mockup:** [03-photo-detail.jpg](./references/mockups/03-photo-detail.jpg)  
+**Mockup:** [03-photo-detail.jpg](../references/mockups/03-photo-detail.jpg)  
 **Route:** `/gallery/photo/:uri`  
 **SRS:** SRS-F-005, SRS-F-009, SRS-F-014
 
@@ -192,13 +192,13 @@ Empty follow graph or hashtag with no matches MUST show guidance, not error page
 
 Indicators and expandable panels MUST meet WCAG 2.x contrast and keyboard focus order (SRS-F-014.2).
 
-**Tests:** [`c2pa_validation_ui_SRS-F-014.feature`](../apps/frontend/tests/features/c2pa_validation_ui_SRS-F-014.feature), [`captions_tags_SRS-F-005.feature`](../apps/frontend/tests/features/captions_tags_SRS-F-005.feature), [`photo_deletion_SRS-F-009.feature`](../apps/frontend/tests/features/photo_deletion_SRS-F-009.feature)
+**Tests:** [`c2pa_validation_ui_SRS-F-014.feature`](../../apps/frontend/tests/features/c2pa_validation_ui_SRS-F-014.feature), [`captions_tags_SRS-F-005.feature`](../../apps/frontend/tests/features/captions_tags_SRS-F-005.feature), [`photo_deletion_SRS-F-009.feature`](../../apps/frontend/tests/features/photo_deletion_SRS-F-009.feature)
 
 ---
 
 ## UI-SCR-004: Album view
 
-**Mockup:** [04-album-view.jpg](./references/mockups/04-album-view.jpg)  
+**Mockup:** [04-album-view.jpg](../references/mockups/04-album-view.jpg)  
 **Route:** `/albums/:uri`  
 **SRS:** SRS-F-004, SRS-F-007, SRS-F-008
 
@@ -231,13 +231,13 @@ Reuse UI-SCR-001 cards; show C2PA watermark/badge on thumbnails where applicable
 
 Permissioned-only elements (Space URI, Invite Members) MUST be hidden when `visibility` is `public` or `unlisted`.
 
-**Tests:** [`album_organization_SRS-F-004.feature`](../apps/frontend/tests/features/album_organization_SRS-F-004.feature), [`shareable_links_SRS-F-007.feature`](../apps/frontend/tests/features/shareable_links_SRS-F-007.feature), [`permissioned_albums_SRS-F-008.feature`](../apps/frontend/tests/features/permissioned_albums_SRS-F-008.feature)
+**Tests:** [`album_organization_SRS-F-004.feature`](../../apps/frontend/tests/features/album_organization_SRS-F-004.feature), [`shareable_links_SRS-F-007.feature`](../../apps/frontend/tests/features/shareable_links_SRS-F-007.feature), [`permissioned_albums_SRS-F-008.feature`](../../apps/frontend/tests/features/permissioned_albums_SRS-F-008.feature)
 
 ---
 
 ## UI-SCR-005: Upload flow
 
-**Mockup:** [05-upload-flow.jpg](./references/mockups/05-upload-flow.jpg)  
+**Mockup:** [05-upload-flow.jpg](../references/mockups/05-upload-flow.jpg)  
 **Route:** `/upload` or modal from shell  
 **SRS:** SRS-F-002, SRS-F-012, SRS-F-005, SRS-F-008
 
@@ -273,13 +273,13 @@ Before signing, UI MUST offer opt-out toggles for GPS, device identifiers, and o
 
 Upload failures and >50MB rejections MUST show actionable errors with **Retry** per UX guide Inputs section.
 
-**Tests:** [`photo_upload_SRS-F-002.feature`](../apps/frontend/tests/features/photo_upload_SRS-F-002.feature), [`c2pa_manifest_generation_SRS-F-012.feature`](../apps/backend/tests/features/c2pa_manifest_generation_SRS-F-012.feature)
+**Tests:** [`photo_upload_SRS-F-002.feature`](../../apps/frontend/tests/features/photo_upload_SRS-F-002.feature), [`c2pa_manifest_generation_SRS-F-012.feature`](../../apps/backend/tests/features/c2pa_manifest_generation_SRS-F-012.feature)
 
 ---
 
 ## UI-SCR-006: Permissioned space administration
 
-**Mockup:** [06-permissioned-space-admin.jpg](./references/mockups/06-permissioned-space-admin.jpg)  
+**Mockup:** [06-permissioned-space-admin.jpg](../references/mockups/06-permissioned-space-admin.jpg)  
 **Route:** `/albums/:uri/space`  
 **SRS:** SRS-F-008, NFR-013
 
@@ -325,7 +325,7 @@ Chronological log with color-coded action types (ADD, MOD, DEL, INF) and RFC 333
 
 Non-members MUST see access-denied panel without thumbnails, blob CIDs, or metadata (SRS-F-008.2, SRS-F-008.4). MUST include **Request Access** or sign-in CTA where applicable.
 
-**Tests:** [`permissioned_albums_SRS-F-008.feature`](../apps/frontend/tests/features/permissioned_albums_SRS-F-008.feature), [`permissioned_spaces_integration_SRS-F-008.feature`](../apps/backend/tests/features/permissioned_spaces_integration_SRS-F-008.feature)
+**Tests:** [`permissioned_albums_SRS-F-008.feature`](../../apps/frontend/tests/features/permissioned_albums_SRS-F-008.feature), [`permissioned_spaces_integration_SRS-F-008.feature`](../../apps/backend/tests/features/permissioned_spaces_integration_SRS-F-008.feature)
 
 ---
 
@@ -339,7 +339,7 @@ Non-members MUST see access-denied panel without thumbnails, blob CIDs, or metad
 - Unauthenticated access allowed for public/unlisted content.
 - Handle resolves to DID before query; DID shown in `metadata-code` for durability.
 
-**Tests:** [`public_profile_gallery_SRS-F-006.feature`](../apps/frontend/tests/features/public_profile_gallery_SRS-F-006.feature)
+**Tests:** [`public_profile_gallery_SRS-F-006.feature`](../../apps/frontend/tests/features/public_profile_gallery_SRS-F-006.feature)
 
 ---
 
@@ -353,7 +353,7 @@ Non-members MUST see access-denied panel without thumbnails, blob CIDs, or metad
 - Empty private credential store by default.
 - Changes affect **Trusted** state only; preview manifest status before/after.
 
-**Tests:** [`c2pa_trust_config_SRS-F-016.feature`](../apps/frontend/tests/features/c2pa_trust_config_SRS-F-016.feature)
+**Tests:** [`c2pa_trust_config_SRS-F-016.feature`](../../apps/frontend/tests/features/c2pa_trust_config_SRS-F-016.feature)
 
 ---
 
@@ -374,18 +374,18 @@ Non-members MUST see access-denied panel without thumbnails, blob CIDs, or metad
 
 # Mockup inventory
 
-Reference images live in [docs/references/mockups/](./references/mockups/). All current assets are **dark-mode only** and were captured before the color-scheme toggle was specified.
+Reference images live in [docs/references/mockups/](../references/mockups/). All current assets are **dark-mode only** and were captured before the color-scheme toggle was specified.
 
 ## On disk (v1 — dark mode)
 
 | File | Screen | UI ID | Theme | Notes |
 |------|--------|-------|-------|-------|
-| [01-discovery-feed.jpg](./references/mockups/01-discovery-feed.jpg) | Discovery feed | UI-SCR-002 | Dark | Following / Trending Hashtags tabs |
-| [02-my-gallery.jpg](./references/mockups/02-my-gallery.jpg) | My Gallery | UI-SCR-001 | Dark | Badges, upload overlay, pagination |
-| [03-photo-detail.jpg](./references/mockups/03-photo-detail.jpg) | Photo detail | UI-SCR-003 | Dark | Split view, C2PA L2 panel |
-| [04-album-view.jpg](./references/mockups/04-album-view.jpg) | Album view | UI-SCR-004 | Dark | Permissioned album example |
-| [05-upload-flow.jpg](./references/mockups/05-upload-flow.jpg) | Upload flow | UI-SCR-005 | Dark | Destination picker wording needs TC-004 fix |
-| [06-permissioned-space-admin.jpg](./references/mockups/06-permissioned-space-admin.jpg) | Space admin | UI-SCR-006 | Dark | Member directory, audit trail |
+| [01-discovery-feed.jpg](../references/mockups/01-discovery-feed.jpg) | Discovery feed | UI-SCR-002 | Dark | Following / Trending Hashtags tabs |
+| [02-my-gallery.jpg](../references/mockups/02-my-gallery.jpg) | My Gallery | UI-SCR-001 | Dark | Badges, upload overlay, pagination |
+| [03-photo-detail.jpg](../references/mockups/03-photo-detail.jpg) | Photo detail | UI-SCR-003 | Dark | Split view, C2PA L2 panel |
+| [04-album-view.jpg](../references/mockups/04-album-view.jpg) | Album view | UI-SCR-004 | Dark | Permissioned album example |
+| [05-upload-flow.jpg](../references/mockups/05-upload-flow.jpg) | Upload flow | UI-SCR-005 | Dark | Destination picker wording needs TC-004 fix |
+| [06-permissioned-space-admin.jpg](../references/mockups/06-permissioned-space-admin.jpg) | Space admin | UI-SCR-006 | Dark | Member directory, audit trail |
 
 ## Not yet captured (planned supplemental mockups)
 
@@ -394,10 +394,10 @@ These assets are **documented here but not yet in the repository**. Add them whe
 | Planned file | Screen | UI ID | Purpose |
 |--------------|--------|-------|---------|
 | `00-app-shell-annotated.jpg` | Global chrome | UI-SHELL-001, UI-SHELL-003 | Single reference showing header utility cluster with **sun/moon color-scheme toggle** placement (between nav and search) |
-| `02-my-gallery-light.jpg` | My Gallery | UI-SCR-001, UI-SHELL-003 | Light-mode variant of [02](./references/mockups/02-my-gallery.jpg) validating `themes.light` surfaces; **semantic badges unchanged** |
+| `02-my-gallery-light.jpg` | My Gallery | UI-SCR-001, UI-SHELL-003 | Light-mode variant of [02](../references/mockups/02-my-gallery.jpg) validating `themes.light` surfaces; **semantic badges unchanged** |
 | `07-settings-appearance.jpg` | Settings | UI-SHELL-003 | **Appearance** section with Dark / Light / System segmented control |
 
-Until planned files land, UI-SHELL-003 acceptance relies on [000-UX-guide.md](./references/000-UX-guide.md) tokens and [`ui_theme_toggle_UI-SHELL-003.feature`](../apps/frontend/tests/features/ui_theme_toggle_UI-SHELL-003.feature)—not on raster mockups.
+Until planned files land, UI-SHELL-003 acceptance relies on [000-UX-guide.md](../references/000-UX-guide.md) tokens and [`ui_theme_toggle_UI-SHELL-003.feature`](../../apps/frontend/tests/features/ui_theme_toggle_UI-SHELL-003.feature)—not on raster mockups.
 
 ---
 
@@ -419,12 +419,12 @@ The v1 mockups are **directional**. Implementation MUST correct these PRD confli
 
 | UI ID | Screen | SRS | PRD | Mockup |
 |-------|--------|-----|-----|--------|
-| UI-SCR-001 | My Gallery | SRS-F-003 | F-003 | [02](./references/mockups/02-my-gallery.jpg) |
-| UI-SCR-002 | Discovery | SRS-F-010 | F-010 | [01](./references/mockups/01-discovery-feed.jpg) |
-| UI-SCR-003 | Photo detail | SRS-F-005, F-009, F-014 | F-005, F-009, F-014 | [03](./references/mockups/03-photo-detail.jpg) |
-| UI-SCR-004 | Album view | SRS-F-004, F-007, F-008 | F-004, F-007, F-008 | [04](./references/mockups/04-album-view.jpg) |
-| UI-SCR-005 | Upload | SRS-F-002, F-012 | F-002, F-012 | [05](./references/mockups/05-upload-flow.jpg) |
-| UI-SCR-006 | Space admin | SRS-F-008 | F-008 | [06](./references/mockups/06-permissioned-space-admin.jpg) |
+| UI-SCR-001 | My Gallery | SRS-F-003 | F-003 | [02](../references/mockups/02-my-gallery.jpg) |
+| UI-SCR-002 | Discovery | SRS-F-010 | F-010 | [01](../references/mockups/01-discovery-feed.jpg) |
+| UI-SCR-003 | Photo detail | SRS-F-005, F-009, F-014 | F-005, F-009, F-014 | [03](../references/mockups/03-photo-detail.jpg) |
+| UI-SCR-004 | Album view | SRS-F-004, F-007, F-008 | F-004, F-007, F-008 | [04](../references/mockups/04-album-view.jpg) |
+| UI-SCR-005 | Upload | SRS-F-002, F-012 | F-002, F-012 | [05](../references/mockups/05-upload-flow.jpg) |
+| UI-SCR-006 | Space admin | SRS-F-008 | F-008 | [06](../references/mockups/06-permissioned-space-admin.jpg) |
 | UI-SCR-007 | Public profile | SRS-F-006 | F-006 | — |
 | UI-SCR-008 | Trust settings | SRS-F-016 | F-016 | — |
 | UI-SHELL-001 | App chrome | SRS-F-001 | F-001 | all |
@@ -445,16 +445,16 @@ UI requirements MUST be verified per AGENTS.md UI Test Mandate:
 
 | File | Covers |
 |------|--------|
-| [`ui_app_shell_UI-SHELL-001.feature`](../apps/frontend/tests/features/ui_app_shell_UI-SHELL-001.feature) | Header, sidebar, nav |
-| [`ui_responsive_layout_UI-SHELL-002.feature`](../apps/frontend/tests/features/ui_responsive_layout_UI-SHELL-002.feature) | Breakpoints, grids |
-| [`ui_theme_toggle_UI-SHELL-003.feature`](../apps/frontend/tests/features/ui_theme_toggle_UI-SHELL-003.feature) | Dark / light / system |
-| [`ui_my_gallery_UI-SCR-001.feature`](../apps/frontend/tests/features/ui_my_gallery_UI-SCR-001.feature) | My Gallery layout |
-| [`ui_discovery_feed_UI-SCR-002.feature`](../apps/frontend/tests/features/ui_discovery_feed_UI-SCR-002.feature) | Discovery feed |
-| [`ui_photo_detail_UI-SCR-003.feature`](../apps/frontend/tests/features/ui_photo_detail_UI-SCR-003.feature) | Photo detail split view |
-| [`ui_album_view_UI-SCR-004.feature`](../apps/frontend/tests/features/ui_album_view_UI-SCR-004.feature) | Album view |
-| [`ui_upload_flow_UI-SCR-005.feature`](../apps/frontend/tests/features/ui_upload_flow_UI-SCR-005.feature) | Upload workspace |
-| [`ui_permissioned_space_UI-SCR-006.feature`](../apps/frontend/tests/features/ui_permissioned_space_UI-SCR-006.feature) | Space admin |
-| [`ui_public_profile_UI-SCR-007.feature`](../apps/frontend/tests/features/ui_public_profile_UI-SCR-007.feature) | Public profile |
-| [`ui_components_UI-CMP.feature`](../apps/frontend/tests/features/ui_components_UI-CMP.feature) | Shared components |
+| [`ui_app_shell_UI-SHELL-001.feature`](../../apps/frontend/tests/features/ui_app_shell_UI-SHELL-001.feature) | Header, sidebar, nav |
+| [`ui_responsive_layout_UI-SHELL-002.feature`](../../apps/frontend/tests/features/ui_responsive_layout_UI-SHELL-002.feature) | Breakpoints, grids |
+| [`ui_theme_toggle_UI-SHELL-003.feature`](../../apps/frontend/tests/features/ui_theme_toggle_UI-SHELL-003.feature) | Dark / light / system |
+| [`ui_my_gallery_UI-SCR-001.feature`](../../apps/frontend/tests/features/ui_my_gallery_UI-SCR-001.feature) | My Gallery layout |
+| [`ui_discovery_feed_UI-SCR-002.feature`](../../apps/frontend/tests/features/ui_discovery_feed_UI-SCR-002.feature) | Discovery feed |
+| [`ui_photo_detail_UI-SCR-003.feature`](../../apps/frontend/tests/features/ui_photo_detail_UI-SCR-003.feature) | Photo detail split view |
+| [`ui_album_view_UI-SCR-004.feature`](../../apps/frontend/tests/features/ui_album_view_UI-SCR-004.feature) | Album view |
+| [`ui_upload_flow_UI-SCR-005.feature`](../../apps/frontend/tests/features/ui_upload_flow_UI-SCR-005.feature) | Upload workspace |
+| [`ui_permissioned_space_UI-SCR-006.feature`](../../apps/frontend/tests/features/ui_permissioned_space_UI-SCR-006.feature) | Space admin |
+| [`ui_public_profile_UI-SCR-007.feature`](../../apps/frontend/tests/features/ui_public_profile_UI-SCR-007.feature) | Public profile |
+| [`ui_components_UI-CMP.feature`](../../apps/frontend/tests/features/ui_components_UI-CMP.feature) | Shared components |
 
 UI test authors SHOULD assert token-backed classes or `data-testid` hooks for badges, panels, theme root attribute, and destructive confirmations—not implementation-specific selectors.

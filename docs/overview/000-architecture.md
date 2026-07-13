@@ -9,7 +9,7 @@
 
 ### 1.1 Purpose
 
-This document synthesizes the [PRD](./prd.md), [SRS](./srs.md), codebase layout, and Architecture Decision Records into a single ISO 42010–aligned system architecture. It is the high-level map for developers and stakeholders: what ATPix owns, what it delegates to HappyView and user PDSes, and how Docker, local storage, and network boundaries fit together.
+This document synthesizes the [PRD](./002-prd.md), [SRS](./003-srs.md), codebase layout, and Architecture Decision Records into a single ISO 42010–aligned system architecture. It is the high-level map for developers and stakeholders: what ATPix owns, what it delegates to HappyView and user PDSes, and how Docker, local storage, and network boundaries fit together.
 
 ### 1.2 Scope
 
@@ -24,23 +24,23 @@ Out of scope: production hosting ADRs, client-side encryption, and custom App Vi
 
 ### 1.3 References
 
-- **PRD:** [prd.md](./prd.md)
-- **SRS:** [srs.md](./srs.md)
-- **Product vision:** [product-vision.md](./product-vision.md)
-- **Implementation plan:** [plan.md](./plan.md)
-- **Lexicon artifacts:** [lexicon/README.md](./lexicon/README.md)
-- **ADRs:** [architecture/](./architecture/) (001–012)
-- **Repository README:** [../README.md](../README.md)
+- **PRD:** [prd.md](./002-prd.md)
+- **SRS:** [srs.md](./003-srs.md)
+- **Product vision:** [product-vision.md](./001-product-vision.md)
+- **Implementation plan:** [plan.md](./005-plan.md)
+- **Lexicon artifacts:** [lexicon/net.atpix.gallery.md](../lexicon/net.atpix.gallery.md)
+- **ADRs:** [architecture/](../architecture/) (001–012)
+- **Repository README:** [../../README.md](../../README.md)
 
 ### 1.4 Architectural Principles
 
-Principles from [AGENTS.md](../AGENTS.md) and the PRD that shape this design:
+Principles from [AGENTS.md](../../AGENTS.md) and the PRD that shape this design:
 
 - **KISS / minimum dependencies:** Gallery indexing and OAuth live in HappyView; ATPix adds C2PA and UI only.
-- **Scale-to-zero orientation:** FastAPI backend is stateless; HappyView SQLite index supports dev scale-to-zero ([ADR-011](./architecture/011-sqlite-index-database.md)).
+- **Scale-to-zero orientation:** FastAPI backend is stateless; HappyView SQLite index supports dev scale-to-zero ([ADR-011](../architecture/011-sqlite-index-database.md)).
 - **API-first:** Gallery operations use HappyView XRPC (`net.atpix.gallery.*`); C2PA uses FastAPI REST.
 - **Security by design:** OAuth + DPoP via HappyView; no app passwords; blobs gated for permissioned albums.
-- **Observability:** All services log unbuffered to `stdout`; Promtail ships container logs to Loki ([ADR-003](./architecture/003-observability-stack.md)).
+- **Observability:** All services log unbuffered to `stdout`; Promtail ships container logs to Loki ([ADR-003](../architecture/003-observability-stack.md)).
 - **Modularization:** Frontend (browser), auxiliary backend (C2PA), App View (HappyView), and user PDS are separate deployable boundaries.
 
 ---
@@ -84,7 +84,7 @@ graph TB
     Backend -.->|Validation refs| C2PA
 ```
 
-**Boundary summary:** ATPix does **not** host user PDSes or operate a custom App View. HappyView is the sole indexing, OAuth proxy, and XRPC surface for gallery operations ([ADR-007](./architecture/007-happyview-app-view-integration.md)).
+**Boundary summary:** ATPix does **not** host user PDSes or operate a custom App View. HappyView is the sole indexing, OAuth proxy, and XRPC surface for gallery operations ([ADR-007](../architecture/007-happyview-app-view-integration.md)).
 
 ---
 
@@ -131,10 +131,10 @@ graph TB
 
 | Aspect | Choice | ADR |
 |--------|--------|-----|
-| **Framework** | Vite 6 + vanilla JavaScript (ES modules) | [005](./architecture/005-application-architecture.md) |
-| **atproto client** | `@happyview/lex-agent`, `@atproto/lex` | [005](./architecture/005-application-architecture.md) |
-| **Authentication** | `@happyview/oauth-client-browser` (DPoP) | [006](./architecture/006-oauth-dpop-authentication.md) |
-| **HappyView config** | `VITE_HAPPYVIEW_URL`, `VITE_HAPPYVIEW_CLIENT_KEY` | [006](./architecture/006-oauth-dpop-authentication.md) |
+| **Framework** | Vite 6 + vanilla JavaScript (ES modules) | [005](../architecture/005-application-architecture.md) |
+| **atproto client** | `@happyview/lex-agent`, `@atproto/lex` | [005](../architecture/005-application-architecture.md) |
+| **Authentication** | `@happyview/oauth-client-browser` (DPoP) | [006](../architecture/006-oauth-dpop-authentication.md) |
+| **HappyView config** | `VITE_HAPPYVIEW_URL`, `VITE_HAPPYVIEW_CLIENT_KEY` | [006](../architecture/006-oauth-dpop-authentication.md) |
 
 **Responsibilities:**
 
@@ -156,9 +156,9 @@ graph TB
 
 | Aspect | Choice | ADR |
 |--------|--------|-----|
-| **Framework** | FastAPI + Uvicorn (port 8000) | [005](./architecture/005-application-architecture.md) |
-| **API style** | REST (JSON) for C2PA and health | [008](./architecture/008-c2pa-sdk-and-signing.md) |
-| **State** | Stateless — no gallery database | [011](./architecture/011-sqlite-index-database.md) |
+| **Framework** | FastAPI + Uvicorn (port 8000) | [005](../architecture/005-application-architecture.md) |
+| **API style** | REST (JSON) for C2PA and health | [008](../architecture/008-c2pa-sdk-and-signing.md) |
+| **State** | Stateless — no gallery database | [011](../architecture/011-sqlite-index-database.md) |
 
 **Responsibilities:**
 
@@ -166,7 +166,7 @@ graph TB
 - C2PA 2.2 manifest generation, update signing, and validation (`app/modules/c2pa/`)
 - Stdout logging for centralized observability
 
-**Explicit non-responsibilities:** OAuth, PDS writes, gallery aggregation, Jetstream subscription, or lexicon indexing ([ADR-007](./architecture/007-happyview-app-view-integration.md)).
+**Explicit non-responsibilities:** OAuth, PDS writes, gallery aggregation, Jetstream subscription, or lexicon indexing ([ADR-007](../architecture/007-happyview-app-view-integration.md)).
 
 **Directory overview (`apps/backend/app/`):**
 
@@ -186,7 +186,7 @@ graph TB
 
 ### 4.1 Data Authority Model
 
-ATPix follows the standard atproto split: **user PDS repos are the source of truth** for public/unlisted content and album containers; **HappyView holds a derived index** for queries and OAuth proxy state; **permissioned photos and `albumItem` records** live in HappyView space repos when `visibility: permissioned` ([ADR-010](./architecture/010-permissioned-spaces-storage.md)).
+ATPix follows the standard atproto split: **user PDS repos are the source of truth** for public/unlisted content and album containers; **HappyView holds a derived index** for queries and OAuth proxy state; **permissioned photos and `albumItem` records** live in HappyView space repos when `visibility: permissioned` ([ADR-010](../architecture/010-permissioned-spaces-storage.md)).
 
 | Data | Canonical location | ATPix component access |
 |------|-------------------|------------------------|
@@ -236,7 +236,7 @@ erDiagram
 
 **Path A — Own uploads:** Browser → Backend (C2PA embed) → HappyView (OAuth proxy) → User PDS (blob + record) → HappyView indexes record.
 
-**Path B — Network discovery:** Jetstream → HappyView backfill/index → Frontend queries `listFeedPhotos` / `collectionRule` — ATPix MUST NOT run a separate firehose ([PRD Gallery Population Model](./prd.md#gallery-population-model)).
+**Path B — Network discovery:** Jetstream → HappyView backfill/index → Frontend queries `listFeedPhotos` / `collectionRule` — ATPix MUST NOT run a separate firehose ([PRD Gallery Population Model](./002-prd.md#gallery-population-model)).
 
 ```mermaid
 sequenceDiagram
@@ -263,9 +263,9 @@ sequenceDiagram
 
 | Store | Technology | Owner | ADR |
 |-------|------------|-------|-----|
-| Gallery index | SQLite (dev) / Postgres optional (prod) | **HappyView** | [011](./architecture/011-sqlite-index-database.md) |
-| ATPix backend | None (stateless) | ATPix | [011](./architecture/011-sqlite-index-database.md) |
-| Lexicon registry | HappyView admin DB | HappyView | [009](./architecture/009-lexicon-namespace-authority.md) |
+| Gallery index | SQLite (dev) / Postgres optional (prod) | **HappyView** | [011](../architecture/011-sqlite-index-database.md) |
+| ATPix backend | None (stateless) | ATPix | [011](../architecture/011-sqlite-index-database.md) |
+| Lexicon registry | HappyView admin DB | HappyView | [009](../architecture/009-lexicon-namespace-authority.md) |
 
 ---
 
@@ -348,7 +348,7 @@ graph TB
 | `prometheus` | prom/prometheus | 9090 | Metrics scrape |
 | `redpanda` | redpanda | 9092 | Kafka-compatible log buffer |
 
-HappyView is intentionally **absent** from the root compose file to avoid port conflicts with Grafana ([ADR-003](./architecture/003-observability-stack.md)). The backend container reaches a host-run HappyView via `host.docker.internal:3001` when ATPix apps run in Docker but HappyView runs on the host.
+HappyView is intentionally **absent** from the root compose file to avoid port conflicts with Grafana ([ADR-003](../architecture/003-observability-stack.md)). The backend container reaches a host-run HappyView via `host.docker.internal:3001` when ATPix apps run in Docker but HappyView runs on the host.
 
 #### `docker-compose.happyview.yml` (App View)
 
@@ -356,7 +356,7 @@ HappyView is intentionally **absent** from the root compose file to avoid port c
 |---------|-------|------|------|
 | `happyview` | `ghcr.io/gamesgamesgamesgamesgames/happyview:latest` | 3001 | App View: SQLite index, OAuth proxy, XRPC, Jetstream sync, permissioned spaces |
 
-Provisioned once per environment via `scripts/provision_happyview.py` (reads `config/happyview/provision-manifest.json`, uploads 23 `net.atpix.gallery.*` lexicons with backfill, enables `feature.spaces_enabled`). The script loads `.env` via `python-dotenv` ([ADR-007](./architecture/007-happyview-app-view-integration.md), [ADR-009](./architecture/009-lexicon-namespace-authority.md)).
+Provisioned once per environment via `scripts/provision_happyview.py` (reads `config/happyview/provision-manifest.json`, uploads 23 `net.atpix.gallery.*` lexicons with backfill, enables `feature.spaces_enabled`). The script loads `.env` via `python-dotenv` ([ADR-007](../architecture/007-happyview-app-view-integration.md), [ADR-009](../architecture/009-lexicon-namespace-authority.md)).
 
 ### 5.4 Local Storage (bind mounts)
 
@@ -387,7 +387,7 @@ ATPix **does not run or host a PDS**. Users bring an existing atproto identity (
 | Permissioned photos/items | HappyView space repo | `com.atproto.space.*` APIs |
 | Permissioned blob reads | User PDS bytes, gated | `com.atproto.space.getBlob` + membership |
 
-**Frontend ↔ PDS:** The browser never talks to the PDS directly. All writes go **Frontend → HappyView → PDS** with DPoP-bound OAuth ([ADR-006](./architecture/006-oauth-dpop-authentication.md)).
+**Frontend ↔ PDS:** The browser never talks to the PDS directly. All writes go **Frontend → HappyView → PDS** with DPoP-bound OAuth ([ADR-006](../architecture/006-oauth-dpop-authentication.md)).
 
 **Backend ↔ PDS:** No connection. The FastAPI service MUST NOT accept PDS credentials or perform repo writes.
 
@@ -406,10 +406,10 @@ ATPix **does not run or host a PDS**. Users bring an existing atproto identity (
 
 | Stage | Tooling | Status |
 |-------|---------|--------|
-| Lint | Ruff (backend), ESLint + Prettier (frontend) | [ADR-004](./architecture/004-coding-style-and-linting.md) |
-| Unit / BDD / integration | pytest, behave, vitest | [ADR-001](./architecture/001-test-runners-and-reporting.md) |
-| Reports | Allure CLI | [ADR-001](./architecture/001-test-runners-and-reporting.md) |
-| Container build | `docker compose build` for frontend/backend | Documented in [README](../README.md) |
+| Lint | Ruff (backend), ESLint + Prettier (frontend) | [ADR-004](../architecture/004-coding-style-and-linting.md) |
+| Unit / BDD / integration | pytest, behave, vitest | [ADR-001](../architecture/001-test-runners-and-reporting.md) |
+| Reports | Allure CLI | [ADR-001](../architecture/001-test-runners-and-reporting.md) |
+| Container build | `docker compose build` for frontend/backend | Documented in [README](../../README.md) |
 | Automated deploy | — | **Gap:** no `.github/workflows` yet |
 
 ---
@@ -441,12 +441,12 @@ sequenceDiagram
 
 | Control | Implementation | ADR |
 |---------|----------------|-----|
-| User authentication | atproto OAuth + DPoP; no app passwords | [006](./architecture/006-oauth-dpop-authentication.md) |
-| XRPC client identity | `VITE_HAPPYVIEW_CLIENT_KEY` (non-admin) | [006](./architecture/006-oauth-dpop-authentication.md) |
-| Admin operations | `HAPPYVIEW_ADMIN_KEY` (`hv_*`) for provisioning only; not in frontend | [009](./architecture/009-lexicon-namespace-authority.md) |
-| Permissioned albums | Space membership + `feature.spaces_enabled` | [010](./architecture/010-permissioned-spaces-storage.md) |
-| C2PA signing keys | Environment / secret store; never in repo | [008](./architecture/008-c2pa-sdk-and-signing.md) |
-| CORS | Backend allows configured frontend origins only | [005](./architecture/005-application-architecture.md) |
+| User authentication | atproto OAuth + DPoP; no app passwords | [006](../architecture/006-oauth-dpop-authentication.md) |
+| XRPC client identity | `VITE_HAPPYVIEW_CLIENT_KEY` (non-admin) | [006](../architecture/006-oauth-dpop-authentication.md) |
+| Admin operations | `HAPPYVIEW_ADMIN_KEY` (`hv_*`) for provisioning only; not in frontend | [009](../architecture/009-lexicon-namespace-authority.md) |
+| Permissioned albums | Space membership + `feature.spaces_enabled` | [010](../architecture/010-permissioned-spaces-storage.md) |
+| C2PA signing keys | Environment / secret store; never in repo | [008](../architecture/008-c2pa-sdk-and-signing.md) |
+| CORS | Backend allows configured frontend origins only | [005](../architecture/005-application-architecture.md) |
 | Secrets in `.env` | `HAPPYVIEW_URL`, `HAPPYVIEW_ADMIN_KEY`, client keys; provision script loads via `python-dotenv` | [.env.example](../.env.example) |
 
 ---
@@ -457,21 +457,21 @@ sequenceDiagram
 
 | Constraint | Detail | Mitigation |
 |------------|--------|------------|
-| HappyView SQLite writes | Single-writer index in dev | Production Postgres option per HappyView docs ([ADR-011](./architecture/011-sqlite-index-database.md)) |
+| HappyView SQLite writes | Single-writer index in dev | Production Postgres option per HappyView docs ([ADR-011](../architecture/011-sqlite-index-database.md)) |
 | C2PA CPU | Signing/validation in backend | Async FastAPI; locust performance tests per SRS |
 | 50 MB blob limit | HappyView platform cap | Client-side validation before upload (PRD) |
-| No custom firehose | ATPix cannot scale independent sync | Delegate to HappyView Jetstream ([ADR-007](./architecture/007-happyview-app-view-integration.md)) |
+| No custom firehose | ATPix cannot scale independent sync | Delegate to HappyView Jetstream ([ADR-007](../architecture/007-happyview-app-view-integration.md)) |
 
-**NFR-011 baseline:** Gallery first-page queries ≤ 2s p95 with ≤ 10k records on single HappyView + SQLite ([ADR-011](./architecture/011-sqlite-index-database.md)).
+**NFR-011 baseline:** Gallery first-page queries ≤ 2s p95 with ≤ 10k records on single HappyView + SQLite ([ADR-011](../architecture/011-sqlite-index-database.md)).
 
 ### 7.2 Observability & Monitoring
 
 | Signal | Path | ADR |
 |--------|------|-----|
-| Application logs | `stdout` → Promtail → Loki | [003](./architecture/003-observability-stack.md) |
-| Metrics | Prometheus scrape → Grafana | [003](./architecture/003-observability-stack.md) |
-| Log buffer | Redpanda (Kafka-compatible) | [003](./architecture/003-observability-stack.md) |
-| Dashboards | Grafana on port 3000 | [003](./architecture/003-observability-stack.md) |
+| Application logs | `stdout` → Promtail → Loki | [003](../architecture/003-observability-stack.md) |
+| Metrics | Prometheus scrape → Grafana | [003](../architecture/003-observability-stack.md) |
+| Log buffer | Redpanda (Kafka-compatible) | [003](../architecture/003-observability-stack.md) |
+| Dashboards | Grafana on port 3000 | [003](../architecture/003-observability-stack.md) |
 
 ATPix `backend` and `frontend` containers MUST NOT write log files on disk; Promtail reads container streams via the Docker socket.
 
@@ -481,29 +481,29 @@ ATPix `backend` and `frontend` containers MUST NOT write log files on disk; Prom
 
 | Layer | Technology | Rationale (ADR) |
 |-------|------------|-----------------|
-| Architecture style | Modular monorepo + external App View | [005](./architecture/005-application-architecture.md) |
-| Protocol | AT Protocol (repos, blobs, XRPC) | [PRD](./prd.md) |
-| App View | HappyView (index, OAuth, Jetstream, spaces) | [007](./architecture/007-happyview-app-view-integration.md) |
-| Frontend | Vite 6, vanilla JS, HappyView OAuth/lex libs | [005](./architecture/005-application-architecture.md), [006](./architecture/006-oauth-dpop-authentication.md) |
-| Backend | FastAPI, Uvicorn, Pydantic Settings | [005](./architecture/005-application-architecture.md) |
-| C2PA | FastAPI module (C2PA 2.2 target) | [008](./architecture/008-c2pa-sdk-and-signing.md) |
-| Lexicons | `net.atpix.gallery.*` (23 JSON files) | [009](./architecture/009-lexicon-namespace-authority.md) |
-| Permissioned storage | HappyView Spaces (ATP-0016) | [010](./architecture/010-permissioned-spaces-storage.md) |
-| Gallery index DB | HappyView SQLite (dev) | [011](./architecture/011-sqlite-index-database.md) |
-| User data store | Remote user PDS (+ space repos) | [010](./architecture/010-permissioned-spaces-storage.md), [PRD](./prd.md) |
-| Observability | Promtail, Redpanda, Loki, Prometheus, Grafana | [003](./architecture/003-observability-stack.md) |
-| Testing | pytest, behave, vitest, locust, Allure | [001](./architecture/001-test-runners-and-reporting.md) |
-| Lint / format | Ruff, ESLint, Prettier | [004](./architecture/004-coding-style-and-linting.md) |
-| API docs generation | pdoc, JSDoc | [002](./architecture/002-inline-documentation-generators.md) |
-| UI specification | ui-requirements.md | [012](./architecture/012-ui-requirements-document.md) |
+| Architecture style | Modular monorepo + external App View | [005](../architecture/005-application-architecture.md) |
+| Protocol | AT Protocol (repos, blobs, XRPC) | [PRD](./002-prd.md) |
+| App View | HappyView (index, OAuth, Jetstream, spaces) | [007](../architecture/007-happyview-app-view-integration.md) |
+| Frontend | Vite 6, vanilla JS, HappyView OAuth/lex libs | [005](../architecture/005-application-architecture.md), [006](../architecture/006-oauth-dpop-authentication.md) |
+| Backend | FastAPI, Uvicorn, Pydantic Settings | [005](../architecture/005-application-architecture.md) |
+| C2PA | FastAPI module (C2PA 2.2 target) | [008](../architecture/008-c2pa-sdk-and-signing.md) |
+| Lexicons | `net.atpix.gallery.*` (23 JSON files) | [009](../architecture/009-lexicon-namespace-authority.md) |
+| Permissioned storage | HappyView Spaces (ATP-0016) | [010](../architecture/010-permissioned-spaces-storage.md) |
+| Gallery index DB | HappyView SQLite (dev) | [011](../architecture/011-sqlite-index-database.md) |
+| User data store | Remote user PDS (+ space repos) | [010](../architecture/010-permissioned-spaces-storage.md), [PRD](./002-prd.md) |
+| Observability | Promtail, Redpanda, Loki, Prometheus, Grafana | [003](../architecture/003-observability-stack.md) |
+| Testing | pytest, behave, vitest, locust, Allure | [001](../architecture/001-test-runners-and-reporting.md) |
+| Lint / format | Ruff, ESLint, Prettier | [004](../architecture/004-coding-style-and-linting.md) |
+| API docs generation | pdoc, JSDoc | [002](../architecture/002-inline-documentation-generators.md) |
+| UI specification | ui-requirements.md | [012](../architecture/012-ui-requirements-document.md) |
 
 ### 8.1 Documented Gaps
 
 | Item | Notes |
 |------|-------|
 | CI/CD workflows | No GitHub Actions in repository |
-| Production deployment ADR | Deferred; local/Docker dev documented in [README](../README.md) |
-| Lexicon DNS publication | Publish `_lexicon.gallery.atpix.net` TXT before public network launch ([ADR-009](./architecture/009-lexicon-namespace-authority.md)) |
+| Production deployment ADR | Deferred; local/Docker dev documented in [README](../../README.md) |
+| Lexicon DNS publication | Publish `_lexicon.gallery.atpix.net` TXT before public network launch ([ADR-009](../architecture/009-lexicon-namespace-authority.md)) |
 
 ---
 

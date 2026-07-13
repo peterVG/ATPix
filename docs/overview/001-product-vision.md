@@ -51,14 +51,14 @@
 
 ## Technical & Domain References
 
-- [AT Protocol knowledge base](../.agents/kb/at-protocol.md)
-- [HappyView knowledge base](../.agents/kb/happyview.md)
-- [Product requirements (PRD)](./prd.md) — functional requirements, Lexicon spec, C2PA compliance
-- [Product terms ↔ AT Protocol primitives (PRD)](./prd.md#product-terms--at-protocol-primitives) — gallery/album (UI) mapped to repos, collections, and records (architecture)
-- [ATPix Lexicon artifacts](./lexicon/README.md)
-- [atproto.com reference dump](./references/atproto.comdocs.md)
-- [happyview.dev reference dump](./references/happyview.dev.docs.md)
-- [AGENTS.md](../AGENTS.md) — project principles and standards
+- [AT Protocol knowledge base](../../.agents/kb/at-protocol.md)
+- [HappyView knowledge base](../../.agents/kb/happyview.md)
+- [Product requirements (PRD)](./002-prd.md) — functional requirements, Lexicon spec, C2PA compliance
+- [Product terms ↔ AT Protocol primitives (PRD)](./002-prd.md#product-terms--at-protocol-primitives) — gallery/album (UI) mapped to repos, collections, and records (architecture)
+- [ATPix Lexicon artifacts](../lexicon/net.atpix.gallery.md)
+- [atproto.com reference dump](../references/atproto.comdocs.md)
+- [happyview.dev reference dump](../references/happyview.dev.docs.md)
+- [AGENTS.md](../../AGENTS.md) — project principles and standards
 
 ## Value Propositions
 

@@ -12,7 +12,7 @@ Accepted
 
 ## Context / Requirement Reference
 
-[docs/prd.md](../prd.md) F-011 defines record, query, and procedure Lexicons. Product Terms mapping clarifies gallery (query/view) vs album (record). [docs/lexicon/](../lexicon/) contains 23 JSON artifacts. [docs/srs.md](../srs.md) SRS-F-011, SRS-TC-005.
+[docs/overview/002-prd.md](../overview/002-prd.md) F-011 defines record, query, and procedure Lexicons. Product Terms mapping clarifies gallery (query/view) vs album (record). [docs/lexicon/](../lexicon/) contains 23 JSON artifacts. [docs/overview/003-srs.md](../overview/003-srs.md) SRS-F-011, SRS-TC-005.
 
 ## Decision
 
@@ -43,4 +43,4 @@ Lexicon changes require coordinated HappyView re-upload and documentation update
 
 ## Related Decisions / Notes
 
-[007-happyview-app-view-integration.md](./007-happyview-app-view-integration.md), [lexicon README](../lexicon/README.md), [010-permissioned-spaces-storage.md](./010-permissioned-spaces-storage.md)
+[007-happyview-app-view-integration.md](./007-happyview-app-view-integration.md), [lexicon net.atpix.gallery](../lexicon/net.atpix.gallery.md), [010-permissioned-spaces-storage.md](./010-permissioned-spaces-storage.md)

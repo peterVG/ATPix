@@ -16,7 +16,7 @@ Galleries populate two ways:
 
 Sharing supports **public**, **unlisted**, and **permissioned** albums; permissioned collections use [HappyView Permissioned Spaces](https://happyview.dev/experimental/spaces) (ATP-0016) so only invited members can view curated private albums.
 
-Product language (gallery, album) maps to atproto primitives (queries, `net.atpix.gallery.*` records, space repos) in the [PRD](docs/prd.md#product-terms--at-protocol-primitives) and [Lexicon README](docs/lexicon/README.md).
+Product language (gallery, album) maps to atproto primitives (queries, `net.atpix.gallery.*` records, space repos) in the [PRD](docs/overview/002-prd.md#product-terms--at-protocol-primitives) and [Lexicon README](docs/lexicon/net.atpix.gallery.md).
 
 ## Metadata
  Photo metadata maps to [Dublin Core](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/) and [Schema.org](https://schema.org/docs/schemas.html) terms in `net.atpix.gallery.*` Lexicons; image files embed [C2PA 2.2](https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html) Content Credentials for tamper-evident provenance. 
@@ -63,11 +63,11 @@ Browser (ATPix) → HappyView (OAuth + XRPC proxy) → user's PDS
 
 ## Requirements and verification
 
-- **[Product vision](docs/product-vision.md)** — problem, users, value proposition
-- **[PRD v1.5](docs/prd.md)** — F-001–F-016 functional requirements, NFRs, technical constraints
-- **[SRS v1.0](docs/srs.md)** — technical specs with 100% PRD traceability
-- **[Implementation plan](docs/plan.md)** — global roadmap; module checklists in [apps/frontend/docs/plan.md](apps/frontend/docs/plan.md) and [apps/backend/docs/plan.md](apps/backend/docs/plan.md)
-- **[UI requirements v1.0](docs/ui-requirements.md)** — screens, components, and mockups ([UX guide](docs/references/000-UX-guide.md))
+- **[Product vision](docs/overview/001-product-vision.md)** — problem, users, value proposition
+- **[PRD v1.5](docs/overview/002-prd.md)** — F-001–F-016 functional requirements, NFRs, technical constraints
+- **[SRS v1.0](docs/overview/003-srs.md)** — technical specs with 100% PRD traceability
+- **[Implementation plan](docs/overview/005-plan.md)** — global roadmap; module checklists in [apps/frontend/docs/plan.md](apps/frontend/docs/plan.md) and [apps/backend/docs/plan.md](apps/backend/docs/plan.md)
+- **[UI requirements v1.0](docs/overview/004-ui-requirements.md)** — screens, components, and mockups ([UX guide](docs/references/000-UX-guide.md))
 - **BDD features** — Gherkin scenarios under `apps/frontend/tests/features/` (UI/auth/gallery) and `apps/backend/tests/features/` (C2PA, lexicon, spaces, performance)
 - **Architecture** — [ADRs 001–011](docs/architecture/) including OAuth ([006](docs/architecture/006-oauth-dpop-authentication.md)), HappyView integration ([007](docs/architecture/007-happyview-app-view-integration.md)), C2PA ([008](docs/architecture/008-c2pa-sdk-and-signing.md)), lexicon authority ([009](docs/architecture/009-lexicon-namespace-authority.md)), permissioned spaces ([010](docs/architecture/010-permissioned-spaces-storage.md)), SQLite index ([011](docs/architecture/011-sqlite-index-database.md))
 
@@ -105,7 +105,7 @@ python3 scripts/provision_happyview.py --verify-only   # confirm provisioning
 # Or export inline: HAPPYVIEW_ADMIN_KEY=hv_... python3 scripts/provision_happyview.py
 ```
 
-See [docs/lexicon/README.md](docs/lexicon/README.md) for lexicon upload order and [happyview.dev](https://happyview.dev) for full App View docs.
+See [docs/lexicon/net.atpix.gallery.md](docs/lexicon/net.atpix.gallery.md) for lexicon upload order and [happyview.dev](https://happyview.dev) for full App View docs.
 
 **Backend** (from `apps/backend/`):
 
@@ -250,7 +250,7 @@ Vite is configured with `envDir` pointing at the repo root, so `npm run dev` fro
 
 7. **Restart** `npm run dev` (Vite reads `.env` at startup).
 
-**Important:** `hv_*` = admin automation (provisioning). `hvc_*` = browser app identity on every XRPC call. Never put `hv_*` on XRPC routes ([TC-006](docs/prd.md#tc-006-api-client-identification)).
+**Important:** `hv_*` = admin automation (provisioning). `hvc_*` = browser app identity on every XRPC call. Never put `hv_*` on XRPC routes ([TC-006](docs/overview/002-prd.md#tc-006-api-client-identification)).
 
 #### Step 7 — Sign in and verify application shell (Task 2.1)
 
@@ -640,7 +640,7 @@ python3 scripts/provision_happyview.py
 python3 scripts/provision_happyview.py --verify-only
 ```
 
-See [docs/lexicon/README.md](docs/lexicon/README.md) for upload order and [system architecture](docs/architecture.md) for how PDS, HappyView, and DNS roles fit together.
+See [docs/lexicon/net.atpix.gallery.md](docs/lexicon/net.atpix.gallery.md) for upload order and [system architecture](docs/overview/000-architecture.md) for how PDS, HappyView, and DNS roles fit together.
 
 ## Deploy to Production
 
@@ -648,4 +648,4 @@ Deploy ATPix apps per [Run the application](#run-the-application): HappyView (`d
 
 ## Monitor and Update
 
-Use the observability stack in [View logs](#view-logs) for ATPix containers. Monitor the DigitalOcean PDS VPS separately (disk, TLS expiry, PDS logs). Re-run provisioning after lexicon changes and document HappyView `feature.spaces_enabled` status in test reports per [SRS NFR-013](docs/srs.md).
+Use the observability stack in [View logs](#view-logs) for ATPix containers. Monitor the DigitalOcean PDS VPS separately (disk, TLS expiry, PDS logs). Re-run provisioning after lexicon changes and document HappyView `feature.spaces_enabled` status in test reports per [SRS NFR-013](docs/overview/003-srs.md).

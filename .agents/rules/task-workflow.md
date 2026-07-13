@@ -7,7 +7,7 @@ description: Ensure all tasks follow the Branch-Per-Task workflow and generate r
 Define the Git workflow and development methodology that MUST be followed for every single task.
 
 ## Branch-Per-Task
-- **Branches Required for ALL Tasks:** All work, including every Task defined in `docs/plan.md`, new features, documentation updates, and bug fixes MUST be developed on dedicated branches (e.g., `task/1.1-setup`, `feature/add-auth`, `docs/update-guide`, `fix/login-bug`). No exceptions.
+- **Branches Required for ALL Tasks:** All work, including every Task defined in `docs/overview/005-plan.md`, new features, documentation updates, and bug fixes MUST be developed on dedicated branches (e.g., `task/1.1-setup`, `feature/add-auth`, `docs/update-guide`, `fix/login-bug`). No exceptions.
 - **Mandatory Push on Completion:** Upon completing a task (after all code is written, tests pass, and the Walkthrough document is generated), you MUST commit all work on your feature branch using Conventional Commits and push the branch to the remote origin (`git push --set-upstream origin <branch-name>`). Do not leave finished task branches persisting only in your local environment.
 - **No Direct Pushes to Main:** The `main` branch contains only approved, stable requirements and code. You MUST NEVER commit or push code directly to the `main` branch unless explicitly told to do so in a user prompt.
 
