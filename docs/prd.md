@@ -45,7 +45,7 @@ Mainstream photo applications trap image libraries in proprietary silos. Users l
 
 ATPix uses familiar **product language** in user stories and UI (gallery, album, share link). Underneath, data is stored and synced as standard atproto **repositories**, **collections**, **records**, and **blobs**. This section is the canonical mapping for architecture and developer documentation. See also [Lexicon README](./lexicon/README.md#product-terms--at-protocol-primitives).
 
-> **Key distinction:** A **gallery** is a **query/view** over photo records—not a record type or repo container. An **album** is a **`com.atpix.gallery.album` record** plus optional **`albumItem` junction records**.
+> **Key distinction:** A **gallery** is a **query/view** over photo records—not a record type or repo container. An **album** is a **`net.atpix.gallery.album` record** plus optional **`albumItem` junction records**.
 
 ```mermaid
 flowchart LR
@@ -77,13 +77,13 @@ flowchart LR
 
 | Product term | AT Protocol primitive | NSID / mechanism |
 |--------------|----------------------|------------------|
-| **My Gallery** | Query over author's photo records | `com.atpix.gallery.listPhotos?did=<author-did>` → collection `com.atpix.gallery.photo` in user's **PDS repo** |
-| **Public profile gallery** | Same query, different DID filter | `listPhotos` over indexed `com.atpix.gallery.photo` records for target DID |
-| **Following / Hashtags feed** | Multi-repo index query + rule records | `com.atpix.gallery.listFeedPhotos` + `com.atpix.gallery.collectionRule` records in curator's repo |
-| **Photo** | Record + blob | Record in `com.atpix.gallery.photo`; bytes via `com.atproto.repo.uploadBlob` |
-| **Album** | Container record | `com.atpix.gallery.album` record in owner's **PDS repo** (always); links `spaceUri` when `visibility: permissioned` |
-| **Album membership** | Junction records + denormalized URIs | `com.atpix.gallery.albumItem` records in same repo as associated photos (PDS for public/unlisted; space repo when permissioned); optional `photo.albumUris[]` |
-| **Private / permissioned album** | Permissioned **space repo** | `ats://<space-did>/…`; type `com.atpix.gallery.albumSpace`; photos/items in space, not public index |
+| **My Gallery** | Query over author's photo records | `net.atpix.gallery.listPhotos?did=<author-did>` → collection `net.atpix.gallery.photo` in user's **PDS repo** |
+| **Public profile gallery** | Same query, different DID filter | `listPhotos` over indexed `net.atpix.gallery.photo` records for target DID |
+| **Following / Hashtags feed** | Multi-repo index query + rule records | `net.atpix.gallery.listFeedPhotos` + `net.atpix.gallery.collectionRule` records in curator's repo |
+| **Photo** | Record + blob | Record in `net.atpix.gallery.photo`; bytes via `com.atproto.repo.uploadBlob` |
+| **Album** | Container record | `net.atpix.gallery.album` record in owner's **PDS repo** (always); links `spaceUri` when `visibility: permissioned` |
+| **Album membership** | Junction records + denormalized URIs | `net.atpix.gallery.albumItem` records in same repo as associated photos (PDS for public/unlisted; space repo when permissioned); optional `photo.albumUris[]` |
+| **Private / permissioned album** | Permissioned **space repo** | `ats://<space-did>/…`; type `net.atpix.gallery.albumSpace`; photos/items in space, not public index |
 | **Share link** | UI route + visibility field | `visibility` on `album` / `photo` records (`public` \| `unlisted` \| `permissioned`) |
 | **App View index** | HappyView local DB | Copy of network `photo` records; not a user repo |
 
@@ -91,10 +91,10 @@ flowchart LR
 
 | Collection NSID | Record role | Typical repo |
 |-----------------|-------------|--------------|
-| `com.atpix.gallery.photo` | Image metadata + blob ref | User PDS repo, or permissioned space repo |
-| `com.atpix.gallery.album` | Named curated container | User PDS repo (metadata); links `spaceUri` when permissioned |
-| `com.atpix.gallery.albumItem` | Ordered album ↔ photo link | Same repo as associated photos (PDS for public/unlisted; space repo when permissioned) |
-| `com.atpix.gallery.collectionRule` | Follow/hashtag source rules | Owner's public PDS repo |
+| `net.atpix.gallery.photo` | Image metadata + blob ref | User PDS repo, or permissioned space repo |
+| `net.atpix.gallery.album` | Named curated container | User PDS repo (metadata); links `spaceUri` when permissioned |
+| `net.atpix.gallery.albumItem` | Ordered album ↔ photo link | Same repo as associated photos (PDS for public/unlisted; space repo when permissioned) |
+| `net.atpix.gallery.collectionRule` | Follow/hashtag source rules | Owner's public PDS repo |
 
 **Terminology policy:** User-facing UI and user stories in this PRD keep gallery/album language. Each functional requirement below includes a **Protocol mapping** line for implementers. Architecture docs and [docs/lexicon/README.md](./lexicon/README.md) use repo/collection/record/blob/space vocabulary.
 
@@ -106,7 +106,7 @@ ATPix offers **two concurrent, first-class paths** for building gallery and albu
 
 | Path | User action | Infrastructure | Primary requirements |
 |------|-------------|------------------|----------------------|
-| **A — Own uploads** | Upload image → blob + `com.atpix.gallery.photo` on user's PDS | HappyView OAuth proxy + local index | F-002, F-003, F-012 |
+| **A — Own uploads** | Upload image → blob + `net.atpix.gallery.photo` on user's PDS | HappyView OAuth proxy + local index | F-002, F-003, F-012 |
 | **B — Network discovery** | Define follow/hashtag rules → browse matches → add to albums | HappyView Jetstream sync + backfill + SQLite/Postgres index | F-010, F-011, F-004 |
 
 ### Path A: Upload to PDS
@@ -115,9 +115,9 @@ The user's **My Gallery** view (F-003) shows photos they authored and uploaded t
 
 ### Path B: HappyView network monitoring (not a custom firehose)
 
-Social discovery MUST rely on **HappyView's built-in network sync**—real-time record ingestion via [Jetstream](https://github.com/bluesky-social/jetstream) and historical [backfill](https://happyview.dev/guides/backfill) into the App View database (Source: [happyview.md](../.agents/kb/happyview.md)). ATPix queries that index through Lexicon endpoints (e.g. `com.atpix.gallery.listFeedPhotos`); it MUST NOT subscribe to the relay firehose or operate a separate sync pipeline.
+Social discovery MUST rely on **HappyView's built-in network sync**—real-time record ingestion via [Jetstream](https://github.com/bluesky-social/jetstream) and historical [backfill](https://happyview.dev/guides/backfill) into the App View database (Source: [happyview.md](../.agents/kb/happyview.md)). ATPix queries that index through Lexicon endpoints (e.g. `net.atpix.gallery.listFeedPhotos`); it MUST NOT subscribe to the relay firehose or operate a separate sync pipeline.
 
-When followed accounts publish new `com.atpix.gallery.photo` records (or records matching configured hashtag keywords), HappyView indexes them; ATPix surfaces them in the **Following / Hashtags** feed and in album-creation previews per `collectionRule` (F-010).
+When followed accounts publish new `net.atpix.gallery.photo` records (or records matching configured hashtag keywords), HappyView indexes them; ATPix surfaces them in the **Following / Hashtags** feed and in album-creation previews per `collectionRule` (F-010).
 
 ### Album population
 
@@ -192,13 +192,13 @@ See [F-008](#f-008-permissioned-gallery--album-access-happyview-permissioned-spa
 **Priority:** Mandatory  
 **User Story:** As a creator, I want to upload photos to my gallery so that they are stored in my PDS repository and immediately visible in my personal gallery.
 
-**Protocol mapping:** `com.atproto.repo.uploadBlob` → PDS **blob** (all paths); `com.atpix.gallery.createPhoto` → **record** in `com.atpix.gallery.photo` (public/unlisted PDS repo); permissioned album uploads additionally use `com.atproto.space.createRecord` / `putRecord` in the linked space and `com.atproto.space.getBlob` for gated thumbnail delivery.
+**Protocol mapping:** `com.atproto.repo.uploadBlob` → PDS **blob** (all paths); `net.atpix.gallery.createPhoto` → **record** in `net.atpix.gallery.photo` (public/unlisted PDS repo); permissioned album uploads additionally use `com.atproto.space.createRecord` / `putRecord` in the linked space and `com.atproto.space.getBlob` for gated thumbnail delivery.
 
 ### Acceptance Criteria
 
-- Authenticated users MUST be able to select and upload image files accepted by the `com.atpix.gallery.photo` record Lexicon (`image/*` MIME types).
-- **Public/unlisted upload flow** MUST: (1) generate and embed a C2PA standard manifest in the image asset per F-012, (2) call `com.atproto.repo.uploadBlob` via HappyView proxy with the manifest-bearing bytes, then (3) create a `com.atpix.gallery.photo` record in the user's public PDS repo referencing the blob ref and C2PA summary fields.
-- **Permissioned album upload flow** MUST: (1) embed C2PA per F-012, (2) call `com.atproto.repo.uploadBlob` to the author's PDS (blob bytes remain on PDS per HappyView spaces model), then (3) write `com.atpix.gallery.photo` and `com.atpix.gallery.albumItem` records to the linked space via `com.atproto.space.createRecord` / `putRecord` — not to the owner's public repo. Thumbnails and full images for permissioned photos MUST be fetched via `com.atproto.space.getBlob` with valid membership (DPoP) or space credential (Bearer).
+- Authenticated users MUST be able to select and upload image files accepted by the `net.atpix.gallery.photo` record Lexicon (`image/*` MIME types).
+- **Public/unlisted upload flow** MUST: (1) generate and embed a C2PA standard manifest in the image asset per F-012, (2) call `com.atproto.repo.uploadBlob` via HappyView proxy with the manifest-bearing bytes, then (3) create a `net.atpix.gallery.photo` record in the user's public PDS repo referencing the blob ref and C2PA summary fields.
+- **Permissioned album upload flow** MUST: (1) embed C2PA per F-012, (2) call `com.atproto.repo.uploadBlob` to the author's PDS (blob bytes remain on PDS per HappyView spaces model), then (3) write `net.atpix.gallery.photo` and `net.atpix.gallery.albumItem` records to the linked space via `com.atproto.space.createRecord` / `putRecord` — not to the owner's public repo. Thumbnails and full images for permissioned photos MUST be fetched via `com.atproto.space.getBlob` with valid membership (DPoP) or space credential (Bearer).
 - Each public/unlisted uploaded photo MUST be indexed in the HappyView public App View. Permissioned space photos MUST NOT appear in public indexes (F-008).
 - The UI MUST show upload progress and a completion or error state for each file.
 - Uploads exceeding the 50MB per-blob limit MUST be rejected with a clear, user-visible error before transfer completes.
@@ -216,13 +216,13 @@ See [F-008](#f-008-permissioned-gallery--album-access-happyview-permissioned-spa
 **Priority:** Mandatory  
 **User Story:** As a signed-in user, I want to browse photos I uploaded to my PDS in a paginated gallery grid so that I can review and manage my own library.
 
-**Protocol mapping:** UI **view** only — `com.atpix.gallery.listPhotos` **query** over indexed `com.atpix.gallery.photo` **records** for author DID; no gallery record or collection exists.
+**Protocol mapping:** UI **view** only — `net.atpix.gallery.listPhotos` **query** over indexed `net.atpix.gallery.photo` **records** for author DID; no gallery record or collection exists.
 
 ### Acceptance Criteria
 
 - The application MUST provide a **My Gallery** view distinct from the network discovery feed (F-010, Path B).
 - The application MUST render the authenticated user's own photos in a grid layout with thumbnail images resolved from PDS blob URLs.
-- Gallery queries MUST use `com.atpix.gallery.listPhotos` filtered to the authenticated author's DID with cursor-based pagination.
+- Gallery queries MUST use `net.atpix.gallery.listPhotos` filtered to the authenticated author's DID with cursor-based pagination.
 - Default page size SHOULD be 20 items; callers MAY request a different `limit` within Lexicon bounds.
 - Empty gallery state MUST display actionable guidance (e.g., upload your first photo).
 - Gallery data MUST be served from the HappyView App View index (author's indexed records), not by scraping arbitrary third-party servers.
@@ -236,16 +236,16 @@ See [F-008](#f-008-permissioned-gallery--album-access-happyview-permissioned-spa
 **Priority:** Mandatory  
 **User Story:** As a creator, I want to organize photos into named albums so that I can group related images and share curated collections.
 
-**Protocol mapping:** **Records** in collections `com.atpix.gallery.album` and `com.atpix.gallery.albumItem` in the owner's **repo**; optional `albumUris` denormalization on photo **records**.
+**Protocol mapping:** **Records** in collections `net.atpix.gallery.album` and `net.atpix.gallery.albumItem` in the owner's **repo**; optional `albumUris` denormalization on photo **records**.
 
 ### Acceptance Criteria
 
-- Authenticated users MUST be able to create albums with a display name via the `com.atpix.gallery.album` record Lexicon and corresponding create procedure.
-- Users MUST be able to add and remove photos from albums via `com.atpix.gallery.albumItem` junction records (ordered membership) or by updating `photo.albumUris` per the [Lexicon specification](#atpix-lexicon-specification).
+- Authenticated users MUST be able to create albums with a display name via the `net.atpix.gallery.album` record Lexicon and corresponding create procedure.
+- Users MUST be able to add and remove photos from albums via `net.atpix.gallery.albumItem` junction records (ordered membership) or by updating `photo.albumUris` per the [Lexicon specification](#atpix-lexicon-specification).
 - Users MUST be able to rename albums and delete empty albums.
 - Deleting an album MUST NOT delete underlying photo records unless the user explicitly deletes those photos.
 - Album list and detail views MUST support pagination consistent with F-003.
-- When creating an album, users MUST be able to seed initial membership from photos matching active `com.atpix.gallery.collectionRule` sources (Path B, F-010) **or** from their own uploads (Path A, F-002).
+- When creating an album, users MUST be able to seed initial membership from photos matching active `net.atpix.gallery.collectionRule` sources (Path B, F-010) **or** from their own uploads (Path A, F-002).
 - The album UI MUST make both population paths visible: add own uploads and add from Following/Hashtag discovery.
 
 **Source:** [product-vision.md](./product-vision.md) — Core Features; [Gallery Population Model](#gallery-population-model)
@@ -257,14 +257,14 @@ See [F-008](#f-008-permissioned-gallery--album-access-happyview-permissioned-spa
 **Priority:** Mandatory  
 **User Story:** As a photographer, I want to add captions and tags to my photos so that I can describe and find images later.
 
-**Protocol mapping:** Metadata updates via `com.atpix.gallery.updatePhoto` on `com.atpix.gallery.photo` **records** in the user's **repo**.
+**Protocol mapping:** Metadata updates via `net.atpix.gallery.updatePhoto` on `net.atpix.gallery.photo` **records** in the user's **repo**.
 
 ### Acceptance Criteria
 
 - Users MUST be able to set and edit an optional caption (max 2000 characters per Lexicon) on upload and from the photo detail view.
 - Users MUST be able to add and remove tags stored in the photo `keywords` field ([dc:subject](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/#subject) / [schema:keywords](https://schema.org/keywords)).
 - Caption and tag edits MUST persist as updated signed records on the user's PDS.
-- Tag search via `com.atpix.gallery.listPhotos?tag=` MUST be supported in v1 and MUST power hashtag matching in F-010.
+- Tag search via `net.atpix.gallery.listPhotos?tag=` MUST be supported in v1 and MUST power hashtag matching in F-010.
 
 **Source:** [product-vision.md](./product-vision.md) — Core Features
 
@@ -275,13 +275,13 @@ See [F-008](#f-008-permissioned-gallery--album-access-happyview-permissioned-spa
 **Priority:** Mandatory  
 **User Story:** As a visitor, I want to browse another user's public gallery by handle or DID so that I can view photos they have published with ATPix Lexicons.
 
-**Protocol mapping:** `com.atpix.gallery.listPhotos?did=<target>` — read-only **query** over another account's indexed `com.atpix.gallery.photo` **collection**.
+**Protocol mapping:** `net.atpix.gallery.listPhotos?did=<target>` — read-only **query** over another account's indexed `net.atpix.gallery.photo` **collection**.
 
 ### Acceptance Criteria
 
 - The application MUST expose a public profile gallery route resolvable by DID (durable) and handle (convenience).
 - Handle resolution MUST use `com.atproto.identity.resolveHandle` or equivalent before querying indexed records.
-- Only photos indexed under `com.atpix.gallery.photo` (and compatible collections) MUST appear in profile galleries.
+- Only photos indexed under `net.atpix.gallery.photo` (and compatible collections) MUST appear in profile galleries.
 - Public galleries MUST NOT require authentication to view unless the target content is permission-gated per F-008.
 - Profile gallery pagination MUST match F-003 cursor semantics.
 
@@ -314,7 +314,7 @@ See [F-008](#f-008-permissioned-gallery--album-access-happyview-permissioned-spa
 **Priority:** Mandatory  
 **User Story:** As a creator, I want to restrict access to my albums—and the photos in them—to a select group of authenticated atproto users so that I can share private curated collections without making them network-public—and as a developer, I want ATPix to serve as a **reference validation** of HappyView Permissioned Spaces.
 
-**Protocol mapping:** Permissioned **space repo** (`ats://`) for `photo` and `albumItem` **records**; album metadata **record** in public **repo** with `spaceUri`; space type `com.atpix.gallery.albumSpace`.
+**Protocol mapping:** Permissioned **space repo** (`ats://`) for `photo` and `albumItem` **records**; album metadata **record** in public **repo** with `spaceUri`; space type `net.atpix.gallery.albumSpace`.
 
 ### Strategic Requirement
 
@@ -323,8 +323,8 @@ ATPix v1 MUST exercise [HappyView Permissioned Spaces](https://happyview.dev/exp
 ### Acceptance Criteria
 
 - HappyView instances used for ATPix MUST enable `feature.spaces_enabled` before permissioned album features are tested or demonstrated.
-- Album owners MUST be able to designate an album with `visibility: permissioned` and receive a linked `spaceUri` (`ats://<space-did>/com.atpix.gallery.albumSpace/<skey>`).
-- Creating a permissioned album MUST call `com.atproto.simplespace.createSpace` with `type: com.atpix.gallery.albumSpace`, `mintPolicy: member-list`, `appAccess: {"type": "allowList", "allowed": ["<ATPix OAuth clientId URL>"]}` (the ATPix OAuth `clientId` metadata URL published at `{deployment-origin}/oauth-client-metadata.json`; `allowed` entries are client metadata URLs per HappyView credentials docs), and `config: {"membershipPublic": false, "recordsPublic": false}`.
+- Album owners MUST be able to designate an album with `visibility: permissioned` and receive a linked `spaceUri` (`ats://<space-did>/net.atpix.gallery.albumSpace/<skey>`).
+- Creating a permissioned album MUST call `com.atproto.simplespace.createSpace` with `type: net.atpix.gallery.albumSpace`, `mintPolicy: member-list`, `appAccess: {"type": "allowList", "allowed": ["<ATPix OAuth clientId URL>"]}` (the ATPix OAuth `clientId` metadata URL published at `{deployment-origin}/oauth-client-metadata.json`; `allowed` entries are client metadata URLs per HappyView credentials docs), and `config: {"membershipPublic": false, "recordsPublic": false}`.
 - Photo and `albumItem` records for permissioned albums MUST be written to the space via `com.atproto.space.putRecord` / `com.atproto.space.createRecord`, not to the owner's public repo. Blob bytes remain on the author's PDS; gated reads use `com.atproto.space.getBlob`.
 - Album owners MUST be able to invite members via `dev.happyview.space.createInvite`; invited users MUST join via `dev.happyview.space.acceptInvite`. Owners MUST manage membership via `com.atproto.simplespace.addMember` / `removeMember` with `access` values `read`, `write`, or `read_self` per HappyView members API.
 - Authenticated space members with `read` or `write` access MUST view permissioned album contents using **direct member auth** (DPoP + `X-Client-Key` on `com.atproto.space.*` routes) or **cross-service reads** via space credential flows (`getDelegationToken` → `getSpaceCredential` → Bearer token without DPoP).
@@ -344,7 +344,7 @@ ATPix v1 MUST exercise [HappyView Permissioned Spaces](https://happyview.dev/exp
 **Priority:** Mandatory  
 **User Story:** As a gallery owner, I want to delete photos and manage album membership so that I control what remains in my repository.
 
-**Protocol mapping:** `deletePhoto` / `removeFromAlbum` procedures remove **records** from **repo** collections (`com.atpix.gallery.photo`, `com.atpix.gallery.albumItem`).
+**Protocol mapping:** `deletePhoto` / `removeFromAlbum` procedures remove **records** from **repo** collections (`net.atpix.gallery.photo`, `net.atpix.gallery.albumItem`).
 
 ### Acceptance Criteria
 
@@ -364,17 +364,17 @@ ATPix v1 MUST exercise [HappyView Permissioned Spaces](https://happyview.dev/exp
 **Priority:** Mandatory  
 **User Story:** As an atproto user, I want ATPix to show me photos from accounts I follow and hashtags I track as they appear on the network, so I can browse a discovery feed and add those photos to albums—using only HappyView's network sync, not a separate firehose client.
 
-**Protocol mapping:** `collectionRule` **records** in the user's **repo**; `com.atpix.gallery.listFeedPhotos` **query** over HappyView's multi-repo index—not a repo container.
+**Protocol mapping:** `collectionRule` **records** in the user's **repo**; `net.atpix.gallery.listFeedPhotos` **query** over HappyView's multi-repo index—not a repo container.
 
 ### Acceptance Criteria
 
 - ATPix MUST NOT implement a standalone relay firehose consumer or custom atproto sync service; network photo discovery MUST use records indexed by HappyView via Jetstream and backfill (Source: [happyview.md](../.agents/kb/happyview.md)).
 - The application MUST resolve the authenticated user's follow graph via `app.bsky.graph.getFollows` (or equivalent) and extract followed actor DIDs for rule evaluation.
-- Users MUST be able to create, edit, and delete `com.atpix.gallery.collectionRule` records that declare **followed-actor** sources, **hashtag** sources, or both.
+- Users MUST be able to create, edit, and delete `net.atpix.gallery.collectionRule` records that declare **followed-actor** sources, **hashtag** sources, or both.
 - Collection rules MUST support `targetScope: gallery` (powers the **Following / Hashtags** discovery feed) and `targetScope: album` with an optional `targetAlbumUri` (preview when creating or editing an album).
 - Hashtag matching MUST normalize tags (lowercase, strip leading `#`) and match against the photo `keywords` field (mapped from [Dublin Core `dc:subject`](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/#subject) / [schema:keywords](https://schema.org/keywords)).
-- Followed-actor matching MUST compare indexed `com.atpix.gallery.photo` author DIDs against the rule's `followedActors` list and/or the user's live follow graph when `useFollowGraph: true`.
-- The discovery feed MUST use `com.atpix.gallery.listFeedPhotos` querying the HappyView index and MUST paginate with cursor semantics consistent with F-003.
+- Followed-actor matching MUST compare indexed `net.atpix.gallery.photo` author DIDs against the rule's `followedActors` list and/or the user's live follow graph when `useFollowGraph: true`.
+- The discovery feed MUST use `net.atpix.gallery.listFeedPhotos` querying the HappyView index and MUST paginate with cursor semantics consistent with F-003.
 - When new matching photos are indexed by HappyView (network publishes), they MUST become visible in the discovery feed on next query without requiring a user upload (concurrent with Path A).
 - When creating or editing an album, the UI MUST let users select active collection rules to preview matching indexed photos and add selected matches as `albumItem` records (Path B album population).
 - Collection rule evaluation MUST query only HappyView Lexicon endpoints over the local index; the feature MUST NOT scrape non-atproto services or query user PDSes directly for discovery.
@@ -391,7 +391,7 @@ ATPix v1 MUST exercise [HappyView Permissioned Spaces](https://happyview.dev/exp
 **Priority:** Mandatory  
 **User Story:** As a creator, I want ATPix to attach Content Credentials when I upload a photo so that viewers can cryptographically verify how the image file was created.
 
-**Protocol mapping:** C2PA manifest embedded in **blob** bytes before upload; summary fields stored on `com.atpix.gallery.photo` **record**.
+**Protocol mapping:** C2PA manifest embedded in **blob** bytes before upload; summary fields stored on `net.atpix.gallery.photo` **record**.
 
 ### Acceptance Criteria
 
@@ -402,7 +402,7 @@ ATPix v1 MUST exercise [HappyView Permissioned Spaces](https://happyview.dev/exp
 - The manifest MUST be embedded in the image asset (manifest store in-file) before blob upload unless the user explicitly chooses external manifest storage (Source: §11.3, Appendix A).
 - The manifest MUST be digitally signed with an X.509 credential bearing the `c2pa-kp-claimSigning` EKU (OID 1.3.6.1.4.1.62558.2.1) (Source: §14.4.1).
 - The claim MUST include `claim_generator_info` identifying ATPix name and version (Source: §10.2.3).
-- A custom assertion `com.atpix.gallery.creatorDid` MUST record the uploader's atproto DID in the manifest assertion store (Source: §6.2.1 namespacing).
+- A custom assertion `net.atpix.gallery.creatorDid` MUST record the uploader's atproto DID in the manifest assertion store (Source: §6.2.1 namespacing).
 - Users MUST be able to opt out of optional assertions (GPS, device identifiers, capture metadata) before signing; required integrity assertions (actions, hash) MUST remain (Source: §1.2 privacy guidance).
 
 **Source:** [c2pa.md](../.agents/kb/c2pa.md) — Required Assertions, Privacy  
@@ -415,7 +415,7 @@ ATPix v1 MUST exercise [HappyView Permissioned Spaces](https://happyview.dev/exp
 **Priority:** Mandatory  
 **User Story:** As a creator, I want edits and gallery publication reflected in the Content Credentials chain so that downstream viewers see an accurate history of changes.
 
-**Protocol mapping:** Update manifest in **blob** bytes + `com.atpix.gallery.updatePhoto` on the photo **record** in the user's **repo**.
+**Protocol mapping:** Update manifest in **blob** bytes + `net.atpix.gallery.updatePhoto` on the photo **record** in the user's **repo**.
 
 ### Acceptance Criteria
 
@@ -424,7 +424,7 @@ ATPix v1 MUST exercise [HappyView Permissioned Spaces](https://happyview.dev/exp
 - When a photo becomes publicly visible (public gallery or public album per F-006/F-007), ATPix MUST append a `c2pa.published` action in a new update manifest or include it in the same edit manifest when publish coincides with an edit (Source: §18.14).
 - Claim generators MUST NOT redact `c2pa.actions` or `c2pa.actions.v2` assertions (Source: §6.8).
 - Each update MUST recompute `c2pa.hash.data` for the modified asset bytes and re-embed the manifest store before replacing the PDS blob.
-- The `com.atpix.gallery.photo` record MUST store `c2paActiveManifestId`, `c2paManifestStoreUri` (if external), and `c2paLastAction` reflecting the latest action type.
+- The `net.atpix.gallery.photo` record MUST store `c2paActiveManifestId`, `c2paManifestStoreUri` (if external), and `c2paLastAction` reflecting the latest action type.
 
 **Source:** [c2pa.md](../.agents/kb/c2pa.md) — ATPix Agent Quick Reference (edit workflow)
 
@@ -497,11 +497,11 @@ ATPix v1 MUST exercise [HappyView Permissioned Spaces](https://happyview.dev/exp
 
 ### Acceptance Criteria
 
-- ATPix MUST define record, query, and procedure Lexicons under the `com.atpix.gallery.*` NSID hierarchy per the [Lexicon specification](#atpix-lexicon-specification) and [docs/lexicon/](./lexicon/) JSON artifacts.
+- ATPix MUST define record, query, and procedure Lexicons under the `net.atpix.gallery.*` NSID hierarchy per the [Lexicon specification](#atpix-lexicon-specification) and [docs/lexicon/](./lexicon/) JSON artifacts.
 - Record Lexicons MUST be uploaded to HappyView with `backfill: true` so historical compatible records are indexed network-wide via Jetstream and relay backfill—this index is the sole source for Path B network discovery (F-010).
 - ATPix MUST NOT duplicate HappyView's Jetstream subscription; all real-time network photo indexing MUST remain a HappyView responsibility.
 - Query and procedure Lexicons MUST declare `target_collection` pointing at the corresponding record NSID.
-- Production deployment SHOULD publish Lexicon authority via DNS `_lexicon` TXT records for the `com.atpix.gallery` namespace (domain TBD).
+- Production deployment SHOULD publish Lexicon authority via DNS `_lexicon` TXT records for the `net.atpix.gallery` namespace on **atpix.net**.
 - Lexicon changes MUST follow atproto immutability rules: breaking changes require a new NSID, not in-place constraint tightening.
 
 **Source:** [product-vision.md](./product-vision.md) — Unfair Advantage, Key Constraints, Technical Stack  
@@ -608,7 +608,7 @@ ATPix v1 MUST exercise [HappyView Permissioned Spaces](https://happyview.dev/exp
 | **Blob storage** | User PDS via `com.atproto.repo.uploadBlob` | 50MB per blob via HappyView proxy |
 | **Frontend** | Vanilla HTML/CSS/JS with `@happyview/lex-agent` and `@happyview/oauth-client-browser` | React or other frameworks MAY be adopted via ADR |
 | **Observability** | Promtail, Redpanda, Loki, Prometheus, Grafana | `docker-compose.yml` |
-| **Lexicon namespace** | `com.atpix.gallery.*` | DNS authority domain TBD |
+| **Lexicon namespace** | `net.atpix.gallery.*` | DNS authority **atpix.net** |
 | **Content Credentials** | C2PA 2.2 | Manifest embed in JPEG/PNG; `c2pa` Rust/JS SDK TBD via ADR |
 | **C2PA signing** | X.509 (`c2pa-kp-claimSigning` EKU) | Org-issued or CAI test certs in development |
 
@@ -736,7 +736,7 @@ ATPix v1 MUST exercise [HappyView Permissioned Spaces](https://happyview.dev/exp
 
 ## RC-006: Lexicon Network Readiness
 
-**Criteria:** `com.atpix.gallery.photo` record Lexicon uploaded with backfill; query returns records from at least two distinct DIDs in a test network.  
+**Criteria:** `net.atpix.gallery.photo` record Lexicon uploaded with backfill; query returns records from at least two distinct DIDs in a test network.  
 **Verification:** Admin API lexicon status + cross-DID query integration test.
 
 ## RC-007: Permissioned Spaces End-to-End
@@ -746,7 +746,7 @@ ATPix v1 MUST exercise [HappyView Permissioned Spaces](https://happyview.dev/exp
 
 ## RC-008: Dual Gallery Population (Upload + HappyView Index)
 
-**Criteria:** (1) User uploads a photo → appears in My Gallery (Path A). (2) A followed account's `com.atpix.gallery.photo` is indexed by HappyView → appears in Following/Hashtags feed (Path B) without curator upload. (3) User adds a Path B photo to an album via collection rule preview.  
+**Criteria:** (1) User uploads a photo → appears in My Gallery (Path A). (2) A followed account's `net.atpix.gallery.photo` is indexed by HappyView → appears in Following/Hashtags feed (Path B) without curator upload. (3) User adds a Path B photo to an album via collection rule preview.  
 **Verification:** Integration test with HappyView index + seeded follow graph; BDD scenarios for both paths and album add from discovery.
 
 ## RC-009: C2PA Upload, Validation, and Edit Chain
@@ -758,50 +758,50 @@ ATPix v1 MUST exercise [HappyView Permissioned Spaces](https://happyview.dev/exp
 
 # ATPix Lexicon Specification
 
-Namespace authority: `com.atpix.gallery` (DNS `_lexicon` TBD). Machine-readable artifacts live in [docs/lexicon/](./lexicon/). Metadata fields intentionally align with [Dublin Core Terms](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/) and [Schema.org](https://schema.org/docs/schemas.html) where applicable; ATPix-native fields are noted as **ATPix**.
+Namespace authority: `net.atpix.gallery` on **atpix.net** (`_lexicon.gallery.atpix.net`). Machine-readable artifacts live in [docs/lexicon/](./lexicon/). Metadata fields intentionally align with [Dublin Core Terms](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/) and [Schema.org](https://schema.org/docs/schemas.html) where applicable; ATPix-native fields are noted as **ATPix**.
 
 ### Record collections
 
 | NSID | Purpose | Storage |
 |------|---------|---------|
-| `com.atpix.gallery.photo` | Image metadata + blob ref | Public PDS repo, or space repo when `visibility: permissioned` |
-| `com.atpix.gallery.album` | Album container + visibility | Public PDS repo (metadata); links to `spaceUri` when permissioned |
-| `com.atpix.gallery.albumItem` | Ordered album membership | Same repo as parent album / associated photos |
-| `com.atpix.gallery.collectionRule` | Follow/hashtag source rules | Owner's public PDS repo |
+| `net.atpix.gallery.photo` | Image metadata + blob ref | Public PDS repo, or space repo when `visibility: permissioned` |
+| `net.atpix.gallery.album` | Album container + visibility | Public PDS repo (metadata); links to `spaceUri` when permissioned |
+| `net.atpix.gallery.albumItem` | Ordered album membership | Same repo as parent album / associated photos |
+| `net.atpix.gallery.collectionRule` | Follow/hashtag source rules | Owner's public PDS repo |
 
 ### Space type (ATP-0016, not a repo collection)
 
 | NSID | Purpose |
 |------|---------|
-| `com.atpix.gallery.albumSpace` | Permissioned Space **type** for gated albums (`ats://…/com.atpix.gallery.albumSpace/<skey>`) |
+| `net.atpix.gallery.albumSpace` | Permissioned Space **type** for gated albums (`ats://…/net.atpix.gallery.albumSpace/<skey>`) |
 
 ### Query endpoints
 
 | NSID | Purpose |
 |------|---------|
-| `com.atpix.gallery.listPhotos` | Paginated photo list (by DID, album, tag) |
-| `com.atpix.gallery.getPhoto` | Single photo by AT URI |
-| `com.atpix.gallery.listAlbums` | Paginated album list for a DID |
-| `com.atpix.gallery.getAlbum` | Single album with optional item hydration |
-| `com.atpix.gallery.listAlbumItems` | Ordered items for an album |
-| `com.atpix.gallery.listFeedPhotos` | Social feed from collection rules + follow graph |
-| `com.atpix.gallery.listCollectionRules` | List owner's collection rules |
+| `net.atpix.gallery.listPhotos` | Paginated photo list (by DID, album, tag) |
+| `net.atpix.gallery.getPhoto` | Single photo by AT URI |
+| `net.atpix.gallery.listAlbums` | Paginated album list for a DID |
+| `net.atpix.gallery.getAlbum` | Single album with optional item hydration |
+| `net.atpix.gallery.listAlbumItems` | Ordered items for an album |
+| `net.atpix.gallery.listFeedPhotos` | Social feed from collection rules + follow graph |
+| `net.atpix.gallery.listCollectionRules` | List owner's collection rules |
 
 ### Procedure endpoints
 
 | NSID | Purpose |
 |------|---------|
-| `com.atpix.gallery.createPhoto` | Create photo record after blob upload |
-| `com.atpix.gallery.updatePhoto` | Update metadata |
-| `com.atpix.gallery.deletePhoto` | Delete photo record |
-| `com.atpix.gallery.createAlbum` | Create album; optionally provisions permissioned space |
-| `com.atpix.gallery.updateAlbum` | Update album metadata |
-| `com.atpix.gallery.deleteAlbum` | Delete album and junction items |
-| `com.atpix.gallery.addToAlbum` | Create `albumItem` |
-| `com.atpix.gallery.removeFromAlbum` | Remove `albumItem` |
-| `com.atpix.gallery.createCollectionRule` | Create follow/hashtag rule |
-| `com.atpix.gallery.updateCollectionRule` | Update rule |
-| `com.atpix.gallery.deleteCollectionRule` | Delete rule |
+| `net.atpix.gallery.createPhoto` | Create photo record after blob upload |
+| `net.atpix.gallery.updatePhoto` | Update metadata |
+| `net.atpix.gallery.deletePhoto` | Delete photo record |
+| `net.atpix.gallery.createAlbum` | Create album; optionally provisions permissioned space |
+| `net.atpix.gallery.updateAlbum` | Update album metadata |
+| `net.atpix.gallery.deleteAlbum` | Delete album and junction items |
+| `net.atpix.gallery.addToAlbum` | Create `albumItem` |
+| `net.atpix.gallery.removeFromAlbum` | Remove `albumItem` |
+| `net.atpix.gallery.createCollectionRule` | Create follow/hashtag rule |
+| `net.atpix.gallery.updateCollectionRule` | Update rule |
+| `net.atpix.gallery.deleteCollectionRule` | Delete rule |
 
 ### Attribute provenance (photo record)
 
@@ -833,7 +833,7 @@ Namespace authority: `com.atpix.gallery` (DNS `_lexicon` TBD). Machine-readable 
 | `c2paManifestStoreUri` | string (uri) | **ATPix** · C2PA §11.4 | External manifest URI when not embedded |
 | `c2paIngredientUri` | string (uri) | **ATPix** · C2PA §18.15 | Upstream ingredient URI for derivatives |
 
-Custom manifest assertion `com.atpix.gallery.creatorDid` links C2PA signer context to atproto identity (C2PA §6.2.1 namespacing).
+Custom manifest assertion `net.atpix.gallery.creatorDid` links C2PA signer context to atproto identity (C2PA §6.2.1 namespacing).
 
 Full JSON schemas: [docs/lexicon/README.md](./lexicon/README.md).
 

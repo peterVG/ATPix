@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atpix.gallery.collectionRule",
+  "id": "net.atpix.gallery.collectionRule",
   "description": "Rule for sourcing photos from followed actors and/or hashtags into gallery feed or albums.",
   "defs": {
     "main": {
@@ -23,7 +23,7 @@
           },
           "targetScope": {
             "type": "ref",
-            "ref": "com.atpix.gallery.defs#targetScope",
+            "ref": "net.atpix.gallery.defs#targetScope",
             "description": "ATPix — gallery (social feed) or album (membership seeding)."
           },
           "targetAlbumUri": {

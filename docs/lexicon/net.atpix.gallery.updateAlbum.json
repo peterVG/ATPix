@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atpix.gallery.updateAlbum",
+  "id": "net.atpix.gallery.updateAlbum",
   "defs": {
     "main": {
       "type": "procedure",

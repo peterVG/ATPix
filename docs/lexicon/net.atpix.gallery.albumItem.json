@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atpix.gallery.albumItem",
+  "id": "net.atpix.gallery.albumItem",
   "description": "Ordered membership linking an album to a photo. ATPix-native junction record.",
   "defs": {
     "main": {
@@ -14,12 +14,12 @@
           "albumUri": {
             "type": "string",
             "format": "at-uri",
-            "description": "ATPix — parent com.atpix.gallery.album AT URI."
+            "description": "ATPix — parent net.atpix.gallery.album AT URI."
           },
           "photoUri": {
             "type": "string",
             "maxLength": 512,
-            "description": "ATPix — child com.atpix.gallery.photo record URI. Use at:// for PDS repo records; use ats:// for permissioned space records (no at-uri format — ats scheme)."
+            "description": "ATPix — child net.atpix.gallery.photo record URI. Use at:// for PDS repo records; use ats:// for permissioned space records (no at-uri format — ats scheme)."
           },
           "position": {
             "type": "integer",

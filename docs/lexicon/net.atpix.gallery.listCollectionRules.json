@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atpix.gallery.listCollectionRules",
+  "id": "net.atpix.gallery.listCollectionRules",
   "defs": {
     "main": {
       "type": "query",
@@ -8,7 +8,7 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "targetScope": { "type": "ref", "ref": "com.atpix.gallery.defs#targetScope" },
+          "targetScope": { "type": "ref", "ref": "net.atpix.gallery.defs#targetScope" },
           "activeOnly": { "type": "boolean", "default": true },
           "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 },
           "cursor": { "type": "string" }
@@ -36,7 +36,7 @@
                     "properties": {
                       "name": { "type": "string" },
                       "description": { "type": "string" },
-                      "targetScope": { "type": "ref", "ref": "com.atpix.gallery.defs#targetScope" },
+                      "targetScope": { "type": "ref", "ref": "net.atpix.gallery.defs#targetScope" },
                       "targetAlbumUri": { "type": "string", "format": "at-uri" },
                       "useFollowGraph": { "type": "boolean" },
                       "followedActors": { "type": "array", "items": { "type": "string", "format": "did" } },

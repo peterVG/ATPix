@@ -66,9 +66,9 @@ After successful sign-in, the UI MUST display the authenticated user's handle an
 
 Authenticated users MUST upload `image/*` files via: (1) C2PA manifest embed per SRS-F-012, (2) `com.atproto.repo.uploadBlob` via HappyView OAuth proxy (blob always on author's PDS), then (3) record creation per visibility target.
 
-**Public/unlisted path:** `com.atpix.gallery.createPhoto` in the user's public PDS repo with blob ref and C2PA summary fields.
+**Public/unlisted path:** `net.atpix.gallery.createPhoto` in the user's public PDS repo with blob ref and C2PA summary fields.
 
-**Permissioned album path:** `com.atproto.space.createRecord` / `putRecord` for `com.atpix.gallery.photo` and `com.atpix.gallery.albumItem` in the linked space — not public repo writes. Thumbnails and image bytes MUST be served via `com.atproto.space.getBlob` with valid membership or space credential.
+**Permissioned album path:** `com.atproto.space.createRecord` / `putRecord` for `net.atpix.gallery.photo` and `net.atpix.gallery.albumItem` in the linked space — not public repo writes. Thumbnails and image bytes MUST be served via `com.atproto.space.getBlob` with valid membership or space credential.
 
 **Technical Implementation:**
 - HappyView proxy URL from `VITE_HAPPYVIEW_URL`.
@@ -112,7 +112,7 @@ Newly uploaded photos MUST appear in the personal gallery (SRS-F-003) on next cl
 The application MUST provide a **My Gallery** view distinct from the network discovery feed (SRS-F-010). Photos MUST render in a paginated grid with thumbnails from PDS blob URLs.
 
 **Technical Implementation:**
-- Query: `com.atpix.gallery.listPhotos?did=<author-did>` with cursor pagination.
+- Query: `net.atpix.gallery.listPhotos?did=<author-did>` with cursor pagination.
 - Default `limit`: 20 (MAY override within Lexicon bounds).
 - Data source: HappyView App View index only.
 
@@ -139,7 +139,7 @@ Empty gallery MUST show actionable guidance (e.g., upload your first photo).
 
 ### SRS-F-004.1: Album CRUD
 
-Authenticated users MUST create albums via `com.atpix.gallery.createAlbum`, rename via `updateAlbum`, and delete empty albums via `deleteAlbum`.
+Authenticated users MUST create albums via `net.atpix.gallery.createAlbum`, rename via `updateAlbum`, and delete empty albums via `deleteAlbum`.
 
 **Source**
 - [prd.md](./prd.md) F-004
@@ -149,7 +149,7 @@ Authenticated users MUST create albums via `com.atpix.gallery.createAlbum`, rena
 
 ### SRS-F-004.2: Album membership
 
-Users MUST add/remove photos via `com.atpix.gallery.addToAlbum` / `removeFromAlbum` (`albumItem` junction records) and MAY update `photo.albumUris`. Deleting an album MUST NOT delete underlying photo records.
+Users MUST add/remove photos via `net.atpix.gallery.addToAlbum` / `removeFromAlbum` (`albumItem` junction records) and MAY update `photo.albumUris`. Deleting an album MUST NOT delete underlying photo records.
 
 **Source**
 - [prd.md](./prd.md) F-004, F-015
@@ -174,7 +174,7 @@ Album creation MUST support seeding from Path A (own uploads) and Path B (`colle
 
 ### SRS-F-005.1: Caption editing
 
-Users MUST set/edit optional captions (max 2000 chars per Lexicon) on upload and in photo detail via `com.atpix.gallery.updatePhoto`.
+Users MUST set/edit optional captions (max 2000 chars per Lexicon) on upload and in photo detail via `net.atpix.gallery.updatePhoto`.
 
 **Source**
 - [prd.md](./prd.md) F-005
@@ -209,7 +209,7 @@ The application MUST expose a public profile gallery route by DID (primary) and 
 
 ### SRS-F-006.2: Unauthenticated read
 
-Public galleries MUST NOT require authentication unless content is permission-gated (SRS-F-008). Only `com.atpix.gallery.photo` indexed records appear. Pagination MUST match SRS-F-003 cursor semantics.
+Public galleries MUST NOT require authentication unless content is permission-gated (SRS-F-008). Only `net.atpix.gallery.photo` indexed records appear. Pagination MUST match SRS-F-003 cursor semantics.
 
 **Source**
 - [prd.md](./prd.md) F-006
@@ -247,7 +247,7 @@ Unlisted albums MUST NOT appear in public profile album lists or discovery surfa
 
 ### SRS-F-008.1: Permissioned album lifecycle
 
-Album owners MUST create `visibility: permissioned` albums with linked `spaceUri` (`ats://<space-did>/com.atpix.gallery.albumSpace/<skey>`). Space creation MUST call `com.atproto.simplespace.createSpace` with `type: com.atpix.gallery.albumSpace`, `mintPolicy: member-list`, `appAccess: {"type": "allowList", "allowed": ["<ATPix OAuth clientId URL>"]}` (ATPix OAuth `clientId` at `{deployment-origin}/oauth-client-metadata.json`), and `config: {"membershipPublic": false, "recordsPublic": false}`.
+Album owners MUST create `visibility: permissioned` albums with linked `spaceUri` (`ats://<space-did>/net.atpix.gallery.albumSpace/<skey>`). Space creation MUST call `com.atproto.simplespace.createSpace` with `type: net.atpix.gallery.albumSpace`, `mintPolicy: member-list`, `appAccess: {"type": "allowList", "allowed": ["<ATPix OAuth clientId URL>"]}` (ATPix OAuth `clientId` at `{deployment-origin}/oauth-client-metadata.json`), and `config: {"membershipPublic": false, "recordsPublic": false}`.
 
 **Technical Implementation:**
 - HappyView MUST have `feature.spaces_enabled=true` (TC-008).
@@ -299,7 +299,7 @@ Permissioned content MUST NOT appear in public App View indexes. Queries for per
 
 ### SRS-F-009.1: Photo deletion
 
-Authenticated users MUST delete own photos via `com.atpix.gallery.deletePhoto`. UI MUST require explicit confirmation. Errors from PDS MUST surface; success MUST NOT be shown until procedure completes.
+Authenticated users MUST delete own photos via `net.atpix.gallery.deletePhoto`. UI MUST require explicit confirmation. Errors from PDS MUST surface; success MUST NOT be shown until procedure completes.
 
 **Source**
 - [prd.md](./prd.md) F-009
@@ -334,7 +334,7 @@ ATPix MUST NOT implement relay firehose, Tap consumer, or custom PDS crawler (TC
 
 ### SRS-F-010.2: Collection rules
 
-Users MUST CRUD `com.atpix.gallery.collectionRule` records with `followed-actor`, `hashtag`, or combined sources. `targetScope` MUST support `gallery` (discovery feed) and `album` (with optional `targetAlbumUri`). Follow graph via `app.bsky.graph.getFollows`; `useFollowGraph: true` compares live follows.
+Users MUST CRUD `net.atpix.gallery.collectionRule` records with `followed-actor`, `hashtag`, or combined sources. `targetScope` MUST support `gallery` (discovery feed) and `album` (with optional `targetAlbumUri`). Follow graph via `app.bsky.graph.getFollows`; `useFollowGraph: true` compares live follows.
 
 **Source**
 - [prd.md](./prd.md) F-010
@@ -344,7 +344,7 @@ Users MUST CRUD `com.atpix.gallery.collectionRule` records with `followed-actor`
 
 ### SRS-F-010.3: Discovery feed query
 
-Feed MUST use `com.atpix.gallery.listFeedPhotos` with cursor pagination. New network-indexed matches MUST appear on next query. Empty follow/hashtag states MUST show guidance, not errors.
+Feed MUST use `net.atpix.gallery.listFeedPhotos` with cursor pagination. New network-indexed matches MUST appear on next query. Empty follow/hashtag states MUST show guidance, not errors.
 
 **Source**
 - [prd.md](./prd.md) F-010
@@ -358,7 +358,7 @@ Feed MUST use `com.atpix.gallery.listFeedPhotos` with cursor pagination. New net
 
 ### SRS-F-011.1: Lexicon artifacts
 
-ATPix MUST ship record/query/procedure Lexicons under `com.atpix.gallery.*` per [docs/lexicon/](./lexicon/) JSON. Procedures/queries MUST declare `target_collection` for corresponding record NSIDs.
+ATPix MUST ship record/query/procedure Lexicons under `net.atpix.gallery.*` per [docs/lexicon/](./lexicon/) JSON. Procedures/queries MUST declare `target_collection` for corresponding record NSIDs.
 
 **Source**
 - [prd.md](./prd.md) F-011
@@ -378,7 +378,7 @@ Lexicons MUST be uploaded to HappyView with `backfill: true`. ATPix MUST NOT dup
 
 ### SRS-F-011.3: DNS authority
 
-Production SHOULD publish `_lexicon` TXT for `com.atpix.gallery` namespace (domain TBD).
+Production SHOULD publish `_lexicon` TXT for `net.atpix.gallery` namespace on **atpix.net**.
 
 **Source**
 - [prd.md](./prd.md) F-011
@@ -399,7 +399,7 @@ Production SHOULD publish `_lexicon` TXT for `com.atpix.gallery` namespace (doma
 - Manifest embedded in-file before blob upload (default).
 - X.509 signing with `c2pa-kp-claimSigning` EKU (OID 1.3.6.1.4.1.62558.2.1).
 - `claim_generator_info` identifies ATPix name/version.
-- Custom assertion `com.atpix.gallery.creatorDid` records uploader DID.
+- Custom assertion `net.atpix.gallery.creatorDid` records uploader DID.
 
 **Source**
 - [prd.md](./prd.md) F-012, NFR-014, TC-009, TC-010
@@ -434,7 +434,7 @@ Pixel edits MUST produce update manifest with `parentOf` ingredient. Metadata-on
 
 ### SRS-F-013.2: Record C2PA summary fields
 
-`com.atpix.gallery.photo` MUST store `c2paActiveManifestId`, `c2paManifestStoreUri` (if external), `c2paLastAction`.
+`net.atpix.gallery.photo` MUST store `c2paActiveManifestId`, `c2paManifestStoreUri` (if external), `c2paLastAction`.
 
 **Source**
 - [prd.md](./prd.md) F-013

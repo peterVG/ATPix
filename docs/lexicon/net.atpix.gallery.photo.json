@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atpix.gallery.photo",
+  "id": "net.atpix.gallery.photo",
   "description": "ATPix photo record. Metadata mapped to Dublin Core and Schema.org ImageObject terms (see docs/lexicon/README.md).",
   "defs": {
     "main": {
@@ -86,7 +86,7 @@
           },
           "locationCreated": {
             "type": "ref",
-            "ref": "com.atpix.gallery.defs#geoPlace",
+            "ref": "net.atpix.gallery.defs#geoPlace",
             "description": "schema:locationCreated — capture location."
           },
           "albumUris": {
@@ -97,7 +97,7 @@
           },
           "visibility": {
             "type": "ref",
-            "ref": "com.atpix.gallery.defs#visibility",
+            "ref": "net.atpix.gallery.defs#visibility",
             "description": "ATPix — public, unlisted, or permissioned (space-gated)."
           },
           "spaceUri": {

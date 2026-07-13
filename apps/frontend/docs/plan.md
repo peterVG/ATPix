@@ -21,7 +21,7 @@ Granular checklist for the Vite vanilla JS client. Global sequencing: [docs/plan
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task FE-1.1. Work strictly in apps/frontend/. Run npm run lint && npm run test:ui. Generate apps/frontend/docs/tasks/Task-FE-1.1-Walkthrough.md with raw CLI output. Delete Plan/ToDos. Check off apps/frontend/docs/plan.md. Commit and push.`
 
 - [ ] **Task FE-1.2: HappyView client module and environment wiring**
-  - **Description:** Extend `src/api/happyview.js` with DPoP session wrapper, `X-Client-Key` header injection, base URL from `VITE_HAPPYVIEW_URL`. Stub lex-agent query helpers for `com.atpix.gallery.*`.
+  - **Description:** Extend `src/api/happyview.js` with DPoP session wrapper, `X-Client-Key` header injection, base URL from `VITE_HAPPYVIEW_URL`. Stub lex-agent query helpers for `net.atpix.gallery.*`.
   - **Estimated Time:** 3 hours
   - **Dependencies:** Task FE-1.1
   - **Related Requirements:** [TC-001](../../../docs/prd.md#tc-001-happyview-app-view), [TC-006](../../../docs/prd.md#tc-006-api-client-identification), [SRS-F-001.2](../../../docs/srs.md#srs-f-001-atproto-oauth-sign-in)

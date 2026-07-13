@@ -27,7 +27,7 @@ Months of App View infrastructure are delegated to HappyView per product vision.
 
 ## Assumptions
 
-Operators deploy HappyView with `com.atpix.gallery.*` lexicons uploaded (`backfill: true`). Local dev uses documented HappyView setup from [happyview.dev](https://happyview.dev).
+Operators deploy HappyView with `net.atpix.gallery.*` lexicons uploaded (`backfill: true`). Local dev uses documented HappyView setup from [happyview.dev](https://happyview.dev).
 
 ## Alternatives Considered
 

@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atpix.gallery.listAlbumItems",
+  "id": "net.atpix.gallery.listAlbumItems",
   "defs": {
     "main": {
       "type": "query",
@@ -33,7 +33,7 @@
                   "position": { "type": "integer", "minimum": 0 },
                   "addedBy": { "type": "string", "format": "did" },
                   "createdAt": { "type": "string", "format": "datetime" },
-                  "photo": { "type": "ref", "ref": "com.atpix.gallery.defs#photoView" }
+                  "photo": { "type": "ref", "ref": "net.atpix.gallery.defs#photoView" }
                 }
               }
             }

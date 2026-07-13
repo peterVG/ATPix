@@ -5,7 +5,7 @@ Feature: Public Profile Gallery
   So that I can view photos they published with ATPix Lexicons
 
   Background:
-    Given a user has public photos indexed under com.atpix.gallery.photo
+    Given a user has public photos indexed under net.atpix.gallery.photo
 
   Scenario: Browse public gallery by DID without signing in
     Given I am not signed in

@@ -14,9 +14,14 @@ Galleries populate two ways:
 **(a)** direct PDS upload and 
 **(b)** photos already indexed on the network via follow-graph and hashtag rules—Path B uses only HappyView Jetstream sync, not a custom firehose. 
 
-Sharing supports **public**, **unlisted**, and **permissioned** albums; permissioned collections use [HappyView Permissioned Spaces]([https://happyview.dev/experimental/spaces/index](https://happyview.dev/experimental/spaces)) (ATP-0016) so only invited members can view curated private albums.
+Sharing supports **public**, **unlisted**, and **permissioned** albums; permissioned collections use [HappyView Permissioned Spaces](https://happyview.dev/experimental/spaces) (ATP-0016) so only invited members can view curated private albums.
 
-Product language (gallery, album) maps to atproto primitives (queries, `com.atpix.gallery.*` records, space repos) in the [PRD](docs/prd.md#product-terms--at-protocol-primitives) and [Lexicon README](docs/lexicon/README.md).
+Product language (gallery, album) maps to atproto primitives (queries, `net.atpix.gallery.*` records, space repos) in the [PRD](docs/prd.md#product-terms--at-protocol-primitives) and [Lexicon README](docs/lexicon/README.md).
+
+## Metadata
+ Photo metadata maps to [Dublin Core](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/) and [Schema.org](https://schema.org/docs/schemas.html) terms in `net.atpix.gallery.*` Lexicons; image files embed [C2PA 2.2](https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html) Content Credentials for tamper-evident provenance. 
+ 
+ Photos and metadata remain user-owned and portable across the Atmosphere—not locked in a proprietary CDN or siloed account system.
 
 ## Repository layout
 
@@ -25,9 +30,34 @@ Product language (gallery, album) maps to atproto primitives (queries, `com.atpi
 | `apps/frontend/` | Vite vanilla JS; OAuth, gallery UI, HappyView XRPC | [005](docs/architecture/005-application-architecture.md), [006](docs/architecture/006-oauth-dpop-authentication.md) |
 | `apps/backend/` | FastAPI; C2PA claim generation/validation, health | [008](docs/architecture/008-c2pa-sdk-and-signing.md) |
 | HappyView (external) | Indexing, OAuth proxy, XRPC, spaces | [007](docs/architecture/007-happyview-app-view-integration.md) |
-| `docs/lexicon/` | `com.atpix.gallery.*` schema artifacts | [009](docs/architecture/009-lexicon-namespace-authority.md) |
+| `docs/lexicon/` | `net.atpix.gallery.*` schema artifacts | [009](docs/architecture/009-lexicon-namespace-authority.md) |
 
 Observability (Promtail → Redpanda → Loki, Prometheus, Grafana) runs via root `docker-compose.yml` per [003](docs/architecture/003-observability-stack.md). Tests use pytest/behave, vitest/playwright, and **Allure** reporting per [001](docs/architecture/001-test-runners-and-reporting.md).
+
+## Where user data lives (PDS vs App View)
+
+ATPix follows the standard [AT Protocol](https://atproto.com) split: a **Personal Data Server (PDS)** hosts each user's signed repository; an **App View** indexes and serves that data for apps. **ATPix does not run or host user PDSes** — neither the monorepo Docker stack nor HappyView replaces account storage.
+
+| Layer | Role in ATPix | Canonical user photos & records? |
+|-------|---------------|----------------------------------|
+| **User PDS** (remote) | Hosts blobs + public/unlisted `net.atpix.gallery.*` records; `net.atpix.gallery.album` metadata (with `spaceUri` when permissioned) | **Yes** — source of truth for public/unlisted content and album containers |
+| **HappyView** (external, port 3001) | App View: index, OAuth write proxy, XRPC, permissioned spaces | **Public/unlisted:** index/cache + proxy only. **Permissioned:** `net.atpix.gallery.photo` and `net.atpix.gallery.albumItem` in the album's space repo are canonical there |
+| **`apps/backend/`** | C2PA claim generation/validation, health | No |
+| **`apps/frontend/`** | Gallery UI, OAuth client | No — browser session state only |
+
+**Users bring their own PDS.** Sign-in uses atproto OAuth against an identity that already exists on a PDS (e.g. a Bluesky account, another hoster, or a self-hosted PDS you run separately). HappyView proxies `uploadBlob` and record writes to that user's PDS; it does not provision new atproto accounts. See [ADR-006](docs/architecture/006-oauth-dpop-authentication.md) and [ADR-007](docs/architecture/007-happyview-app-view-integration.md).
+
+Typical write path once the gallery UI is implemented:
+
+```
+Browser (ATPix) → HappyView (OAuth + XRPC proxy) → user's PDS
+```
+
+**Permissioned albums** ([ADR-010](docs/architecture/010-permissioned-spaces-storage.md)): the `net.atpix.gallery.album` container record stays in the owner's **PDS** and links `spaceUri`. The HappyView **space repo** holds permissioned `net.atpix.gallery.photo` and `net.atpix.gallery.albumItem` records. **Image blobs remain on the author's PDS** and are served via `com.atproto.space.getBlob` with membership checks.
+
+**Local Docker persistence:** HappyView stores its own SQLite index, OAuth sessions, and provisioned lexicons under `./data/happyview_data/` (bind-mounted in `docker-compose.happyview.yml`). Stopping the container does **not** delete user PDS data. Wiping `./data/happyview_data/` loses local index and sessions only — records on users' PDSes remain; re-run [provisioning](#run-the-application) and backfill to rebuild the index.
+
+**New test accounts:** use an existing atproto identity or sign up with a PDS provider / self-hosted PDS outside this repo before exercising upload flows.
 
 ## Requirements and verification
 
@@ -51,16 +81,29 @@ Install runtimes using a version manager ([mise](https://mise.jdx.dev/), [asdf](
 | Node.js | 22+ | [nodejs.org](https://nodejs.org/) |
 | Docker | latest | [docs.docker.com](https://docs.docker.com/get-docker/) |
 
-## Metadata
- Photo metadata maps to [Dublin Core](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/) and [Schema.org](https://schema.org/docs/schemas.html) terms in `com.atpix.gallery.*` Lexicons; image files embed [C2PA 2.2](https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html) Content Credentials for tamper-evident provenance. 
- 
- Photos and metadata remain user-owned and portable across the Atmosphere—not locked in a proprietary CDN or siloed account system.
-
 # Setup Development Environment
 
 ## Run the application
 
-**HappyView** (separate process): deploy per [happyview.dev](https://happyview.dev) on port **3001** (Grafana uses **3000** in compose).
+**HappyView** (separate process, [ADR-007](docs/architecture/007-happyview-app-view-integration.md)): runs on port **3001** (Grafana uses **3000** in compose).
+
+```bash
+# Start HappyView (SQLite, port 3001)
+docker compose -f docker-compose.happyview.yml up -d
+curl http://127.0.0.1:3001/health
+
+# Log in at http://127.0.0.1:3001/ with your atproto handle (first user = super user).
+# Create an admin API key (Settings → API Keys) with lexicons:create, lexicons:read,
+# and settings:manage (read is required for --verify-only and post-upload checks).
+
+pip install python-dotenv   # or use apps/backend venv after pip install -r requirements-dev.txt
+cp .env.example .env   # set HAPPYVIEW_ADMIN_KEY=hv_... — the provision script loads .env automatically
+python3 scripts/provision_happyview.py          # upload lexicons + enable feature.spaces_enabled
+python3 scripts/provision_happyview.py --verify-only   # confirm provisioning
+# Or export inline: HAPPYVIEW_ADMIN_KEY=hv_... python3 scripts/provision_happyview.py
+```
+
+See [docs/lexicon/README.md](docs/lexicon/README.md) for lexicon upload order and [happyview.dev](https://happyview.dev) for full App View docs.
 
 **Backend** (from `apps/backend/`):
 

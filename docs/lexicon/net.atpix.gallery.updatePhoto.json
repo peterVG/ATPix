@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atpix.gallery.updatePhoto",
+  "id": "net.atpix.gallery.updatePhoto",
   "defs": {
     "main": {
       "type": "procedure",
@@ -20,7 +20,7 @@
             "copyrightHolder": { "type": "string", "format": "did" },
             "contributor": { "type": "string", "format": "did" },
             "inLanguage": { "type": "string", "maxLength": 35 },
-            "locationCreated": { "type": "ref", "ref": "com.atpix.gallery.defs#geoPlace" },
+            "locationCreated": { "type": "ref", "ref": "net.atpix.gallery.defs#geoPlace" },
             "albumUris": { "type": "array", "maxLength": 100, "items": { "type": "string", "format": "at-uri" } }
           }
         }

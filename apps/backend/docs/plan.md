@@ -33,7 +33,7 @@ Granular checklist for the FastAPI auxiliary service (C2PA, health, integration 
 ## Phase BE-2: HappyView Integration Verification
 
 - [ ] **Task BE-2.1: Lexicon publication integration tests**
-  - **Description:** Behave scenarios verifying `com.atpix.gallery.*` lexicons uploaded to HappyView, backfill enabled, cross-DID `listPhotos` returns records (RC-006).
+  - **Description:** Behave scenarios verifying `net.atpix.gallery.*` lexicons uploaded to HappyView, backfill enabled, cross-DID `listPhotos` returns records (RC-006).
   - **Estimated Time:** 4 hours
   - **Dependencies:** Task BE-1.1; global Task 1.2
   - **Related Requirements:** [F-011](../../../docs/prd.md#f-011-lexicon-publication-and-network-indexing), [TC-005](../../../docs/prd.md#tc-005-record-size-discipline), [SRS-F-011](../../../docs/srs.md#srs-f-011-lexicon-publication-and-network-indexing)
@@ -61,7 +61,7 @@ Granular checklist for the FastAPI auxiliary service (C2PA, health, integration 
 ## Phase BE-3: C2PA Manifest Generation
 
 - [ ] **Task BE-3.1: C2PA manifest generation on upload**
-  - **Description:** Implement POST endpoint embedding C2PA 2.2 manifest in JPEG/PNG per Appendix A; `c2pa.created` first action; `com.atpix.gallery.creatorDid` assertion; return manifest-bearing bytes for frontend `uploadBlob`.
+  - **Description:** Implement POST endpoint embedding C2PA 2.2 manifest in JPEG/PNG per Appendix A; `c2pa.created` first action; `net.atpix.gallery.creatorDid` assertion; return manifest-bearing bytes for frontend `uploadBlob`.
   - **Estimated Time:** 12 hours
   - **Dependencies:** Task BE-1.2
   - **Related Requirements:** [F-012](../../../docs/prd.md#f-012-c2pa-manifest-generation-on-upload), [TC-009](../../../docs/prd.md#tc-009-c2pa-manifest-embedding), [TC-010](../../../docs/prd.md#tc-010-c2pa-actions-integrity), [NFR-014](../../../docs/prd.md#nfr-014-c2pa-22-conformance), [SRS-F-012](../../../docs/srs.md#srs-f-012-c2pa-manifest-generation-on-upload)
