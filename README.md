@@ -122,6 +122,28 @@ npm run dev
 
 Open [http://127.0.0.1:5173](http://127.0.0.1:5173). API health: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health).
 
+**OAuth client metadata** ([ADR-006](docs/architecture/006-oauth-dpop-authentication.md)): the frontend serves atproto OAuth client metadata at `/oauth-client-metadata.json`. In dev, Vite returns JSON dynamically from the request origin; production builds write `dist/oauth-client-metadata.json` from `VITE_DEPLOYMENT_ORIGIN`.
+
+```bash
+# Dev — metadata from running Vite server
+curl -s http://127.0.0.1:5173/oauth-client-metadata.json | head
+
+# Production build — set origin before npm run build
+cd apps/frontend
+VITE_DEPLOYMENT_ORIGIN=http://127.0.0.1:5173 npm run build
+cat dist/oauth-client-metadata.json
+```
+
+**Register the ATPix API client in HappyView** (required before OAuth sign-in in Task 2.1):
+
+1. Ensure the frontend is reachable at your deployment origin (e.g. `http://127.0.0.1:5173`) and `curl {origin}/oauth-client-metadata.json` returns valid JSON.
+2. In HappyView admin → **API Clients** → create a **public** client.
+3. Set **Client ID** to `{VITE_DEPLOYMENT_ORIGIN}/oauth-client-metadata.json` (must match the served document's `client_id` field).
+4. Add allowed origin(s) matching your frontend URL; register scopes that include those in the metadata `scope` field (`atproto`, `blob:*/*`, `repo:net.atpix.gallery.*`).
+5. Copy the `hvc_*` **client key** into `.env` as `VITE_HAPPYVIEW_CLIENT_KEY` (used as `X-Client-Key` on XRPC — not `hv_*` admin keys per [TC-006](docs/prd.md#tc-006-api-client-identification)).
+
+Permissioned album spaces use this same clientId URL in `appAccess.allowList` when calling `com.atproto.simplespace.createSpace` ([ADR-010](docs/architecture/010-permissioned-spaces-storage.md)).
+
 **Full stack via Docker:**
 
 ```bash

@@ -30,7 +30,7 @@ This document is the **global execution roadmap** for ATPix v1. It sequences wor
   - **Related Tests:** [`lexicon_publication_SRS-F-011.feature`](../apps/backend/tests/features/lexicon_publication_SRS-F-011.feature), [`happyview_only_sync_SRS-TC-012.feature`](../apps/backend/tests/features/happyview_only_sync_SRS-TC-012.feature)
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task 1.2. Configure external HappyView per ADR-007. Document setup steps in root README.md if changed. Invoke @feature-writer for any new integration scenarios. Generate walkthrough with CLI proof, check off docs/plan.md, commit, push.`
 
-- [ ] **Task 1.3: Register OAuth client and space appAccess allowList**
+- [x] **Task 1.3: Register OAuth client and space appAccess allowList**
   - **Description:** Register ATPix API client in HappyView admin; publish OAuth client metadata at `{deployment-origin}/oauth-client-metadata.json`; configure permissioned space `appAccess: {"type": "allowList", "allowed": ["<clientId URL>"]}` per [ADR-010](./architecture/010-permissioned-spaces-storage.md).
   - **Estimated Time:** 2 hours
   - **Dependencies:** Task 1.2
