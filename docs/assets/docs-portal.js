@@ -63,6 +63,43 @@
   }
 
   /**
+   * Resolve a relative documentation or asset path against the active document.
+   *
+   * @param {string} href - Relative or root-absolute path from rendered HTML.
+   * @param {string} currentPath - Currently displayed document path.
+   * @returns {string|null} Normalized site-relative path, or null if external.
+   */
+  function resolveRelativeDocPath(href, currentPath) {
+    if (!href || href.startsWith("http") || href.startsWith("#") || href.startsWith("data:")) {
+      return null;
+    }
+
+    var currentDir = currentPath.includes("/")
+      ? currentPath.slice(0, currentPath.lastIndexOf("/") + 1)
+      : "";
+    var combined = href.startsWith("/") ? href.slice(1) : currentDir + href;
+    var parts = combined.split("/");
+    var normalized = [];
+
+    parts.forEach(function (part) {
+      if (!part || part === ".") {
+        return;
+      }
+      if (part === "..") {
+        normalized.pop();
+        return;
+      }
+      normalized.push(part);
+    });
+
+    if (normalized.length === 0) {
+      return null;
+    }
+
+    return normalized.join("/");
+  }
+
+  /**
    * Rewrite relative .md links inside rendered HTML so in-portal navigation works.
    *
    * @param {HTMLElement} container - Rendered article element.
@@ -70,28 +107,51 @@
    */
   function rewriteMarkdownLinks(container, currentPath) {
     var links = container.querySelectorAll("a[href]");
-    var currentDir = currentPath.includes("/")
-      ? currentPath.slice(0, currentPath.lastIndexOf("/") + 1)
-      : "";
 
     links.forEach(function (anchor) {
       var href = anchor.getAttribute("href");
-      if (!href || href.startsWith("http") || href.startsWith("#")) {
+      if (!href || !href.endsWith(".md")) {
         return;
       }
 
-      if (!href.endsWith(".md")) {
+      var resolved = resolveRelativeDocPath(href, currentPath);
+      if (!resolved) {
         return;
       }
 
-      var resolved = href;
-      if (!href.startsWith("/") && currentDir) {
-        resolved = currentDir + href;
-      }
-
-      resolved = resolved.replace(/^\//, "");
       anchor.setAttribute("href", "#" + resolved);
       anchor.classList.add("doc-link");
+    });
+  }
+
+  /**
+   * Rewrite relative image and asset links for hash-routed portal viewing.
+   *
+   * @param {HTMLElement} container - Rendered article element.
+   * @param {string} currentPath - Currently displayed document path.
+   */
+  function rewriteMarkdownAssets(container, currentPath) {
+    container.querySelectorAll("img[src]").forEach(function (image) {
+      var src = image.getAttribute("src");
+      var resolved = resolveRelativeDocPath(src, currentPath);
+      if (!resolved) {
+        return;
+      }
+      image.setAttribute("src", buildFetchUrl(resolved));
+    });
+
+    container.querySelectorAll("a[href]").forEach(function (anchor) {
+      var href = anchor.getAttribute("href");
+      if (!href || href.endsWith(".md")) {
+        return;
+      }
+
+      var resolved = resolveRelativeDocPath(href, currentPath);
+      if (!resolved) {
+        return;
+      }
+
+      anchor.setAttribute("href", buildFetchUrl(resolved));
     });
   }
 
@@ -281,6 +341,7 @@
     var article = document.createElement("article");
     article.innerHTML = marked.parse(stripFrontMatter(markdown));
     rewriteMarkdownLinks(article, docPath);
+    rewriteMarkdownAssets(article, docPath);
 
     container.innerHTML = "";
     container.appendChild(article);
