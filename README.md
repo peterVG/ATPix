@@ -60,7 +60,22 @@ Install runtimes using a version manager ([mise](https://mise.jdx.dev/), [asdf](
 
 ## Run the application
 
-**HappyView** (separate process): deploy per [happyview.dev](https://happyview.dev) on port **3001** (Grafana uses **3000** in compose).
+**HappyView** (separate process, [ADR-007](docs/architecture/007-happyview-app-view-integration.md)): runs on port **3001** (Grafana uses **3000** in compose).
+
+```bash
+# Start HappyView (SQLite, port 3001)
+docker compose -f docker-compose.happyview.yml up -d
+curl http://127.0.0.1:3001/health
+
+# Log in at http://127.0.0.1:3001/ with your atproto handle (first user = super user).
+# Create an admin API key (Settings → API Keys) with lexicons:create and settings:manage.
+
+# Copy .env.example to .env and set HAPPYVIEW_ADMIN_KEY=hv_...
+python3 scripts/provision_happyview.py          # upload lexicons + enable feature.spaces_enabled
+python3 scripts/provision_happyview.py --verify-only   # confirm provisioning
+```
+
+See [docs/lexicon/README.md](docs/lexicon/README.md) for lexicon upload order and [happyview.dev](https://happyview.dev) for full App View docs.
 
 **Backend** (from `apps/backend/`):
 

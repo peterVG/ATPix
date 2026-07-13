@@ -1,0 +1,28 @@
+# HappyView App View — external to ATPix monorepo (ADR-007).
+# Default port 3001 avoids conflict with Grafana on 3000 in docker-compose.yml.
+#
+# Start:  docker compose -f docker-compose.happyview.yml up -d
+# Health: curl http://127.0.0.1:3001/health
+# Dashboard: http://127.0.0.1:3001/ (log in with atproto handle; first user = super user)
+
+services:
+  happyview:
+    image: ghcr.io/gamesgamesgamesgamesgames/happyview:latest
+    container_name: atpix_happyview
+    ports:
+      - "3001:3001"
+    environment:
+      - TZ=UTC
+      - PORT=3001
+      - PUBLIC_URL=http://127.0.0.1:3001
+      - DATABASE_URL=sqlite:///data/happyview.db?mode=rwc
+      # Dev-only secret — replace in production (min 64 characters per HappyView docs)
+      - SESSION_SECRET=atpix-dev-session-secret-replace-before-production-deployment-64chars
+    volumes:
+      - ./data/happyview_data:/app/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3001/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
