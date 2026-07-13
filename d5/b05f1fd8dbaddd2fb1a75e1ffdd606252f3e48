@@ -1,0 +1,14 @@
+docs/index.md
+  h_10c93bba641ef0 10,17-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "d5b05f1fd8dbaddd2fb1a75e1ffdd606252f3e48",
+  "prompts": {},
+  "humans": {
+    "h_10c93bba641ef0": {
+      "author": "Peter Van Garderen <vangarderen.peter@gmail.com>"
+    }
+  }
+}
