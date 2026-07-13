@@ -20,6 +20,8 @@ from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+from dotenv import load_dotenv
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 MANIFEST_PATH = REPO_ROOT / "config" / "happyview" / "provision-manifest.json"
 ENV_FILE = REPO_ROOT / ".env"
@@ -30,18 +32,8 @@ QUERY_PROCEDURE_TYPES = frozenset({"query", "procedure"})
 
 
 def _load_dotenv() -> None:
-    """Load root ``.env`` into ``os.environ`` when keys are not already set."""
-    if not ENV_FILE.is_file():
-        return
-    for line in ENV_FILE.read_text(encoding="utf-8").splitlines():
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#") or "=" not in stripped:
-            continue
-        key, _, value = stripped.partition("=")
-        key = key.strip()
-        value = value.strip().strip('"').strip("'")
-        if key and key not in os.environ:
-            os.environ[key] = value
+    """Load root ``.env`` without overriding variables already set in the shell."""
+    load_dotenv(ENV_FILE, override=False)
 
 
 def _load_manifest() -> dict[str, Any]:

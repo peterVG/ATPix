@@ -96,6 +96,7 @@ curl http://127.0.0.1:3001/health
 # Create an admin API key (Settings → API Keys) with lexicons:create, lexicons:read,
 # and settings:manage (read is required for --verify-only and post-upload checks).
 
+pip install python-dotenv   # or use apps/backend venv after pip install -r requirements-dev.txt
 cp .env.example .env   # set HAPPYVIEW_ADMIN_KEY=hv_... — the provision script loads .env automatically
 python3 scripts/provision_happyview.py          # upload lexicons + enable feature.spaces_enabled
 python3 scripts/provision_happyview.py --verify-only   # confirm provisioning
