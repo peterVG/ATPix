@@ -14,7 +14,7 @@ This document is the **global execution roadmap** for ATPix v1. It sequences wor
 
 ## Phase 1: Foundation & HappyView Provisioning
 
-- [ ] **Task 1.1: Verify monorepo scaffold against ADRs**
+- [x] **Task 1.1: Verify monorepo scaffold against ADRs**
   - **Description:** Confirm `apps/frontend/`, `apps/backend/`, `docker-compose.yml`, `.env.example`, lint configs, and test runners match [ADR-005](./architecture/005-application-architecture.md), [ADR-001](./architecture/001-test-runners-and-reporting.md), and [ADR-004](./architecture/004-coding-style-and-linting.md). Resolve any drift.
   - **Estimated Time:** 2 hours
   - **Dependencies:** None
