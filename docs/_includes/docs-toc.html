@@ -1,7 +1,10 @@
 <nav aria-label="Documentation">
-  <div class="docs-toc-section">
-    <p class="docs-toc-section-title">Overview</p>
-    <ul class="docs-toc-list">
+  <div class="docs-toc-section" data-toc-section>
+    <button type="button" class="docs-toc-section-toggle" aria-expanded="true" aria-controls="toc-panel-overview">
+      <span class="docs-toc-chevron" aria-hidden="true"></span>
+      <span class="docs-toc-section-title">Overview</span>
+    </button>
+    <ul class="docs-toc-list docs-toc-panel" id="toc-panel-overview">
       <li><a class="doc-link" data-path="architecture.md" href="#architecture.md">Architecture</a></li>
       <li><a class="doc-link" data-path="plan.md" href="#plan.md">Plan</a></li>
       <li><a class="doc-link" data-path="prd.md" href="#prd.md">PRD</a></li>
@@ -11,9 +14,12 @@
     </ul>
   </div>
 
-  <div class="docs-toc-section">
-    <p class="docs-toc-section-title">architecture</p>
-    <ul class="docs-toc-list">
+  <div class="docs-toc-section" data-toc-section>
+    <button type="button" class="docs-toc-section-toggle" aria-expanded="true" aria-controls="toc-panel-architecture">
+      <span class="docs-toc-chevron" aria-hidden="true"></span>
+      <span class="docs-toc-section-title">architecture</span>
+    </button>
+    <ul class="docs-toc-list docs-toc-panel" id="toc-panel-architecture">
       <li class="depth-1"><a class="doc-link" data-path="architecture/001-test-runners-and-reporting.md" href="#architecture/001-test-runners-and-reporting.md">001 Test Runners and Reporting</a></li>
       <li class="depth-1"><a class="doc-link" data-path="architecture/002-inline-documentation-generators.md" href="#architecture/002-inline-documentation-generators.md">002 Inline Documentation Generators</a></li>
       <li class="depth-1"><a class="doc-link" data-path="architecture/003-observability-stack.md" href="#architecture/003-observability-stack.md">003 Observability Stack</a></li>
@@ -29,27 +35,44 @@
     </ul>
   </div>
 
-  <div class="docs-toc-section">
-    <p class="docs-toc-section-title">lexicon</p>
-    <ul class="docs-toc-list">
+  <div class="docs-toc-section" data-toc-section>
+    <button type="button" class="docs-toc-section-toggle" aria-expanded="true" aria-controls="toc-panel-lexicon">
+      <span class="docs-toc-chevron" aria-hidden="true"></span>
+      <span class="docs-toc-section-title">lexicon</span>
+    </button>
+    <ul class="docs-toc-list docs-toc-panel" id="toc-panel-lexicon">
       <li class="depth-1"><a class="doc-link" data-path="lexicon/README.md" href="#lexicon/README.md">README</a></li>
     </ul>
   </div>
 
-  <div class="docs-toc-section">
-    <p class="docs-toc-section-title">references</p>
-    <ul class="docs-toc-list">
+  <div class="docs-toc-section" data-toc-section>
+    <button type="button" class="docs-toc-section-toggle" aria-expanded="true" aria-controls="toc-panel-references">
+      <span class="docs-toc-chevron" aria-hidden="true"></span>
+      <span class="docs-toc-section-title">references</span>
+    </button>
+    <ul class="docs-toc-list docs-toc-panel" id="toc-panel-references">
       <li class="depth-1"><a class="doc-link" data-path="references/000-UX-guide.md" href="#references/000-UX-guide.md">000 UX Guide</a></li>
       <li class="depth-1"><a class="doc-link" data-path="references/README.md" href="#references/README.md">README</a></li>
       <li class="depth-1"><a class="doc-link" data-path="references/atproto.comdocs.md" href="#references/atproto.comdocs.md">atproto.comdocs</a></li>
       <li class="depth-1"><a class="doc-link" data-path="references/happyview.dev.docs.md" href="#references/happyview.dev.docs.md">happyview.dev.docs</a></li>
-      <li class="depth-2"><a class="doc-link" data-path="references/mockups/README.md" href="#references/mockups/README.md">mockups / README</a></li>
+      <li class="docs-toc-nested" data-toc-section>
+        <button type="button" class="docs-toc-section-toggle docs-toc-nested-toggle" aria-expanded="true" aria-controls="toc-panel-references-mockups">
+          <span class="docs-toc-chevron" aria-hidden="true"></span>
+          <span class="docs-toc-section-title">mockups</span>
+        </button>
+        <ul class="docs-toc-list docs-toc-panel" id="toc-panel-references-mockups">
+          <li class="depth-2"><a class="doc-link" data-path="references/mockups/README.md" href="#references/mockups/README.md">README</a></li>
+        </ul>
+      </li>
     </ul>
   </div>
 
-  <div class="docs-toc-section">
-    <p class="docs-toc-section-title">templates</p>
-    <ul class="docs-toc-list">
+  <div class="docs-toc-section" data-toc-section>
+    <button type="button" class="docs-toc-section-toggle" aria-expanded="true" aria-controls="toc-panel-templates">
+      <span class="docs-toc-chevron" aria-hidden="true"></span>
+      <span class="docs-toc-section-title">templates</span>
+    </button>
+    <ul class="docs-toc-list docs-toc-panel" id="toc-panel-templates">
       <li class="depth-1"><a class="doc-link" data-path="templates/architecture-template.md" href="#templates/architecture-template.md">Architecture Template</a></li>
       <li class="depth-1"><a class="doc-link" data-path="templates/prd-template.md" href="#templates/prd-template.md">PRD Template</a></li>
       <li class="depth-1"><a class="doc-link" data-path="templates/product-vision-template.md" href="#templates/product-vision-template.md">Product Vision Template</a></li>
