@@ -397,7 +397,7 @@ The PDS hostname, user handles, marketing site, and lexicon authority are **sepa
 |---------------|------|-----------|
 | `atpix.net` | Project homepage (marketing) | [atpix-homepage repo](#step-1--github-pages-atpixnet-homepage) |
 | `docs.atpix.net` | Project documentation | [ATPix `docs/`](#step-1b--github-pages-docsatpixnet) |
-| `pds.atpix.net` | Self-hosted PDS (one instance, many accounts) | [DigitalOcean VPS](#step-2--digitalocean-vps--pdsatpixnet) |
+| `pds.atpix.net` | Self-hosted PDS (one instance, many accounts) | [OVHcloud VPS (EU)](#step-2--ovhcloud-vps-eu--pdsatpixnet) |
 | `alice.atpix.net`, `bob.atpix.net` | Test handles → DIDs on your PDS | [Handle DNS](#step-3--handle-dns-aliceatpixnet--bobatpixnet) |
 | `_lexicon.gallery.atpix.net` | Lexicon authority for `net.atpix.gallery.*` | [Lexicon authority](#step-4--lexicon-authority-_lexicongalleryatpixnet) |
 
@@ -411,8 +411,8 @@ At your domain registrar, create these records. Registrar UIs usually show only 
 | `@` | `A` | `185.199.111.153` | Step 1 |
 | `www` | `CNAME` | `peterVG.github.io` | Step 1 (optional; GitHub redirects `www` ↔ apex) |
 | `docs` | `CNAME` | `peterVG.github.io` | Step 1b (`docs.atpix.net` documentation) |
-| `pds` | `A` | `<droplet-public-ipv4>` | Step 2 (before PDS install) |
-| `*.pds` | `A` | `<droplet-public-ipv4>` | Step 2 (wildcard for `*.pds.atpix.net` handles) |
+| `pds` | `A` | `<vps-public-ipv4>` | Step 2 (before PDS install) |
+| `*.pds` | `A` | `<vps-public-ipv4>` | Step 2 (wildcard for `*.pds.atpix.net` handles) |
 | `_atproto.alice` | `TXT` | `did=<alice-did>` | Step 3 (after account creation) |
 | `_atproto.bob` | `TXT` | `did=<bob-did>` | Step 3 |
 | `_lexicon.gallery` | `TXT` | `did=<authority-did>` | Step 4 (after authority account exists) |
@@ -459,31 +459,32 @@ dig docs.atpix.net +short -t CNAME
 
 References: [Managing a custom domain for GitHub Pages](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site), [About custom domains and GitHub Pages](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/about-custom-domains-and-github-pages).
 
-### Step 2 — DigitalOcean VPS + `pds.atpix.net`
+### Step 2 — OVHcloud VPS (EU) + `pds.atpix.net`
 
-Run one [reference PDS](https://github.com/bluesky-social/pds) on a VPS. Use hostname **`pds.atpix.net`** (not the apex `atpix.net`).
+Run one [reference PDS](https://github.com/bluesky-social/pds) on an **EU-region** [OVHcloud VPS](https://www.ovhcloud.com/en-ie/vps/). Use hostname **`pds.atpix.net`** (not the apex `atpix.net`).
 
-#### 2a. Create the Droplet
+#### 2a. Order the VPS (EU datacenter)
 
-1. In [DigitalOcean](https://cloud.digitalocean.com/): **Create → Droplets**.
-2. **Image:** Ubuntu 24.04 LTS. **Size:** at least 1 GB RAM / 1 vCPU / 20 GB SSD ([PDS recommendations](https://github.com/bluesky-social/pds#deploying-a-pds-onto-a-vps)).
-3. **Authentication:** SSH key (recommended) or password. Note the **public IPv4** address after creation.
-4. **Firewall:** create or attach a cloud firewall allowing **inbound TCP 80 and 443** from anywhere. Restrict **SSH (22)** to your IP if possible ([DO firewall docs](https://docs.digitalocean.com/products/networking/firewalls/)).
-5. SSH in: `ssh root@<droplet-public-ipv4>`.
+1. Sign in to the [OVHcloud Control Panel](https://www.ovh.com/manager/) and order a **VPS** ([getting started guide](https://help.ovhcloud.com/csm/en-ie-vps-getting-started?id=kb_article_view&sysparm_article=KB0047625)).
+2. **Location:** choose an **EU datacenter** (for example Gravelines, Roubaix, Frankfurt, or Warsaw) so PDS data stays in the EU.
+3. **Image:** Ubuntu 24.04 LTS. **Size:** at least 1 GB RAM / 1 vCPU / 20 GB SSD ([PDS recommendations](https://github.com/bluesky-social/pds#deploying-a-pds-onto-a-vps)).
+4. **Authentication:** SSH key (recommended). Note the **public IPv4** address after provisioning ([find your VPS IP](https://help.ovhcloud.com/csm/en-ie-vps-getting-started?id=kb_article_view&sysparm_article=KB0047625)).
+5. **Firewall:** enable the [OVH Network Firewall](https://help.ovhcloud.com/csm/en-ie-vps-network-firewall?id=kb_article_view&sysparm_article=KB0047548) (or equivalent host rules) allowing **inbound TCP 80 and 443** from anywhere. Restrict **SSH (22)** to your IP where possible.
+6. SSH in: `ssh ubuntu@<vps-public-ipv4>` (or `root@…` if your image uses root).
 
 #### 2b. DNS before install
 
-Add the Step 0 records `pds` and `*.pds` → `<droplet-public-ipv4>`. Confirm:
+Add the Step 0 records `pds` and `*.pds` → `<vps-public-ipv4>`. Confirm:
 
 ```bash
 dig pds.atpix.net +short -t A
 dig test123.pds.atpix.net +short -t A
-# Both should return the Droplet IP
+# Both should return the VPS public IPv4
 ```
 
 #### 2c. Run the PDS installer
 
-On the Droplet ([PDS install guide](https://github.com/bluesky-social/pds#installing-on-ubuntu-200422042404-and-debian-111213)):
+On the VPS ([PDS install guide](https://github.com/bluesky-social/pds#installing-on-ubuntu-200422042404-and-debian-111213)):
 
 ```bash
 curl -O https://raw.githubusercontent.com/bluesky-social/pds/main/installer.sh
@@ -648,4 +649,4 @@ Deploy ATPix apps per [Run the application](#run-the-application): HappyView (`d
 
 ## Monitor and Update
 
-Use the observability stack in [View logs](#view-logs) for ATPix containers. Monitor the DigitalOcean PDS VPS separately (disk, TLS expiry, PDS logs). Re-run provisioning after lexicon changes and document HappyView `feature.spaces_enabled` status in test reports per [SRS NFR-013](docs/overview/003-srs.md).
+Use the observability stack in [View logs](#view-logs) for ATPix containers. Monitor the OVHcloud PDS VPS separately (disk, TLS expiry, PDS logs; [OVH monitoring and alerts](https://help.ovhcloud.com/csm/en-ie-vps-monitoring?id=kb_article_view&sysparm_article=KB0047626)). Re-run provisioning after lexicon changes and document HappyView `feature.spaces_enabled` status in test reports per [SRS NFR-013](docs/overview/003-srs.md).
