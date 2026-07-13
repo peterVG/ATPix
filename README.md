@@ -122,27 +122,157 @@ npm run dev
 
 Open [http://127.0.0.1:5173](http://127.0.0.1:5173). API health: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health).
 
-**OAuth client metadata** ([ADR-006](docs/architecture/006-oauth-dpop-authentication.md)): the frontend serves atproto OAuth client metadata at `/oauth-client-metadata.json`. In dev, Vite returns JSON dynamically from the request origin; production builds write `dist/oauth-client-metadata.json` from `VITE_DEPLOYMENT_ORIGIN`.
+### Test current functionality (Tasks 1.2 + 1.3)
+
+**What works on `main` today:** HappyView provisioning (lexicons + spaces flag), OAuth client metadata at `/oauth-client-metadata.json`, frontend landing page, backend health. **Not yet:** OAuth sign-in button, photo upload, or galleries (Task 2.1+).
+
+**Prerequisites:** Docker running, Python 3.11+, Node.js 22+, an atproto account (Bluesky handle works for HappyView admin login).
+
+#### Step 1 — Clone and configure environment
 
 ```bash
-# Dev — metadata from running Vite server
-curl -s http://127.0.0.1:5173/oauth-client-metadata.json | head
-
-# Production build — set origin before npm run build
-cd apps/frontend
-VITE_DEPLOYMENT_ORIGIN=http://127.0.0.1:5173 npm run build
-cat dist/oauth-client-metadata.json
+git clone https://github.com/peterVG/ATPix.git
+cd ATPix
+cp .env.example .env
 ```
 
-**Register the ATPix API client in HappyView** (required before OAuth sign-in in Task 2.1):
+Open `.env` in an editor. You will fill in keys in later steps; for now confirm these defaults exist:
 
-1. Ensure the frontend is reachable at your deployment origin (e.g. `http://127.0.0.1:5173`) and `curl {origin}/oauth-client-metadata.json` returns valid JSON.
-2. In HappyView admin → **API Clients** → create a **public** client.
-3. Set **Client ID** to `{VITE_DEPLOYMENT_ORIGIN}/oauth-client-metadata.json` (must match the served document's `client_id` field).
-4. Add allowed origin(s) matching your frontend URL; register scopes that include those in the metadata `scope` field (`atproto`, `blob:*/*`, `repo:net.atpix.gallery.*`).
-5. Copy the `hvc_*` **client key** into `.env` as `VITE_HAPPYVIEW_CLIENT_KEY` (used as `X-Client-Key` on XRPC — not `hv_*` admin keys per [TC-006](docs/prd.md#tc-006-api-client-identification)).
+| Variable | Example value | Purpose |
+|----------|---------------|---------|
+| `HAPPYVIEW_URL` | `http://127.0.0.1:3001` | App View base URL |
+| `VITE_HAPPYVIEW_URL` | `http://127.0.0.1:3001` | Same, for frontend build |
+| `VITE_DEPLOYMENT_ORIGIN` | `http://127.0.0.1:5173` | Public URL of the ATPix UI (OAuth `client_id` origin) |
+| `HAPPYVIEW_ADMIN_KEY` | *(empty until Step 3)* | `hv_*` admin key for provisioning |
+| `VITE_HAPPYVIEW_CLIENT_KEY` | *(empty until Step 6)* | `hvc_*` client key for XRPC |
 
-Permissioned album spaces use this same clientId URL in `appAccess.allowList` when calling `com.atproto.simplespace.createSpace` ([ADR-010](docs/architecture/010-permissioned-spaces-storage.md)).
+#### Step 2 — Start HappyView and verify health
+
+```bash
+docker compose -f docker-compose.happyview.yml up -d
+curl -sS http://127.0.0.1:3001/health
+```
+
+**Expected:** HTTP 200 and a JSON body (not an error page). If `curl` fails, wait 10–30 seconds for the container to start, then retry.
+
+#### Step 3 — HappyView admin login and admin API key
+
+1. Open **http://127.0.0.1:3001/** in a browser.
+2. Sign in with your atproto handle (e.g. a Bluesky account). The **first** user becomes super-user.
+3. Go to **Settings → API Keys → Create**.
+4. Name it e.g. `atpix-provision`; enable permissions: `lexicons:create`, `lexicons:read`, `settings:manage`.
+5. Copy the key (starts with `hv_`). Paste into `.env`:
+
+```bash
+HAPPYVIEW_ADMIN_KEY=hv_paste_your_key_here
+```
+
+#### Step 4 — Provision lexicons and enable permissioned spaces
+
+```bash
+pip install python-dotenv
+python3 scripts/provision_happyview.py
+python3 scripts/provision_happyview.py --verify-only
+```
+
+**Expected from `--verify-only`:** confirmation that all 23 `net.atpix.gallery.*` lexicons are registered and `feature.spaces_enabled` is `true`. Errors about `HAPPYVIEW_ADMIN_KEY` mean Step 3 is incomplete.
+
+Optional: in HappyView admin, open **Lexicons** and confirm `net.atpix.gallery.photo` (and siblings) appear in the list.
+
+#### Step 5 — Start frontend and verify OAuth client metadata
+
+```bash
+cd apps/frontend
+npm install
+npm run dev
+```
+
+Leave this terminal running. In a **second** terminal:
+
+```bash
+# Landing page loads
+curl -sS -o /dev/null -w "http_code=%{http_code}\n" http://127.0.0.1:5173/
+
+# OAuth metadata document (Task 1.3)
+curl -sS http://127.0.0.1:5173/oauth-client-metadata.json
+```
+
+**Expected metadata checks:**
+
+| JSON field | Expected value (local dev) |
+|------------|----------------------------|
+| `client_id` | `http://127.0.0.1:5173/oauth-client-metadata.json` |
+| `client_name` | `ATPix` |
+| `redirect_uris` | `["http://127.0.0.1:5173/oauth/callback"]` |
+| `dpop_bound_access_tokens` | `true` |
+| `token_endpoint_auth_method` | `"none"` |
+| `scope` | contains `atproto`, `blob:*/*`, `repo:net.atpix.gallery.photo` |
+
+Open **http://127.0.0.1:5173/** in a browser — you should see the R&D overview page with **HappyView endpoint: `http://127.0.0.1:3001`**.
+
+**Production build check (optional):**
+
+```bash
+cd apps/frontend
+VITE_DEPLOYMENT_ORIGIN=http://127.0.0.1:5173 npm run build
+grep client_id dist/oauth-client-metadata.json
+```
+
+#### Step 6 — Register ATPix API client in HappyView (before Task 2.1 sign-in)
+
+HappyView must know about your app **before** users can sign in via OAuth. You register it as an **API Client** (different from the admin `hv_*` key).
+
+1. Keep `npm run dev` running so `http://127.0.0.1:5173/oauth-client-metadata.json` stays reachable.
+2. Open **http://127.0.0.1:3001/** → **API Clients** (admin sidebar).
+3. Click **Create** (or equivalent).
+4. Fill in fields:
+
+| Field | Value |
+|-------|-------|
+| **Type** | Public (browser app; no client secret) |
+| **Client ID** | `http://127.0.0.1:5173/oauth-client-metadata.json` — must match the `client_id` from Step 5 exactly |
+| **Allowed origins** | `http://127.0.0.1:5173` (and `http://localhost:5173` if you use that hostname) |
+| **Scopes** | Include at minimum: `atproto`, `blob:*/*`, and the `repo:net.atpix.gallery.*` collections listed in the metadata `scope` field |
+
+5. Save. Copy the generated **client key** (`hvc_…`) — shown once on create.
+6. Add to repo root `.env`:
+
+```bash
+VITE_HAPPYVIEW_CLIENT_KEY=hvc_paste_your_key_here
+```
+
+7. **Restart** `npm run dev` (Vite reads `.env` at startup).
+
+**Important:** `hv_*` = admin automation (provisioning). `hvc_*` = browser app identity on every XRPC call. Never put `hv_*` on XRPC routes ([TC-006](docs/prd.md#tc-006-api-client-identification)).
+
+#### Step 7 — Run automated tests (optional)
+
+```bash
+cd apps/frontend && npm run lint && npm run test:unit
+cd ../..
+# With HappyView up and HAPPYVIEW_ADMIN_KEY set:
+cd apps/backend && python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
+pytest tests/integration/test_happyview_provision.py -v
+```
+
+#### What you cannot test yet
+
+- **Sign in with OAuth** — UI arrives in Task 2.1; metadata + `hvc_*` key are prerequisites only.
+- **Upload photos / albums / permissioned spaces UI** — Tasks 3.x and 5.x.
+
+#### Permissioned albums and `appAccess` (preview for Task 5.1)
+
+When permissioned albums are implemented, creating a private album will call HappyView's `com.atproto.simplespace.createSpace` with an `appAccess` field built by `buildSpaceAppAccess(origin)` in `apps/frontend/src/config/oauthClientMetadata.js`. That object looks like:
+
+```json
+{
+  "type": "allowList",
+  "allowed": ["http://127.0.0.1:5173/oauth-client-metadata.json"]
+}
+```
+
+See [ADR-010](docs/architecture/010-permissioned-spaces-storage.md) — only apps on the allow-list may obtain space credentials for that album. The URL is the same **Client ID** you registered in Step 6.
 
 **Full stack via Docker:**
 
