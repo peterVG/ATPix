@@ -8,6 +8,7 @@
   var CONTENT_ID = "docs-content";
   var ACTIVE_CLASS = "is-active";
   var MAX_PATH_LENGTH = 256;
+  var activeRequestId = 0;
 
   /**
    * Resolve a documentation path relative to the site root.
@@ -130,6 +131,28 @@
   }
 
   /**
+   * Display a fetch error without interpreting user-controlled paths as HTML.
+   *
+   * @param {HTMLElement} container - Content column element.
+   * @param {string} docPath - Requested document path.
+   * @param {string} errorMessage - Fetch or parse error message.
+   */
+  function showLoadError(container, docPath, errorMessage) {
+    container.innerHTML = "";
+
+    var paragraph = document.createElement("p");
+    paragraph.className = "docs-error";
+
+    paragraph.appendChild(document.createTextNode("Unable to load "));
+    var code = document.createElement("code");
+    code.textContent = docPath;
+    paragraph.appendChild(code);
+    paragraph.appendChild(document.createTextNode(": " + errorMessage));
+
+    container.appendChild(paragraph);
+  }
+
+  /**
    * Fetch and display a markdown document.
    *
    * @param {string} rawPath - Requested document path or hash.
@@ -147,6 +170,9 @@
       return Promise.resolve();
     }
 
+    var requestId = activeRequestId + 1;
+    activeRequestId = requestId;
+
     container.innerHTML = "<p class=\"docs-loading\">Loading…</p>";
     setActiveTocLink(docPath);
 
@@ -154,24 +180,33 @@
 
     return fetch(url)
       .then(function (response) {
+        if (requestId !== activeRequestId) {
+          return null;
+        }
+
         if (!response.ok) {
           throw new Error("HTTP " + response.status);
         }
+
         return response.text();
       })
       .then(function (markdown) {
+        if (requestId !== activeRequestId || markdown === null) {
+          return;
+        }
+
         renderMarkdown(markdown, docPath);
+
         if (window.history && window.history.replaceState) {
           window.history.replaceState(null, "", "#" + docPath);
         }
       })
       .catch(function (error) {
-        container.innerHTML =
-          "<p class=\"docs-error\">Unable to load <code>" +
-          docPath +
-          "</code>: " +
-          error.message +
-          "</p>";
+        if (requestId !== activeRequestId) {
+          return;
+        }
+
+        showLoadError(container, docPath, error.message);
       });
   }
 
