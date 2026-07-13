@@ -113,28 +113,121 @@
   }
 
   /**
+   * Remove YAML front matter from fetched markdown files.
+   *
+   * @param {string} markdown - Raw markdown source.
+   * @returns {string} Markdown without leading front matter block.
+   */
+  function stripFrontMatter(markdown) {
+    if (!markdown || markdown.indexOf("---\n") !== 0) {
+      return markdown;
+    }
+
+    var closingIndex = markdown.indexOf("\n---\n", 4);
+    if (closingIndex === -1) {
+      return markdown;
+    }
+
+    return markdown.slice(closingIndex + 5);
+  }
+
+  /**
+   * Locate the direct child toggle button for a TOC section node.
+   *
+   * @param {HTMLElement} sectionNode - Section wrapper element.
+   * @returns {HTMLElement|null} Direct toggle button, if present.
+   */
+  function findDirectSectionToggle(sectionNode) {
+    var child = sectionNode.firstElementChild;
+    while (child) {
+      if (child.classList.contains("docs-toc-section-toggle")) {
+        return child;
+      }
+      child = child.nextElementSibling;
+    }
+    return null;
+  }
+
+  /**
+   * Convert fenced mermaid code blocks into renderable diagram nodes.
+   *
+   * @param {HTMLElement} container - Rendered article element.
+   * @returns {HTMLElement[]} Mermaid nodes queued for rendering.
+   */
+  function prepareMermaidBlocks(container) {
+    var blocks = container.querySelectorAll("pre > code.language-mermaid");
+    var nodes = [];
+
+    blocks.forEach(function (code) {
+      var pre = code.parentElement;
+      if (!pre) {
+        return;
+      }
+
+      var diagram = document.createElement("div");
+      diagram.className = "mermaid";
+      diagram.textContent = code.textContent || "";
+      pre.replaceWith(diagram);
+      nodes.push(diagram);
+    });
+
+    return nodes;
+  }
+
+  /**
+   * Render Mermaid diagram blocks inside an article.
+   *
+   * @param {HTMLElement} article - Rendered article element.
+   * @returns {Promise<void>}
+   */
+  function renderMermaidDiagrams(article) {
+    var nodes = prepareMermaidBlocks(article);
+    if (nodes.length === 0) {
+      return Promise.resolve();
+    }
+
+    if (typeof mermaid === "undefined" || !mermaid.run) {
+      nodes.forEach(function (node) {
+        node.className = "mermaid-error";
+        node.textContent = "Mermaid renderer failed to load.";
+      });
+      return Promise.resolve();
+    }
+
+    return mermaid.run({ nodes: nodes }).catch(function (error) {
+      nodes.forEach(function (node) {
+        node.className = "mermaid-error";
+        node.textContent = "Mermaid diagram failed to render: " + error.message;
+      });
+    });
+  }
+
+  /**
    * Render markdown text into the content column.
    *
    * @param {string} markdown - Raw markdown source.
    * @param {string} docPath - Source path used for link rewriting.
+   * @returns {Promise<void>}
    */
   function renderMarkdown(markdown, docPath) {
     var container = document.getElementById(CONTENT_ID);
     if (!container) {
-      return;
+      return Promise.resolve();
     }
 
     if (typeof marked === "undefined" || !marked.parse) {
       container.innerHTML = "<p class=\"docs-error\">Markdown renderer failed to load.</p>";
-      return;
+      return Promise.resolve();
     }
 
     var article = document.createElement("article");
-    article.innerHTML = marked.parse(markdown);
+    article.innerHTML = marked.parse(stripFrontMatter(markdown));
     rewriteMarkdownLinks(article, docPath);
 
     container.innerHTML = "";
     container.appendChild(article);
+
+    return renderMermaidDiagrams(article);
   }
 
   /**
@@ -193,10 +286,11 @@
         if (requestId !== activeRequestId || markdown === null) {
           return;
         }
-        renderMarkdown(markdown, docPath);
-        if (window.history && window.history.replaceState) {
-          window.history.replaceState(null, "", "#" + docPath);
-        }
+        return renderMarkdown(markdown, docPath).then(function () {
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, "", "#" + docPath);
+          }
+        });
       })
       .catch(function (error) {
         if (requestId !== activeRequestId) {
@@ -212,7 +306,7 @@
    * @param {HTMLElement} sectionNode - Section wrapper with panel children.
    */
   function toggleTocSection(sectionNode) {
-    var toggle = sectionNode.querySelector(":scope > .docs-toc-section-toggle");
+    var toggle = findDirectSectionToggle(sectionNode);
     var isCollapsed = sectionNode.classList.toggle(COLLAPSED_CLASS);
     if (toggle) {
       toggle.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
@@ -330,23 +424,39 @@
       saveTocWidth(clamped);
     }
 
-    resizer.addEventListener("mousedown", function (event) {
+    resizer.addEventListener("pointerdown", function (event) {
       dragging = true;
       resizer.classList.add(DRAGGING_CLASS);
+      if (resizer.setPointerCapture) {
+        resizer.setPointerCapture(event.pointerId);
+      }
       event.preventDefault();
     });
 
-    window.addEventListener("mousemove", function (event) {
+    resizer.addEventListener("pointermove", function (event) {
       if (!dragging) {
         return;
       }
       updateFromPointer(event.clientX);
     });
 
-    window.addEventListener("mouseup", function () {
+    function endDrag(event) {
+      if (!dragging) {
+        return;
+      }
       dragging = false;
       resizer.classList.remove(DRAGGING_CLASS);
-    });
+      if (resizer.releasePointerCapture && event.pointerId !== undefined) {
+        try {
+          resizer.releasePointerCapture(event.pointerId);
+        } catch (releaseError) {
+          return;
+        }
+      }
+    }
+
+    resizer.addEventListener("pointerup", endDrag);
+    resizer.addEventListener("pointercancel", endDrag);
 
     resizer.addEventListener("keydown", function (event) {
       var current = parseFloat(resizer.getAttribute("aria-valuenow") || String(DEFAULT_TOC_PERCENT));
@@ -384,7 +494,24 @@
   /**
    * Boot portal UI and optional hash-routed document.
    */
+  /**
+   * Configure Mermaid for client-side diagram rendering in fetched docs.
+   */
+  function initMermaid() {
+    if (typeof mermaid === "undefined" || !mermaid.initialize) {
+      return;
+    }
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "default",
+      securityLevel: "strict",
+      fontFamily: "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+    });
+  }
+
   function bootPortal() {
+    initMermaid();
     initTocCollapse();
     initColumnResizer();
 
