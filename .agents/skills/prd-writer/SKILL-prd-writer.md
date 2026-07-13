@@ -33,7 +33,7 @@ Draft the `docs/overview/002-prd.md` document using the structure from `docs/tem
 Ensure that:
 - Core features from the product vision are translated into specific functional and user requirements. Add a source citation for each requirement derived from the product-vision.md document.
 - The extracted requirements from the `docs/references/` are heavily integrated.
-- Every extracted requirement from files in `docs/references/` maintains its traceability citation as provided by the Requirements Extractor.
+- Every extracted requirement from files in `docs/references/` maintains its traceability citation as provided by the Requirements Extractor (relative links use `../references/[filename]` from `docs/overview/`).
 
 ### Step 5: Update Project Overview
 Read the newly finalized `docs/overview/002-prd.md` and the original `docs/overview/001-product-vision.md` to synthesize a concise project overview (1-2 paragraphs). Inject this overview directly into the `# About this project` section of the root `README.md` file, replacing the placeholder note.

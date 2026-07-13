@@ -39,7 +39,7 @@ OK apps/frontend/eslint.config.js
 ```text
 $ cd apps/frontend && npx prettier --write .
 .prettierrc 13ms (unchanged)
-docs/overview/005-plan.md 41ms
+docs/plan.md 41ms
 eslint.config.js 4ms (unchanged)
 index.html 11ms
 jsdoc.json 1ms (unchanged)

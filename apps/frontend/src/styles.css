@@ -494,8 +494,11 @@ body {
   right: 0.5rem;
   bottom: 0.35rem;
   margin: 0;
+  padding: 0.15rem 0.35rem;
+  border-radius: var(--radius-sm);
   font-size: 0.7rem;
-  color: var(--on-surface-variant);
+  color: var(--on-background);
+  background: color-mix(in srgb, var(--surface-container-high) 82%, transparent);
 }
 
 .gallery-card__overlay {

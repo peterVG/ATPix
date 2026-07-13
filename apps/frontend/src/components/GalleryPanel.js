@@ -68,13 +68,13 @@ function renderBadges(record) {
 /**
  * Apply gallery card background images through DOM APIs to avoid style-attribute injection.
  *
- * @param {HTMLElement} mount - Gallery mount element.
+ * @param {HTMLElement} grid - Gallery grid element.
  * @param {object[]} filteredPhotos - Photos currently visible in the grid.
  * @param {string} fallbackDid - Signed-in author DID for blob resolution.
  * @returns {void}
  */
-function applyCardBackgrounds(mount, filteredPhotos, fallbackDid) {
-  mount.querySelectorAll('[data-testid="gallery-card"]').forEach((card) => {
+function applyCardBackgrounds(grid, filteredPhotos, fallbackDid) {
+  grid.querySelectorAll('[data-testid="gallery-card"]').forEach((card) => {
     if (!(card instanceof HTMLElement)) {
       return;
     }
@@ -119,6 +119,7 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
   let loadingSearchPages = false;
   let errorMessage = null;
   let pageNumber = 1;
+  let eventsBound = false;
 
   const renderCard = (photo, index) => {
     const record = photo.record ?? {};
@@ -147,7 +148,46 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
     </article>
   `;
 
-  const render = () => {
+  const buildCardsMarkup = (filtered) => {
+    const pending = getPendingGalleryUploads();
+    return [
+      ...pending.map((entry) => renderPendingCard(entry)),
+      ...filtered.map((photo, index) => renderCard(photo, index)),
+    ].join("");
+  };
+
+  const ensureShell = () => {
+    if (mount.querySelector('[data-testid="gallery-screen"]')) {
+      return;
+    }
+
+    mount.innerHTML = `
+      <section class="gallery-screen" data-testid="gallery-screen">
+        <header class="route-header gallery-header">
+          <div>
+            <p class="label-caps">Personal archive</p>
+            <h2 class="headline-md" data-testid="gallery-title">My Gallery</h2>
+          </div>
+          <div class="gallery-toolbar" data-testid="gallery-toolbar">
+            <input
+              class="sign-in-input gallery-search"
+              type="search"
+              placeholder="Search your vault…"
+              data-testid="gallery-search"
+            />
+            <button type="button" class="btn btn-primary" data-testid="gallery-upload">Upload</button>
+          </div>
+        </header>
+        <div data-gallery-dynamic></div>
+      </section>
+    `;
+
+    bindPersistentEvents();
+  };
+
+  const syncView = () => {
+    ensureShell();
+
     const breakpoint =
       document.documentElement.dataset.breakpoint || breakpointFromWidth(window.innerWidth);
     const columns = GRID_COLUMNS[breakpoint];
@@ -162,69 +202,110 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
       (photos.length > 0 || pending.length > 0);
     const showPagination = !loading && (nextCursor || cursorHistory.length > 0);
 
-    const cards = [
-      ...pending.map((entry) => renderPendingCard(entry)),
-      ...filtered.map((photo, index) => renderCard(photo, index)),
-    ].join("");
+    const search = mount.querySelector('[data-testid="gallery-search"]');
+    if (search instanceof HTMLInputElement && search.value !== searchQuery) {
+      search.value = searchQuery;
+    }
 
-    mount.innerHTML = `
-      <section class="gallery-screen" data-testid="gallery-screen">
-        <header class="route-header gallery-header">
-          <div>
-            <p class="label-caps">Personal archive</p>
-            <h2 class="headline-md" data-testid="gallery-title">My Gallery</h2>
-          </div>
-          <div class="gallery-toolbar" data-testid="gallery-toolbar">
-            <input
-              class="sign-in-input gallery-search"
-              type="search"
-              placeholder="Search your vault…"
-              value="${escapeHtml(searchQuery)}"
-              data-testid="gallery-search"
-            />
-            <button type="button" class="btn btn-primary" data-testid="gallery-upload">Upload</button>
-          </div>
-        </header>
-        ${loading ? `<p class="gallery-status" data-testid="gallery-loading">Loading your gallery…</p>` : ""}
-        ${loadingSearchPages ? `<p class="gallery-status" data-testid="gallery-search-loading">Searching your vault…</p>` : ""}
-        ${errorMessage ? `<p class="gallery-error" data-testid="gallery-error">${escapeHtml(errorMessage)}</p>` : ""}
-        ${showEmpty ? `
-          <div class="gallery-empty" data-testid="gallery-empty">
-            <p>Upload your first photo to start your personal archive.</p>
-            <button type="button" class="btn btn-primary" data-testid="gallery-empty-upload">Upload your first photo</button>
-          </div>
-        ` : ""}
-        ${showNoResults ? `
-          <div class="gallery-empty" data-testid="gallery-no-results">
-            <p>No photos match your search.</p>
-          </div>
-        ` : ""}
-        <div
-          class="gallery-grid"
-          data-testid="gallery-grid"
-          data-columns="${columns}"
-          data-breakpoint="${breakpoint}"
-        >
-          ${cards}
+    const dynamic = mount.querySelector("[data-gallery-dynamic]");
+    if (!(dynamic instanceof HTMLElement)) {
+      return;
+    }
+
+    dynamic.innerHTML = `
+      ${loading ? `<p class="gallery-status" data-testid="gallery-loading">Loading your gallery…</p>` : ""}
+      ${loadingSearchPages ? `<p class="gallery-status" data-testid="gallery-search-loading">Searching your vault…</p>` : ""}
+      ${errorMessage ? `<p class="gallery-error" data-testid="gallery-error">${escapeHtml(errorMessage)}</p>` : ""}
+      ${showEmpty ? `
+        <div class="gallery-empty" data-testid="gallery-empty">
+          <p>Upload your first photo to start your personal archive.</p>
+          <button type="button" class="btn btn-primary" data-testid="gallery-empty-upload">Upload your first photo</button>
         </div>
-        ${showPagination ? `
-          <nav class="gallery-pagination" data-testid="gallery-pagination" aria-label="Gallery pagination">
-            <button type="button" class="btn btn-ghost" data-testid="gallery-page-prev" ${cursorHistory.length === 0 ? "disabled" : ""}>Previous</button>
-            <span data-testid="gallery-page-label">Page ${pageNumber}</span>
-            <button type="button" class="btn btn-ghost" data-testid="gallery-page-next" ${nextCursor ? "" : "disabled"}>Next</button>
-          </nav>
-        ` : ""}
-      </section>
+      ` : ""}
+      ${showNoResults ? `
+        <div class="gallery-empty" data-testid="gallery-no-results">
+          <p>No photos match your search.</p>
+        </div>
+      ` : ""}
+      <div
+        class="gallery-grid"
+        data-testid="gallery-grid"
+        data-columns="${columns}"
+        data-breakpoint="${breakpoint}"
+      >
+        ${buildCardsMarkup(filtered)}
+      </div>
+      ${showPagination ? `
+        <nav class="gallery-pagination" data-testid="gallery-pagination" aria-label="Gallery pagination">
+          <button type="button" class="btn btn-ghost" data-testid="gallery-page-prev" ${cursorHistory.length === 0 ? "disabled" : ""}>Previous</button>
+          <span data-testid="gallery-page-label">Page ${pageNumber}</span>
+          <button type="button" class="btn btn-ghost" data-testid="gallery-page-next" ${nextCursor ? "" : "disabled"}>Next</button>
+        </nav>
+      ` : ""}
     `;
 
-    applyCardBackgrounds(mount, filtered, identity.did);
-    bindGalleryEvents();
+    const grid = dynamic.querySelector('[data-testid="gallery-grid"]');
+    if (grid instanceof HTMLElement) {
+      applyCardBackgrounds(grid, filtered, identity.did);
+    }
+  };
+
+  const bindPersistentEvents = () => {
+    if (eventsBound) {
+      return;
+    }
+    eventsBound = true;
+
+    mount.addEventListener("input", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) {
+        return;
+      }
+      if (target.dataset.testid !== "gallery-search") {
+        return;
+      }
+
+      searchQuery = target.value;
+      syncView();
+      void loadRemainingPagesForSearch();
+    });
+
+    mount.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+
+      if (target.closest('[data-testid="gallery-upload"], [data-testid="gallery-empty-upload"]')) {
+        onUpload();
+        return;
+      }
+
+      if (target.closest('[data-testid="gallery-page-next"]')) {
+        if (!nextCursor) {
+          return;
+        }
+        cursorHistory.push(cursor ?? "");
+        pageNumber += 1;
+        void loadPage(nextCursor);
+        return;
+      }
+
+      if (target.closest('[data-testid="gallery-page-prev"]')) {
+        const previous = cursorHistory.pop();
+        if (previous === undefined) {
+          return;
+        }
+        pageNumber = Math.max(1, pageNumber - 1);
+        void loadPage(previous || undefined);
+      }
+    });
   };
 
   const loadPage = async (requestedCursor) => {
     loading = true;
     errorMessage = null;
-    render();
+    syncView();
 
     try {
       const fetchHandler = await getHappyViewFetchHandler();
@@ -237,11 +318,11 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
       cursor = requestedCursor;
       nextCursor = page.cursor;
       loading = false;
-      render();
+      syncView();
     } catch (error) {
       loading = false;
       errorMessage = error instanceof Error ? error.message : "Unable to load gallery";
-      render();
+      syncView();
     }
   };
 
@@ -251,7 +332,7 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
     }
 
     loadingSearchPages = true;
-    render();
+    syncView();
 
     try {
       const fetchHandler = await getHappyViewFetchHandler();
@@ -270,7 +351,7 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
       errorMessage = error instanceof Error ? error.message : "Unable to search gallery";
     } finally {
       loadingSearchPages = false;
-      render();
+      syncView();
     }
   };
 
@@ -280,55 +361,11 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
     await loadPage(undefined);
   };
 
-  const bindGalleryEvents = () => {
-    mount.querySelector('[data-testid="gallery-upload"]')?.addEventListener("click", onUpload);
-    mount.querySelector('[data-testid="gallery-empty-upload"]')?.addEventListener("click", onUpload);
-
-    const search = mount.querySelector('[data-testid="gallery-search"]');
-    if (search instanceof HTMLInputElement) {
-      search.addEventListener("input", () => {
-        searchQuery = search.value;
-        const selectionStart = search.selectionStart;
-        const selectionEnd = search.selectionEnd;
-        const hadFocus = document.activeElement === search;
-        render();
-        if (hadFocus) {
-          const nextSearch = mount.querySelector('[data-testid="gallery-search"]');
-          if (nextSearch instanceof HTMLInputElement) {
-            nextSearch.focus();
-            if (selectionStart !== null && selectionEnd !== null) {
-              nextSearch.setSelectionRange(selectionStart, selectionEnd);
-            }
-          }
-        }
-        void loadRemainingPagesForSearch();
-      });
-    }
-
-    mount.querySelector('[data-testid="gallery-page-next"]')?.addEventListener("click", () => {
-      if (!nextCursor) {
-        return;
-      }
-      cursorHistory.push(cursor ?? "");
-      pageNumber += 1;
-      void loadPage(nextCursor);
-    });
-
-    mount.querySelector('[data-testid="gallery-page-prev"]')?.addEventListener("click", () => {
-      const previous = cursorHistory.pop();
-      if (previous === undefined) {
-        return;
-      }
-      pageNumber = Math.max(1, pageNumber - 1);
-      void loadPage(previous || undefined);
-    });
-  };
-
   const unsubscribeRefresh = onGalleryRefresh(() => {
     void refresh();
   });
   const unsubscribePending = onPendingUploadsChange(() => {
-    render();
+    syncView();
   });
 
   void refresh();
@@ -338,6 +375,7 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
     destroy: () => {
       unsubscribeRefresh();
       unsubscribePending();
+      eventsBound = false;
     },
   };
 }

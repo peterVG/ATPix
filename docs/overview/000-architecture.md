@@ -24,10 +24,10 @@ Out of scope: production hosting ADRs, client-side encryption, and custom App Vi
 
 ### 1.3 References
 
-- **PRD:** [prd.md](./002-prd.md)
-- **SRS:** [srs.md](./003-srs.md)
-- **Product vision:** [product-vision.md](./001-product-vision.md)
-- **Implementation plan:** [plan.md](./005-plan.md)
+- **PRD:** [002-prd.md](./002-prd.md)
+- **SRS:** [003-srs.md](./003-srs.md)
+- **Product vision:** [001-product-vision.md](./001-product-vision.md)
+- **Implementation plan:** [005-plan.md](./005-plan.md)
 - **Lexicon artifacts:** [lexicon/net.atpix.gallery.md](../lexicon/net.atpix.gallery.md)
 - **ADRs:** [architecture/](../architecture/) (001–012)
 - **Repository README:** [../../README.md](../../README.md)

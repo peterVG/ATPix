@@ -6,7 +6,7 @@ This document is the **global execution roadmap** for ATPix v1. It sequences wor
 
 **Module detail:** Granular checklists live in [apps/frontend/docs/plan.md](../../apps/frontend/docs/plan.md) and [apps/backend/docs/plan.md](../../apps/backend/docs/plan.md).
 
-**Current state:** Monorepo scaffold, health/C2PA stubs, BDD features, Lexicon artifacts, and observability compose exist. Frontend shell is placeholder; HappyView integration, gallery UX, C2PA SDK, and permissioned spaces are **not yet implemented**.
+**Current state:** Monorepo scaffold, OAuth shell, C2PA manifest pipeline, Path A upload, and My Gallery grid (Task 3.2) are implemented. Remaining Phase 3+ work: albums/captions (3.3), permissioned spaces, discovery, and performance verification (Task 7.2 Locust).
 
 > **Note:** No `srs.md` files exist under `apps/`; all SRS requirements reference [docs/overview/003-srs.md](./003-srs.md).
 

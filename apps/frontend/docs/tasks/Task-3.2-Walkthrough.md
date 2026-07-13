@@ -35,22 +35,22 @@ Implemented Path A public upload and My Gallery grid (frontend-only; backend rem
 ### Unit tests
 
 ```
- RUN  v2.1.9 /Users/petervangarderen/Dev/ATPix/apps/frontend
+ RUN  v2.1.9 apps/frontend
 
- ✓ tests/unit/router.test.js (4 tests) 1ms
- ✓ tests/unit/selectPhotoBadge.test.js (3 tests) 2ms
- ✓ tests/unit/happyview.test.js (3 tests) 1ms
- ✓ tests/unit/galleryApi.test.js (3 tests) 4ms
- ✓ tests/unit/backend.test.js (3 tests) 5ms
- ✓ tests/unit/colorScheme.test.js (6 tests) 7ms
- ✓ tests/unit/uploadLimits.test.js (3 tests) 2ms
- ✓ tests/unit/oauthClientMetadata.test.js (10 tests) 8ms
+ ✓ tests/unit/selectPhotoBadge.test.js (5 tests) 2ms
+ ✓ tests/unit/colorScheme.test.js (6 tests) 3ms
+ ✓ tests/unit/happyview.test.js (3 tests) 2ms
+ ✓ tests/unit/backend.test.js (3 tests) 3ms
+ ✓ tests/unit/formatCreatedAt.test.js (4 tests) 3ms
+ ✓ tests/unit/galleryApi.test.js (4 tests) 8ms
+ ✓ tests/unit/uploadLimits.test.js (3 tests) 3ms
+ ✓ tests/unit/oauthClientMetadata.test.js (10 tests) 6ms
  ✓ tests/unit/app.test.js (2 tests) 23ms
- ✓ tests/unit/formatCreatedAt.test.js (3 tests) 1ms
  ✓ tests/unit/breakpoint.test.js (1 test) 1ms
+ ✓ tests/unit/router.test.js (4 tests) 1ms
 
  Test Files  11 passed (11)
-      Tests  41 passed (41)
+      Tests  45 passed (45)
 ```
 
 ### UI tests (production build)
@@ -59,7 +59,7 @@ Implemented Path A public upload and My Gallery grid (frontend-only; backend rem
 vite v6.4.3 building for test...
 ✓ built in 385ms
 
- RUN  v2.1.9 /Users/petervangarderen/Dev/ATPix/apps/frontend
+ RUN  v2.1.9 apps/frontend
 
  ✓ tests/ui/signIn.ui.test.js (1 test) 126ms
  ✓ tests/ui/uploadGallery.ui.test.js (1 test) 233ms
