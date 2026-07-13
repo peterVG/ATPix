@@ -1,10 +1,11 @@
-import { escapeHtml } from "../utils/html.js";
-
+import { notifyGalleryRefresh, setPendingGalleryUploads } from "../gallery/galleryEvents.js";
 import {
   C2PA_EMBED_ACCEPT,
   UPLOAD_FORMAT_LABELS,
 } from "../upload/constants.js";
 import { prepareUploadFile } from "../upload/prepareUploadFile.js";
+import { publishPreparedPhoto } from "../upload/publishPreparedPhoto.js";
+import { escapeHtml } from "../utils/html.js";
 
 /**
  * @typedef {import("../upload/prepareUploadFile.js").PreparedUploadFile} PreparedUploadFile
@@ -15,7 +16,8 @@ import { prepareUploadFile } from "../upload/prepareUploadFile.js";
  * @property {string} id - Queue item id.
  * @property {string} name - Filename label.
  * @property {File} sourceFile - Original browser file for retries.
- * @property {"selected" | "signing" | "ready" | "error"} state - UI state.
+ * @property {"selected" | "signing" | "ready" | "uploading" | "complete" | "error"} state - UI state.
+ * @property {number} [uploadProgress] - Transfer progress percentage.
  * @property {boolean} [c2paSigned] - Whether C2PA signing completed.
  * @property {string} [errorMessage] - Actionable error copy.
  * @property {PreparedUploadFile} [prepared] - Signed output when ready.
@@ -88,6 +90,12 @@ export function renderUploadPanel({ mount, identity }) {
         const progress =
           item.state === "signing"
             ? `<span class="upload-queue__progress upload-queue__progress--indeterminate" data-testid="upload-progress">Signing C2PA manifest…</span>`
+            : item.state === "uploading"
+              ? `<progress class="upload-queue__bar" max="100" value="${item.uploadProgress ?? 0}" data-testid="upload-progress"></progress>`
+              : "";
+        const complete =
+          item.state === "complete"
+            ? `<span class="status-chip status-chip--trusted" data-testid="upload-complete">Uploaded</span>`
             : "";
         const c2paBadge = item.c2paSigned
           ? `<span class="status-chip status-chip--trusted" data-testid="upload-c2pa-badge">C2PA</span>`
@@ -103,6 +111,7 @@ export function renderUploadPanel({ mount, identity }) {
           <li class="upload-queue__item${activeClass}" data-testid="upload-queue-item" data-item-id="${item.id}">
             <button type="button" class="upload-queue__select" data-select-id="${item.id}">${escapeHtml(item.name)}</button>
             ${progress}
+            ${complete}
             ${c2paBadge}
             ${error}
             ${retry}
@@ -170,13 +179,79 @@ export function renderUploadPanel({ mount, identity }) {
               <label><input type="checkbox" data-testid="privacy-device" /> Include device identifiers</label>
               <p class="upload-privacy__note" data-testid="privacy-required-note">Required integrity assertions (actions and hash) always remain enabled.</p>
             </section>
-            <p class="upload-step" data-testid="upload-c2pa-step">C2PA signing runs before blob upload.</p>
+            <p class="upload-step" data-testid="upload-c2pa-step">C2PA signing runs before blob upload to your PDS.</p>
+            ${
+              destination === "permissioned"
+                ? `<p class="upload-step upload-step--note" data-testid="upload-permissioned-note">Permissioned uploads ship in a later release. Choose My Public Repository for Path A uploads.</p>`
+                : ""
+            }
           </aside>
         </div>
       </section>
     `;
 
     bindUploadPanelEvents();
+  };
+
+  const readPublishMetadata = () => {
+    const titleInput = mount.querySelector('[data-testid="upload-title-input"]');
+    const captionInput = mount.querySelector('[data-testid="upload-caption-input"]');
+    return {
+      title: titleInput instanceof HTMLInputElement ? titleInput.value.trim() : "",
+      caption: captionInput instanceof HTMLInputElement ? captionInput.value.trim() : "",
+      keywords: tags,
+    };
+  };
+
+  const publishItem = async (itemId) => {
+    const item = queue.find((entry) => entry.id === itemId);
+    if (!item?.prepared?.signedBlob) {
+      return;
+    }
+
+    queue = queue.map((entry) =>
+      entry.id === itemId ? { ...entry, state: "uploading", uploadProgress: 0, errorMessage: undefined } : entry,
+    );
+    setPendingGalleryUploads([
+      { id: itemId, label: item.name, progress: 0 },
+    ]);
+    render();
+
+    const metadata = readPublishMetadata();
+    const result = await publishPreparedPhoto({
+      signedBlob: item.prepared.signedBlob,
+      mimeType: item.sourceFile.type,
+      fileName: item.name,
+      visibility: "public",
+      title: metadata.title || undefined,
+      caption: metadata.caption || undefined,
+      keywords: metadata.keywords.length > 0 ? metadata.keywords : undefined,
+      onProgress: (progress) => {
+        queue = queue.map((entry) =>
+          entry.id === itemId ? { ...entry, uploadProgress: progress } : entry,
+        );
+        setPendingGalleryUploads([{ id: itemId, label: item.name, progress }]);
+        render();
+      },
+    });
+
+    setPendingGalleryUploads([]);
+
+    if (result.status === "error") {
+      queue = queue.map((entry) =>
+        entry.id === itemId
+          ? { ...entry, state: "error", errorMessage: result.errorMessage ?? "Upload failed" }
+          : entry,
+      );
+      render();
+      return;
+    }
+
+    queue = queue.map((entry) =>
+      entry.id === itemId ? { ...entry, state: "complete", uploadProgress: 100 } : entry,
+    );
+    notifyGalleryRefresh();
+    render();
   };
 
   const signFile = async (file, itemId = crypto.randomUUID()) => {
@@ -221,6 +296,11 @@ export function renderUploadPanel({ mount, identity }) {
       };
     });
     render();
+
+    const signedItem = queue.find((entry) => entry.id === itemId);
+    if (destination === "public" && signedItem?.state === "ready") {
+      await publishItem(itemId);
+    }
   };
 
   const handleFiles = async (fileList) => {

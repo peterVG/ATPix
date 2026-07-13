@@ -62,7 +62,7 @@ This document is the **global execution roadmap** for ATPix v1. It sequences wor
   - **Related Tests:** [`c2pa_manifest_generation_SRS-F-012.feature`](../apps/backend/tests/features/c2pa_manifest_generation_SRS-F-012.feature)
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task 3.1. Execute BE-3.1 and FE-3.1 in apps/backend/ and apps/frontend/ respectively. Invoke @feature-writer. Allure + walkthrough, check off plans, commit, push.`
 
-- [ ] **Task 3.2: Photo upload and personal gallery (cross-module)**
+- [x] **Task 3.2: Photo upload and personal gallery (cross-module)**
   - **Description:** Deliver F-002 upload (public/unlisted path), F-003 My Gallery grid (UI-SCR-001), 50MB limit, RFC 3339 timestamps. Holistic upload UI (UI-SCR-005) includes progress and C2PA step.
   - **Estimated Time:** 10 hours
   - **Dependencies:** Task 3.1

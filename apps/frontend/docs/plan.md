@@ -60,7 +60,7 @@ Granular checklist for the Vite vanilla JS client. Global sequencing: [docs/plan
   - **Related Tests:** [`photo_upload_SRS-F-002.feature`](../tests/features/photo_upload_SRS-F-002.feature), [`ui_upload_flow_UI-SCR-005.feature`](../tests/features/ui_upload_flow_UI-SCR-005.feature)
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task FE-3.1. Work in apps/frontend/. Walkthrough, check off, commit, push.`
 
-- [ ] **Task FE-3.2: Photo upload and My Gallery grid**
+- [x] **Task FE-3.2: Photo upload and My Gallery grid**
   - **Description:** Implement public/unlisted upload: `uploadBlob` → `createPhoto` → `listPhotos` pagination (UI-SCR-001). 4-column desktop grid, cursor pagination, empty states. RFC 3339 display.
   - **Estimated Time:** 8 hours
   - **Dependencies:** Task FE-3.1

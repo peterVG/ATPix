@@ -1,6 +1,7 @@
 import { routeHref } from "../router/router.js";
 import { escapeHtml } from "../utils/html.js";
 
+import { renderGalleryPanel } from "./GalleryPanel.js";
 import { bindAppearanceControls, renderRouteContent } from "./GalleryPlaceholder.js";
 import { renderUploadPanel } from "./UploadPanel.js";
 
@@ -175,11 +176,17 @@ export function renderAppShell({
   if (main instanceof HTMLElement) {
     if (route === "upload") {
       renderUploadPanel({ mount: main, identity });
+    } else if (route === "gallery") {
+      renderGalleryPanel({
+        mount: main,
+        identity,
+        onUpload: openUpload,
+      });
     } else {
       renderRouteContent({
         mount: main,
         route,
-        showBadges: route === "gallery",
+        showBadges: false,
       });
     }
 
