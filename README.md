@@ -18,6 +18,11 @@ Sharing supports **public**, **unlisted**, and **permissioned** albums; permissi
 
 Product language (gallery, album) maps to atproto primitives (queries, `net.atpix.gallery.*` records, space repos) in the [PRD](docs/prd.md#product-terms--at-protocol-primitives) and [Lexicon README](docs/lexicon/README.md).
 
+## Metadata
+ Photo metadata maps to [Dublin Core](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/) and [Schema.org](https://schema.org/docs/schemas.html) terms in `net.atpix.gallery.*` Lexicons; image files embed [C2PA 2.2](https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html) Content Credentials for tamper-evident provenance. 
+ 
+ Photos and metadata remain user-owned and portable across the Atmosphere—not locked in a proprietary CDN or siloed account system.
+
 ## Repository layout
 
 | Component | Role | ADR |
@@ -75,11 +80,6 @@ Install runtimes using a version manager ([mise](https://mise.jdx.dev/), [asdf](
 | Python | 3.11+ | [python.org/downloads](https://www.python.org/downloads/) |
 | Node.js | 22+ | [nodejs.org](https://nodejs.org/) |
 | Docker | latest | [docs.docker.com](https://docs.docker.com/get-docker/) |
-
-## Metadata
- Photo metadata maps to [Dublin Core](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/) and [Schema.org](https://schema.org/docs/schemas.html) terms in `net.atpix.gallery.*` Lexicons; image files embed [C2PA 2.2](https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html) Content Credentials for tamper-evident provenance. 
- 
- Photos and metadata remain user-owned and portable across the Atmosphere—not locked in a proprietary CDN or siloed account system.
 
 # Setup Development Environment
 
