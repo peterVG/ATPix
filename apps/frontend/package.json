@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "pretest": "rm -rf tests/allure-results",
     "test:unit": "vitest run",
-    "test:ui": "vitest run --config vitest.config.js",
+    "test:ui": "vite build --mode test && vitest run --config vitest.ui.config.js",
     "lint": "eslint .",
     "format": "prettier --write .",
     "docs": "jsdoc -c jsdoc.json"
