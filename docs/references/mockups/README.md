@@ -15,6 +15,32 @@ Directional screen captures for [ui-requirements.md](../../ui-requirements.md). 
 
 All six images are **dark-mode only** and do **not** show the color-scheme toggle (UI-SHELL-003).
 
+## Previews
+
+### Discovery feed
+
+![Discovery feed](./01-discovery-feed.jpg)
+
+### My Gallery
+
+![My Gallery](./02-my-gallery.jpg)
+
+### Photo detail
+
+![Photo detail](./03-photo-detail.jpg)
+
+### Album view
+
+![Album view](./04-album-view.jpg)
+
+### Upload flow
+
+![Upload flow](./05-upload-flow.jpg)
+
+### Permissioned space admin
+
+![Permissioned space admin](./06-permissioned-space-admin.jpg)
+
 ## Planned (not yet in repo)
 
 | File | Purpose |
