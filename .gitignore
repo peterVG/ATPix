@@ -1,6 +1,9 @@
 .env
 .venv
 
+# Standalone homepage repo (separate git root at github.com/peterVG/atpix-homepage)
+atpix-homepage/
+
 data/*
 !data/README.md
 

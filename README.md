@@ -31,6 +31,8 @@ Product language (gallery, album) maps to atproto primitives (queries, `net.atpi
 | `apps/backend/` | FastAPI; C2PA claim generation/validation, health | [008](docs/architecture/008-c2pa-sdk-and-signing.md) |
 | HappyView (external) | Indexing, OAuth proxy, XRPC, spaces | [007](docs/architecture/007-happyview-app-view-integration.md) |
 | `docs/lexicon/` | `net.atpix.gallery.*` schema artifacts | [009](docs/architecture/009-lexicon-namespace-authority.md) |
+| `docs/` | Project documentation portal (`docs.atpix.net` via GitHub Pages) | — |
+| [atpix-homepage](https://github.com/peterVG/atpix-homepage) | Marketing site (`atpix.net` via GitHub Pages; separate repo) | — |
 
 Observability (Promtail → Redpanda → Loki, Prometheus, Grafana) runs via root `docker-compose.yml` per [003](docs/architecture/003-observability-stack.md). Tests use pytest/behave, vitest/playwright, and **Allure** reporting per [001](docs/architecture/001-test-runners-and-reporting.md).
 
@@ -393,7 +395,8 @@ The PDS hostname, user handles, marketing site, and lexicon authority are **sepa
 
 | Host / record | Role | Hosted on |
 |---------------|------|-----------|
-| `atpix.net` | Project homepage (marketing, docs links) | [GitHub Pages](#step-1--github-pages-atpixnet-homepage) |
+| `atpix.net` | Project homepage (marketing) | [atpix-homepage repo](#step-1--github-pages-atpixnet-homepage) |
+| `docs.atpix.net` | Project documentation | [ATPix `docs/`](#step-1b--github-pages-docsatpixnet) |
 | `pds.atpix.net` | Self-hosted PDS (one instance, many accounts) | [DigitalOcean VPS](#step-2--digitalocean-vps--pdsatpixnet) |
 | `alice.atpix.net`, `bob.atpix.net` | Test handles → DIDs on your PDS | [Handle DNS](#step-3--handle-dns-aliceatpixnet--bobatpixnet) |
 | `_lexicon.gallery.atpix.net` | Lexicon authority for `net.atpix.gallery.*` | [Lexicon authority](#step-4--lexicon-authority-_lexicongalleryatpixnet) |
@@ -402,11 +405,12 @@ At your domain registrar, create these records. Registrar UIs usually show only 
 
 | Registrar host label | Type | Value | When to add |
 |----------------------|------|-------|-------------|
-| `@` | `A` | `185.199.108.153` | Step 1 (GitHub Pages apex) |
+| `@` | `A` | `185.199.108.153` | Step 1 (GitHub Pages apex for `atpix.net`) |
 | `@` | `A` | `185.199.109.153` | Step 1 |
 | `@` | `A` | `185.199.110.153` | Step 1 |
 | `@` | `A` | `185.199.111.153` | Step 1 |
-| `www` | `CNAME` | `<org-or-user>.github.io` | Step 1 (optional; GitHub redirects `www` ↔ apex) |
+| `www` | `CNAME` | `peterVG.github.io` | Step 1 (optional; GitHub redirects `www` ↔ apex) |
+| `docs` | `CNAME` | `peterVG.github.io` | Step 1b (`docs.atpix.net` documentation) |
 | `pds` | `A` | `<droplet-public-ipv4>` | Step 2 (before PDS install) |
 | `*.pds` | `A` | `<droplet-public-ipv4>` | Step 2 (wildcard for `*.pds.atpix.net` handles) |
 | `_atproto.alice` | `TXT` | `did=<alice-did>` | Step 3 (after account creation) |
@@ -419,12 +423,12 @@ HappyView and ATPix still run wherever you deploy them (local Docker, a cloud VM
 
 ### Step 1 — GitHub Pages (`atpix.net` homepage)
 
-Host a static project site from this repository (or a dedicated docs repo) on GitHub Pages. The apex domain serves HTML only; it must not run the PDS.
+The marketing homepage lives in the separate **[atpix-homepage](https://github.com/peterVG/atpix-homepage)** repository (`index.html`, self-hosted CSS/fonts/images). It is **not** in this monorepo. The apex domain serves HTML only; it must not run the PDS.
 
-1. **Choose a publishing source** in the GitHub repo: **Settings → Pages → Build and deployment → Source** → deploy from branch `main` (folder `/` or `/docs` depending on where your site files live). Wait for the first `*.github.io` deployment to succeed.
-2. **Add the custom domain** in the same Pages settings panel: enter `atpix.net` under **Custom domain** → **Save**. GitHub commits a `CNAME` file to your publishing branch (pull it locally if you build the site offline).
-3. **Add apex DNS** at your registrar (four `A` records on `@` from the [Step 0](#step-0--domain-map-registrar-dns) table). Optional IPv6: four `AAAA` records on `@` per [GitHub's apex guide](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site#configuring-an-apex-domain).
-4. **Optional `www`:** add the `www` → `<org-or-user>.github.io` `CNAME` from Step 0 so GitHub can redirect between `atpix.net` and `www.atpix.net`.
+1. Open **[peterVG/atpix-homepage](https://github.com/peterVG/atpix-homepage) → Settings → Pages**.
+2. **Source:** deploy from branch `main`, folder `/ (root)`.
+3. **Custom domain:** `atpix.net` (repo includes `CNAME`).
+4. **GoDaddy DNS:** add four `A` records on `@` from the [Step 0](#step-0--domain-map-registrar-dns) table. Optional `www` → `peterVG.github.io` CNAME.
 5. **Verify DNS:**
 
 ```bash
@@ -432,7 +436,26 @@ dig atpix.net +noall +answer -t A
 # Expect four A records → 185.199.108.153 … 185.199.111.153
 ```
 
-6. Back in **Settings → Pages**, wait until the custom domain shows as verified, then enable **Enforce HTTPS** (can take up to 24 hours after DNS propagates).
+6. Enable **Enforce HTTPS** after the custom domain verifies.
+
+Local clone for homepage work: `git clone git@github.com:peterVG/atpix-homepage.git`. Design reference: `docs/000-UX-guide.md` in that repo (synced from [docs/references/000-UX-guide.md](docs/references/000-UX-guide.md)).
+
+### Step 1b — GitHub Pages (`docs.atpix.net` documentation)
+
+Project documentation is served from the **`docs/`** folder in **this** repository via GitHub Pages (`docs/index.md` portal with client-side markdown rendering). Requires the docs portal on `main` ([PR #12](https://github.com/peterVG/ATPix/pull/12)).
+
+1. Open **[peterVG/ATPix](https://github.com/peterVG/ATPix) → Settings → Pages**.
+2. **Source:** deploy from branch `main`, folder **`/docs`**.
+3. **Custom domain:** `docs.atpix.net` (`docs/CNAME` in the docs portal).
+4. **GoDaddy DNS:** add CNAME `docs` → `peterVG.github.io`.
+5. **Verify DNS:**
+
+```bash
+dig docs.atpix.net +short -t CNAME
+# peterVG.github.io.
+```
+
+6. Enable **Enforce HTTPS** after verification.
 
 References: [Managing a custom domain for GitHub Pages](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site), [About custom domains and GitHub Pages](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/about-custom-domains-and-github-pages).
 
