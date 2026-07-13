@@ -36,5 +36,7 @@ describe("UI-SHELL-002 responsive layout (production build)", () => {
     const sidebar = document.querySelector('[data-testid="app-sidebar"]');
     expect(sidebar).not.toBeNull();
     expect(getComputedStyle(sidebar).display).toBe("none");
+    expect(document.querySelector('[data-testid="mobile-menu-toggle"]')).not.toBeNull();
+    expect(document.querySelector('[data-testid="mobile-sign-out"]')).not.toBeNull();
   });
 });

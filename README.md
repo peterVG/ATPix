@@ -237,11 +237,13 @@ HappyView must know about your app **before** users can sign in via OAuth. You r
 | **Scopes** | Include at minimum: `atproto`, `blob:*/*`, and the `repo:net.atpix.gallery.*` collections listed in the metadata `scope` field |
 
 5. Save. Copy the generated **client key** (`hvc_…`) — shown once on create.
-6. Add to repo root `.env`:
+6. Add to the **repository root** `.env` (created in Step 1):
 
 ```bash
 VITE_HAPPYVIEW_CLIENT_KEY=hvc_paste_your_key_here
 ```
+
+Vite is configured with `envDir` pointing at the repo root, so `npm run dev` from `apps/frontend/` loads `VITE_*` variables from that file. You do **not** need a separate `apps/frontend/.env` unless you prefer a local override.
 
 7. **Restart** `npm run dev` (Vite reads `.env` at startup).
 

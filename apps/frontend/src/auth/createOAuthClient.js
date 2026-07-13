@@ -8,14 +8,18 @@ import {
   getOAuthRedirectUri,
 } from "../config/oauthClientMetadata.js";
 
-import { createTestSession, isTestAuthStubEnabled } from "./testAuthStub.js";
+import {
+  createTestSession,
+  isTestAuthStubEnabled,
+  shouldBootstrapTestSession,
+} from "./testAuthStub.js";
 
 /**
  * Minimal OAuth client interface used by the application shell.
  *
  * @typedef {object} AppOAuthClient
  * @property {() => Promise<{ did: string, handle?: string } | null>} restoreSession
- * @property {(handle: string) => Promise<void>} signInRedirect
+ * @property {(handle: string) => Promise<void>} signIn
  * @property {() => Promise<{ did: string, handle?: string } | null>} handleCallback
  * @property {(did: string) => Promise<void>} signOut
  */
@@ -45,7 +49,7 @@ function createTestOAuthClient() {
 
   return {
     async restoreSession() {
-      if (localStorage.getItem("atpix-test-signed-in") === "false") {
+      if (!shouldBootstrapTestSession()) {
         active = null;
         return null;
       }
@@ -56,7 +60,7 @@ function createTestOAuthClient() {
 
       return active;
     },
-    async signInRedirect(_handle) {
+    async signIn(_handle) {
       active = createTestSession();
     },
     async handleCallback() {
@@ -96,8 +100,8 @@ export function createOAuthClient() {
       const restored = await browserClient.initRestore();
       return sessionIdentity(restored?.session);
     },
-    async signInRedirect(handle) {
-      await browserClient.signInRedirect(handle);
+    async signIn(handle) {
+      await browserClient.signIn(handle);
     },
     async handleCallback() {
       const result = await browserClient.initCallback();

@@ -7,6 +7,7 @@ import {
   resolveEffectiveTheme,
   setColorSchemePreference,
   toggleDarkLight,
+  watchSystemColorScheme,
 } from "../../src/theme/colorScheme.js";
 
 describe("colorScheme", () => {
@@ -47,6 +48,23 @@ describe("colorScheme", () => {
 
   it("initializes theme from stored preference", () => {
     localStorage.setItem(COLOR_SCHEME_STORAGE_KEY, "light");
-    expect(initColorScheme()).toBe("light");
+    const { effective } = initColorScheme();
+    expect(effective).toBe("light");
+  });
+
+  it("registers a system preference listener even without a callback", () => {
+    const addEventListener = vi.fn();
+    const removeEventListener = vi.fn();
+    vi.spyOn(window, "matchMedia").mockReturnValue({
+      matches: false,
+      addEventListener,
+      removeEventListener,
+    });
+
+    setColorSchemePreference("system");
+    const stop = watchSystemColorScheme();
+    expect(addEventListener).toHaveBeenCalled();
+    stop();
+    expect(removeEventListener).toHaveBeenCalled();
   });
 });

@@ -42,14 +42,14 @@ describe("UI-SHELL-003 color scheme toggle (production build)", () => {
     expect(publicBadge?.classList.contains("status-chip--public")).toBe(true);
     expect(trustedBadge?.classList.contains("status-chip--trusted")).toBe(true);
     expect(invalidBadge?.classList.contains("status-chip--invalid")).toBe(true);
-    expect(getComputedStyle(document.documentElement).getPropertyValue("--status-public").trim()).toBe(
-      "#10b981",
-    );
-    expect(getComputedStyle(document.documentElement).getPropertyValue("--c2pa-trusted").trim()).toBe(
-      "#10b981",
-    );
-    expect(getComputedStyle(document.documentElement).getPropertyValue("--c2pa-invalid").trim()).toBe(
-      "#ef4444",
-    );
+    expect(
+      getComputedStyle(document.documentElement).getPropertyValue("--status-public").trim(),
+    ).toBe("#10b981");
+    expect(
+      getComputedStyle(document.documentElement).getPropertyValue("--c2pa-trusted").trim(),
+    ).toBe("#10b981");
+    expect(
+      getComputedStyle(document.documentElement).getPropertyValue("--c2pa-invalid").trim(),
+    ).toBe("#ef4444");
   });
 });

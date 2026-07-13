@@ -5,6 +5,8 @@ import { bootstrapApp } from "../../src/components/App.js";
 describe("bootstrapApp", () => {
   /** @type {HTMLElement} */
   let mount;
+  /** @type {(() => void) | undefined} */
+  let teardown;
 
   beforeEach(() => {
     mount = document.createElement("div");
@@ -14,6 +16,7 @@ describe("bootstrapApp", () => {
   });
 
   afterEach(() => {
+    teardown?.();
     mount.remove();
     vi.restoreAllMocks();
   });
@@ -21,16 +24,17 @@ describe("bootstrapApp", () => {
   it("renders sign-in panel when no session is restored", async () => {
     const oauthClient = {
       restoreSession: vi.fn().mockResolvedValue(null),
-      signInRedirect: vi.fn(),
+      signIn: vi.fn(),
       handleCallback: vi.fn(),
       signOut: vi.fn(),
     };
 
-    await bootstrapApp({
+    const state = await bootstrapApp({
       mount,
       happyviewUrl: "http://127.0.0.1:3001",
       oauthClient,
     });
+    teardown = state.teardown;
 
     expect(mount.querySelector('[data-testid="sign-in-panel"]')).not.toBeNull();
     expect(mount.querySelector('[data-testid="sign-in-form"]')).not.toBeNull();
@@ -42,16 +46,17 @@ describe("bootstrapApp", () => {
         did: "did:plc:test",
         handle: "alice.test",
       }),
-      signInRedirect: vi.fn(),
+      signIn: vi.fn(),
       handleCallback: vi.fn(),
       signOut: vi.fn(),
     };
 
-    await bootstrapApp({
+    const state = await bootstrapApp({
       mount,
       happyviewUrl: "http://127.0.0.1:3001",
       oauthClient,
     });
+    teardown = state.teardown;
 
     expect(mount.querySelector('[data-testid="app-shell"]')).not.toBeNull();
     expect(mount.querySelector('[data-testid="identity-handle"]')?.textContent).toContain(

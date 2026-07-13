@@ -10,16 +10,27 @@ Implemented holistic Task FE-2.1:
 - Responsive layout hooks (UI-SHELL-002) via `data-breakpoint` and gallery `data-columns`
 - Production-build UI tests (`npm run test:ui`) loading `dist/` artifacts per ADR-001
 
+## Security verification (SRS-NFR-003 / RC-004)
+
+| Check                                                        | Evidence                                                                                                                     |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| No app passwords or plaintext PDS credentials in client code | OAuth-only flow via `@happyview/oauth-client-browser`; no password fields or `localStorage` password keys                    |
+| DPoP-bound sessions                                          | HappyView browser client provisions DPoP per [ADR-006](../../../docs/architecture/006-oauth-dpop-authentication.md)          |
+| `X-Client-Key` on XRPC                                       | `buildXrpcHeaders()` + browser client `clientKey` option                                                                     |
+| Production `TOKEN_ENCRYPTION_KEY`                            | Documented as required in [ADR-006](../../../docs/architecture/006-oauth-dpop-authentication.md)                             |
+| Live OAuth sign-in                                           | Manual verification per README Step 7                                                                                        |
+| Backend BDD `authentication_security_SRS-NFR-003.feature`    | Scaffold present; step definitions require live HappyView for full behave execution (coordinate in Task 7.1 RC verification) |
+
 ## SRS traceability
 
-| Requirement | Verification |
-|-------------|--------------|
-| SRS-F-001.1 OAuth flow | `createOAuthClient.js`, sign-in panel, `/oauth/callback` handling |
-| SRS-F-001.2 X-Client-Key | `buildXrpcHeaders()` + HappyView browser client `clientKey` |
-| SRS-F-001.3 Identity display | Shell identity card + sign-in gating |
-| UI-SHELL-001 | `tests/ui/appShell.ui.test.js` |
-| UI-SHELL-002 | `tests/ui/responsiveLayout.ui.test.js` |
-| UI-SHELL-003 | `tests/ui/themeToggle.ui.test.js` |
+| Requirement                  | Verification                                                      |
+| ---------------------------- | ----------------------------------------------------------------- |
+| SRS-F-001.1 OAuth flow       | `createOAuthClient.js`, sign-in panel, `/oauth/callback` handling |
+| SRS-F-001.2 X-Client-Key     | `buildXrpcHeaders()` + HappyView browser client `clientKey`       |
+| SRS-F-001.3 Identity display | Shell identity card + sign-in gating                              |
+| UI-SHELL-001                 | `tests/ui/appShell.ui.test.js`                                    |
+| UI-SHELL-002                 | `tests/ui/responsiveLayout.ui.test.js`                            |
+| UI-SHELL-003                 | `tests/ui/themeToggle.ui.test.js`                                 |
 
 ## Test output (raw CLI)
 
@@ -38,17 +49,18 @@ Exit code: 0
 > atpix-frontend@0.1.0 test:unit
 > vitest run
 
- RUN  v2.1.9 /Users/petervangarderen/Dev/ATPix/apps/frontend
+ RUN  v2.1.9 (repo root)/apps/frontend
 
- ✓ tests/unit/colorScheme.test.js (5 tests) 6ms
+ ✓ tests/unit/colorScheme.test.js (6 tests) 6ms
  ✓ tests/unit/breakpoint.test.js (1 test) 1ms
  ✓ tests/unit/happyview.test.js (3 tests) 3ms
  ✓ tests/unit/router.test.js (4 tests) 1ms
  ✓ tests/unit/oauthClientMetadata.test.js (10 tests) 8ms
  ✓ tests/unit/app.test.js (2 tests) 27ms
+ ✓ tests/unit/colorScheme.test.js (6 tests)
 
  Test Files  6 passed (6)
-      Tests  25 passed (25)
+      Tests  26 passed (26)
 ```
 
 ### UI tests (production build)
@@ -61,7 +73,7 @@ vite v6.4.3 building for test...
 ✓ 290 modules transformed.
 ✓ built in 360ms
 
- RUN  v2.1.9 /Users/petervangarderen/Dev/ATPix/apps/frontend
+ RUN  v2.1.9 (repo root)/apps/frontend
 
  ✓ tests/ui/signIn.ui.test.js (1 test) 87ms
  ✓ tests/ui/appShell.ui.test.js (2 tests) 104ms

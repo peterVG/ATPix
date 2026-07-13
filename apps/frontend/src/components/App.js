@@ -1,6 +1,5 @@
 import { OAUTH_CALLBACK_PATH } from "../config/oauthClientMetadata.js";
 import { createOAuthClient } from "../auth/createOAuthClient.js";
-
 import { navigateToRoute, onRouteChange, parseRouteFromHash } from "../router/router.js";
 import {
   getStoredColorScheme,
@@ -30,6 +29,7 @@ export function isOAuthCallbackPath() {
  * @property {{ did: string, handle?: string } | null} identity
  * @property {string} route
  * @property {"dark" | "light" | "system"} colorPreference
+ * @property {() => void} teardown - Removes bootstrap listeners.
  */
 
 /**
@@ -42,13 +42,40 @@ export function isOAuthCallbackPath() {
  * @returns {Promise<AppViewState>} Current view state after bootstrap.
  */
 export async function bootstrapApp({ mount, happyviewUrl, oauthClient }) {
+  if (typeof globalThis.__ATPIX_TEARDOWN__ === "function") {
+    globalThis.__ATPIX_TEARDOWN__();
+    globalThis.__ATPIX_TEARDOWN__ = undefined;
+  }
+
   const client = oauthClient ?? createOAuthClient();
   let identity = null;
   let route = parseRouteFromHash();
   let colorPreference = getStoredColorScheme();
+  /** @type {() => void} */
+  let render = () => {};
 
-  initColorScheme();
+  const { stopSystemWatch } = initColorScheme(() => {
+    if (identity) {
+      render();
+    }
+  });
   const stopBreakpointWatch = watchLayoutBreakpoint();
+  const stopRouteWatch = onRouteChange((nextRoute) => {
+    route = nextRoute;
+    if (identity) {
+      render();
+    }
+  });
+
+  const teardown = () => {
+    stopSystemWatch();
+    stopBreakpointWatch();
+    stopRouteWatch();
+  };
+
+  if (import.meta.env.VITE_TEST_AUTH_STUB === "true") {
+    globalThis.__ATPIX_TEARDOWN__ = teardown;
+  }
 
   if (isOAuthCallbackPath()) {
     identity = await client.handleCallback();
@@ -58,7 +85,7 @@ export async function bootstrapApp({ mount, happyviewUrl, oauthClient }) {
     identity = await client.restoreSession();
   }
 
-  const render = () => {
+  render = () => {
     mount.innerHTML = "";
 
     if (!identity) {
@@ -66,7 +93,7 @@ export async function bootstrapApp({ mount, happyviewUrl, oauthClient }) {
         mount,
         happyviewUrl,
         onSignIn: async (handle) => {
-          await client.signInRedirect(handle);
+          await client.signIn(handle);
         },
       });
       return;
@@ -87,6 +114,7 @@ export async function bootstrapApp({ mount, happyviewUrl, oauthClient }) {
       },
       onThemeToggle: () => {
         toggleDarkLight();
+        colorPreference = getStoredColorScheme();
       },
       onSchemeSelect: (scheme) => {
         colorPreference = scheme;
@@ -96,28 +124,7 @@ export async function bootstrapApp({ mount, happyviewUrl, oauthClient }) {
     });
   };
 
-  onRouteChange((nextRoute) => {
-    route = nextRoute;
-    if (identity) {
-      render();
-    }
-  });
-
   render();
   updateLayoutBreakpoint();
-  return { identity, route, colorPreference, stopBreakpointWatch };
-}
-
-/**
- * @deprecated Use {@link bootstrapApp}. Retained for unit test compatibility.
- * @param {object} options - Render options.
- * @param {HTMLElement} options.mount - DOM node to render into.
- * @param {string} options.happyviewUrl - HappyView App View base URL.
- * @returns {void}
- */
-export function renderApp({ mount, happyviewUrl }) {
-  bootstrapApp({ mount, happyviewUrl }).catch((error) => {
-    console.error("ATPix bootstrap failed", error);
-    mount.innerHTML = `<p role="alert">Failed to start ATPix. Check console for details.</p>`;
-  });
+  return { identity, route, colorPreference, teardown };
 }

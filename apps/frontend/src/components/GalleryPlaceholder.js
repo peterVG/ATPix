@@ -1,11 +1,4 @@
-import { breakpointFromWidth } from "../layout/breakpoint.js";
-
-/** @constant {Record<string, number>} Gallery columns per layout breakpoint. */
-const GRID_COLUMNS = {
-  mobile: 2,
-  tablet: 3,
-  desktop: 4,
-};
+import { GRID_COLUMNS, breakpointFromWidth } from "../layout/breakpoint.js";
 
 /**
  * Render a responsive gallery placeholder grid for shell layout verification.
@@ -25,7 +18,8 @@ export function renderRouteContent({ mount, route, showBadges = false }) {
   };
 
   const title = titles[route] ?? "My Gallery";
-  const breakpoint = breakpointFromWidth(window.innerWidth);
+  const breakpoint =
+    document.documentElement.dataset.breakpoint || breakpointFromWidth(window.innerWidth);
   const columns = GRID_COLUMNS[breakpoint];
   const badges = showBadges
     ? `
@@ -88,10 +82,9 @@ export function bindAppearanceControls(root, onSchemeSelect, activePreference) {
     }
 
     const scheme = button.dataset.scheme;
-    if (scheme === activePreference) {
-      button.classList.add("scheme-option--active");
-      button.setAttribute("aria-pressed", "true");
-    }
+    const isActive = scheme === activePreference;
+    button.classList.toggle("scheme-option--active", isActive);
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
 
     button.addEventListener("click", () => {
       if (scheme === "dark" || scheme === "light" || scheme === "system") {

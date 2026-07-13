@@ -43,7 +43,7 @@ This document is the **global execution roadmap** for ATPix v1. It sequences wor
 ## Phase 2: Authentication & Application Shell
 
 - [x] **Task 2.1: OAuth sign-in and global shell (cross-module)**
-  - **Description:** Deliver F-001 OAuth flow, UI-SHELL-001 chrome, UI-SHELL-003 theme toggle, and DPoP + `X-Client-Key` on all HappyView XRPC calls. Coordinate [frontend plan Task FE-2.1](../apps/frontend/docs/plan.md) and security verification.
+  - **Description:** Deliver F-001 OAuth flow, UI-SHELL-001 chrome, UI-SHELL-003 theme toggle, and DPoP + `X-Client-Key` on all HappyView XRPC calls. Coordinate [frontend plan Task FE-2.1](../apps/frontend/docs/plan.md) and security verification (recorded in [Task-2.1-Walkthrough.md](../apps/frontend/docs/tasks/Task-2.1-Walkthrough.md#security-verification-srs-nfr-003--rc-004); backend NFR-003 behave steps complete in Task 7.1).
   - **Estimated Time:** 8 hours
   - **Dependencies:** Task 1.3
   - **Related Requirements:** [F-001](./prd.md#f-001-atproto-oauth-sign-in), [NFR-003](./prd.md#nfr-003-authentication-security), [SRS-F-001](./srs.md#srs-f-001-atproto-oauth-sign-in), [UI-SHELL-001](./ui-requirements.md#ui-shell-001-application-chrome), [UI-SHELL-003](./ui-requirements.md#ui-shell-003-dark--light-color-scheme-toggle)

@@ -94,8 +94,8 @@ body {
 }
 
 .btn-primary {
-  background: var(--atproto-blue);
-  color: #fff;
+  background: var(--primary);
+  color: var(--primary-on);
 }
 
 .btn-ghost {
@@ -231,8 +231,8 @@ body {
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  background: var(--atproto-blue);
-  color: #fff;
+  background: var(--primary);
+  color: var(--primary-on);
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -332,6 +332,66 @@ body {
   color: var(--c2pa-invalid);
 }
 
+[data-theme="light"] .status-chip {
+  background: #ffffff;
+  border: 1px solid color-mix(in srgb, currentColor 35%, var(--outline-variant));
+}
+
+[data-theme="light"] .status-chip--public {
+  color: #047857;
+}
+
+[data-theme="light"] .status-chip--trusted {
+  color: #047857;
+}
+
+[data-theme="light"] .status-chip--invalid {
+  color: #b91c1c;
+}
+
+.sign-in-error {
+  margin: 0 0 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--c2pa-invalid);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--c2pa-invalid) 12%, var(--surface-container));
+  color: var(--on-background);
+}
+
+.mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin-right: 0.5rem;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-sm);
+  background: var(--surface-container);
+  color: var(--on-background);
+  cursor: pointer;
+}
+
+.mobile-nav-panel {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem 1rem;
+  border-bottom: 1px solid var(--outline-variant);
+  background: var(--surface-container);
+}
+
+.mobile-nav-panel a {
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--radius-sm);
+  color: var(--on-background);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.mobile-nav-panel[hidden] {
+  display: none !important;
+}
+
 .gallery-grid {
   display: grid;
   gap: 0.5rem;
@@ -395,4 +455,8 @@ body {
 
 [data-breakpoint="mobile"] .app-header__nav {
   display: none;
+}
+
+[data-breakpoint="mobile"] .mobile-menu-btn {
+  display: inline-flex;
 }

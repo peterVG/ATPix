@@ -69,6 +69,11 @@ export async function loadProductionBuild(options = {}) {
   const scriptUrl = `${pathToFileURL(scriptPath).href}?t=${Date.now()}`;
   await import(scriptUrl);
 
+  if (typeof globalThis.__ATPIX_TEARDOWN__ === "function") {
+    globalThis.__ATPIX_TEARDOWN__();
+    globalThis.__ATPIX_TEARDOWN__ = undefined;
+  }
+
   const mountFn = globalThis.__ATPIX_MOUNT__;
   if (typeof mountFn !== "function") {
     throw new Error("Test build did not expose globalThis.__ATPIX_MOUNT__");

@@ -1,3 +1,10 @@
+/** @constant {Record<string, number>} Gallery columns per layout breakpoint. */
+export const GRID_COLUMNS = {
+  mobile: 2,
+  tablet: 3,
+  desktop: 4,
+};
+
 /**
  * Derive the layout breakpoint name from a viewport width.
  *
@@ -28,13 +35,33 @@ export function updateLayoutBreakpoint() {
 }
 
 /**
- * Register a resize listener that keeps `data-breakpoint` in sync.
+ * Keep gallery placeholder `data-columns` / `data-breakpoint` in sync with the root breakpoint.
+ *
+ * @returns {void}
+ */
+export function syncGalleryGridMetadata() {
+  const grid = document.querySelector('[data-testid="gallery-grid"]');
+  if (!grid) {
+    return;
+  }
+
+  const breakpoint = document.documentElement.dataset.breakpoint || updateLayoutBreakpoint();
+  grid.setAttribute("data-breakpoint", breakpoint);
+  grid.setAttribute("data-columns", String(GRID_COLUMNS[breakpoint]));
+}
+
+/**
+ * Register a resize listener that keeps layout metadata in sync.
  *
  * @returns {() => void} Cleanup function.
  */
 export function watchLayoutBreakpoint() {
-  const handler = () => updateLayoutBreakpoint();
+  const handler = () => {
+    updateLayoutBreakpoint();
+    syncGalleryGridMetadata();
+  };
+
   window.addEventListener("resize", handler);
-  updateLayoutBreakpoint();
+  handler();
   return () => window.removeEventListener("resize", handler);
 }

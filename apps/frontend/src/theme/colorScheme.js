@@ -26,6 +26,10 @@ export function getStoredColorScheme() {
  */
 export function resolveEffectiveTheme(preference) {
   if (preference === "system") {
+    if (typeof window.matchMedia !== "function") {
+      return "dark";
+    }
+
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   }
 
@@ -58,17 +62,14 @@ export function setColorSchemePreference(preference) {
 }
 
 /**
- * Initialize theme from storage and optionally watch system preference changes.
+ * Watch OS color-scheme changes while `system` preference is active.
  *
- * @param {(theme: "dark" | "light") => void} [onSystemChange] - Callback when OS scheme changes while `system` is selected.
- * @returns {"dark" | "light"} Effective theme applied on startup.
+ * @param {(theme: "dark" | "light") => void} [onSystemChange] - Optional callback after theme updates.
+ * @returns {() => void} Cleanup function removing the listener.
  */
-export function initColorScheme(onSystemChange) {
-  const preference = getStoredColorScheme();
-  const effective = setColorSchemePreference(preference);
-
-  if (preference !== "system" || typeof onSystemChange !== "function") {
-    return effective;
+export function watchSystemColorScheme(onSystemChange) {
+  if (typeof window.matchMedia !== "function") {
+    return () => {};
   }
 
   const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -79,17 +80,32 @@ export function initColorScheme(onSystemChange) {
 
     const next = resolveEffectiveTheme("system");
     applyDocumentTheme(next);
-    onSystemChange(next);
+    if (typeof onSystemChange === "function") {
+      onSystemChange(next);
+    }
   };
 
   media.addEventListener("change", handler);
-  return effective;
+  return () => media.removeEventListener("change", handler);
+}
+
+/**
+ * Initialize theme from storage and watch system preference changes.
+ *
+ * @param {(theme: "dark" | "light") => void} [onSystemChange] - Callback when OS scheme changes while `system` is selected.
+ * @returns {{ effective: "dark" | "light", stopSystemWatch: () => void }} Applied theme and cleanup.
+ */
+export function initColorScheme(onSystemChange) {
+  const preference = getStoredColorScheme();
+  const effective = setColorSchemePreference(preference);
+  const stopSystemWatch = watchSystemColorScheme(onSystemChange);
+  return { effective, stopSystemWatch };
 }
 
 /**
  * Toggle between dark and light appearance (header quick action).
  *
- * @returns {"dark" | "light"} Theme after toggle.
+ * @returns {"dark" | "light"} Stored preference after toggle.
  */
 export function toggleDarkLight() {
   const current = document.documentElement.dataset.theme === "light" ? "light" : "dark";
