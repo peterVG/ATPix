@@ -6,10 +6,10 @@ Implemented backend C2PA 2.2 claim generation per [ADR-008](../../../../docs/arc
 
 - `c2pa-python` SDK wired in `app/modules/c2pa/`
 - `POST /c2pa/manifest/embed` embeds signed manifests in JPEG/PNG before `uploadBlob`
-- `c2pa.created` for new captures; `c2pa.opened` + ingredient for imports (EDIT intent)
-- Custom assertion `net.atpix.gallery.creatorDid`
-- Privacy opt-out omits optional GPS/device metadata assertions
-- Development signing via CAI test fixtures in `tests/fixtures/c2pa/`
+- OAuth bearer binding for `creator_did` when `C2PA_REQUIRE_AUTH=true`
+- `GET /c2pa/status` reports readiness from configured signing material
+- Development signing gated behind `C2PA_ALLOW_DEV_SIGNING=true`
+- `update_manifest` / `validate_manifest` scaffold interfaces for BE-1.2
 
 ## SRS traceability
 
@@ -35,28 +35,28 @@ tests/unit/test_c2pa_service.py::test_embed_manifest_adds_created_action_for_jpe
 tests/unit/test_c2pa_service.py::test_embed_manifest_adds_opened_action_for_import PASSED
 tests/unit/test_c2pa_service.py::test_embed_manifest_supports_png PASSED
 tests/unit/test_c2pa_service.py::test_privacy_opt_out_omits_optional_metadata PASSED
+tests/unit/test_c2pa_service.py::test_opt_in_without_real_metadata_omits_optional_assertions PASSED
+tests/unit/test_c2pa_service.py::test_opt_in_with_consented_metadata_embeds_assertions PASSED
+tests/unit/test_c2pa_service.py::test_rejects_empty_creator_did PASSED
+tests/unit/test_c2pa_service.py::test_rejects_oversized_image PASSED
 tests/unit/test_c2pa_service.py::test_rejects_unsupported_mime_type PASSED
+tests/unit/test_c2pa_service.py::test_signed_output_stays_within_upload_cap PASSED
 tests/integration/test_c2pa_api.py::test_c2pa_status_reports_ready_generator PASSED
 tests/integration/test_c2pa_api.py::test_manifest_embed_returns_signed_jpeg_bytes PASSED
 tests/integration/test_c2pa_api.py::test_manifest_embed_rejects_unsupported_mime_type PASSED
+tests/integration/test_c2pa_api.py::test_manifest_embed_rejects_oversized_payload PASSED
 
-8 passed
+14 passed
 ```
 
 ### Behave (SRS-F-012)
 
 ```
-Feature: C2PA Manifest Generation on Upload
-6 scenarios passed, 0 failed, 0 skipped
-33 steps passed, 0 failed, 0 skipped
-```
-
-### Full backend pytest
-
-```
-39 passed, 3 skipped
+1 feature passed, 0 failed, 0 skipped
+7 scenarios passed, 0 failed, 0 skipped
+38 steps passed, 0 failed, 0 skipped
 ```
 
 ## Mocked environment
 
-Automated tests use CAI **test signing certificates** from `tests/fixtures/c2pa/` (not production org-issued credentials).
+Automated tests set `C2PA_ALLOW_DEV_SIGNING=true` and `C2PA_REQUIRE_AUTH=false` via `tests/conftest.py` and `tests/features/environment.py`. By default, tests use CAI test certificates from `tests/fixtures/c2pa/` when explicit `C2PA_SIGNING_*` paths are not set. If those env vars are set in the shell, tests will use the configured credentials instead.

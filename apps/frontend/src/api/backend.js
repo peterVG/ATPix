@@ -12,5 +12,9 @@ export function getBackendUrl() {
     return configured.replace(/\/$/, "");
   }
 
+  if (import.meta.env.PROD) {
+    throw new Error("VITE_BACKEND_URL is required for production builds");
+  }
+
   return DEFAULT_BACKEND_URL;
 }

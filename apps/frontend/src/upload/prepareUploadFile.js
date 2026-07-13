@@ -2,13 +2,13 @@ import { embedManifestBeforeUpload } from "../api/c2pa.js";
 
 import {
   C2PA_EMBED_MIME_TYPES,
-  MAX_UPLOAD_BYTES,
+  MAX_EMBED_INPUT_BYTES,
+  MAX_OUTPUT_BYTES,
   SUPPORTED_UPLOAD_MIME_TYPES,
 } from "./constants.js";
 
 /**
  * @typedef {object} PreparedUploadFile
- * @property {string} id - Stable queue item id.
  * @property {string} name - Original filename.
  * @property {Blob} signedBlob - Manifest-bearing bytes ready for `uploadBlob`.
  * @property {string} firstAction - First C2PA action applied to the asset.
@@ -25,15 +25,15 @@ import {
  */
 export function validateUploadFile(file) {
   if (!SUPPORTED_UPLOAD_MIME_TYPES.has(file.type)) {
-    return "Only JPEG, PNG, and WebP images are supported.";
+    return "Only JPEG and PNG images are supported.";
   }
 
   if (!C2PA_EMBED_MIME_TYPES.has(file.type)) {
     return "C2PA signing currently supports JPEG and PNG files only.";
   }
 
-  if (file.size > MAX_UPLOAD_BYTES) {
-    return "File exceeds the 50 MB upload limit.";
+  if (file.size > MAX_EMBED_INPUT_BYTES) {
+    return "File exceeds the upload size limit before C2PA manifest headroom is reserved.";
   }
 
   return null;
@@ -58,7 +58,6 @@ export async function prepareUploadFile({
   const validationError = validateUploadFile(file);
   if (validationError) {
     return {
-      id: crypto.randomUUID(),
       name: file.name,
       signedBlob: file,
       firstAction: "",
@@ -76,8 +75,18 @@ export async function prepareUploadFile({
       includeDevice,
     });
 
+    if (result.signedBlob.size > MAX_OUTPUT_BYTES) {
+      return {
+        name: file.name,
+        signedBlob: file,
+        firstAction: "",
+        creatorDid,
+        status: "error",
+        errorMessage: "Signed file exceeds the 50 MB upload limit after C2PA embedding",
+      };
+    }
+
     return {
-      id: crypto.randomUUID(),
       name: file.name,
       signedBlob: result.signedBlob,
       firstAction: result.firstAction,
@@ -87,7 +96,6 @@ export async function prepareUploadFile({
   } catch (error) {
     const message = error instanceof Error ? error.message : "C2PA signing failed";
     return {
-      id: crypto.randomUUID(),
       name: file.name,
       signedBlob: file,
       firstAction: "",

@@ -272,7 +272,9 @@ Prerequisites: Steps 2–6 complete (`hvc_*` key in `.env`, `npm run dev` restar
 
 Prerequisites: Steps 2–7 complete; **backend API running** on port 8000.
 
-1. In a second terminal: `cd apps/backend && source .venv/bin/activate && uvicorn app.main:app --reload --port 8000`
+1. In a second terminal, start the backend API on port 8000:
+   - macOS/Linux: `cd apps/backend && source .venv/bin/activate && uvicorn app.main:app --reload --port 8000`
+   - Windows: `cd apps/backend && .venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000`
 2. Confirm C2PA status: `curl -sS http://127.0.0.1:8000/c2pa/status`
 3. In the signed-in shell, click **Upload Media** (header ↑ or sidebar button).
 4. Select a JPEG or PNG (≤ 50 MB). The upload workspace runs **C2PA signing before blob upload** and shows a **C2PA** badge on signed queue items.
@@ -285,13 +287,15 @@ curl -sS -o /tmp/atpix-signed.jpg \
   http://127.0.0.1:8000/c2pa/manifest/embed
 ```
 
-Development signing uses CAI test certificates from `apps/backend/tests/fixtures/c2pa/` unless you set `C2PA_SIGNING_CERTS_PATH` and `C2PA_SIGNING_KEY_PATH` in `.env`.
+The backend loads environment variables from the repository-root `.env` automatically. For local development, set `C2PA_ALLOW_DEV_SIGNING=true` to use CAI test certificates from `apps/backend/tests/fixtures/c2pa/`. Production deployments must provide `C2PA_SIGNING_CERTS_PATH` and `C2PA_SIGNING_KEY_PATH` with org-issued claim-signing credentials and keep `C2PA_ALLOW_DEV_SIGNING=false`.
 
 #### Step 9 — Run automated tests (optional)
 
 ```bash
 cd apps/frontend && npm run lint && npm run test:unit && npm run test:ui
-cd ../backend && source .venv/bin/activate
+cd ../backend
+# macOS/Linux: source .venv/bin/activate
+# Windows: .venv\Scripts\activate
 ruff check . --fix && ruff format .
 pytest tests/unit/test_c2pa_service.py tests/integration/test_c2pa_api.py -v --alluredir=tests/allure-results --clean-alluredir
 behave tests/features/c2pa_manifest_generation_SRS-F-012.feature
@@ -299,6 +303,8 @@ cd ../..
 # With HappyView up and HAPPYVIEW_ADMIN_KEY set:
 cd apps/backend && pytest tests/integration/test_happyview_provision.py -v
 ```
+
+Behave writes Allure results to `apps/backend/tests/allure-results/` via `apps/backend/.behaverc`.
 
 `npm run test:ui` builds production artifacts (`vite build --mode test`) and runs vitest DOM assertions against `dist/` per [ADR-001](docs/architecture/001-test-runners-and-reporting.md).
 

@@ -48,11 +48,26 @@ def step_uploader_did_example(context) -> None:
     context.creator_did = "did:plc:example"
 
 
+@given("the user opts in to GPS and device metadata")
+def step_user_opts_in_optional_metadata(context) -> None:
+    """Record privacy opt-in flags and consented metadata values."""
+    context.include_gps = True
+    context.include_device = True
+    context.gps_coords = {
+        "@type": "c2pa.GpsCoordinates",
+        "latitude": 52.37,
+        "longitude": 4.89,
+    }
+    context.device_info = {"@type": "c2pa.Device", "manufacturer": "ATPix-Test-Device"}
+
+
 @given("the user declines GPS and device metadata")
 def step_user_declines_optional_metadata(context) -> None:
     """Record privacy opt-out flags for optional assertions."""
     context.include_gps = False
     context.include_device = False
+    context.gps_coords = None
+    context.device_info = None
 
 
 @when("the claim generator processes the upload")
@@ -64,6 +79,8 @@ def step_process_upload(context) -> None:
         context.creator_did,
         include_gps=getattr(context, "include_gps", False),
         include_device=getattr(context, "include_device", False),
+        gps_coords=getattr(context, "gps_coords", None),
+        device_info=getattr(context, "device_info", None),
     )
     context.summary = summarize_manifest(context.signed_bytes, context.mime_type)
 
@@ -141,6 +158,13 @@ def step_assert_optional_metadata_omitted(context) -> None:
     """Verify privacy opt-out removed optional metadata."""
     assert context.summary.has_gps_metadata is False
     assert context.summary.has_device_metadata is False
+
+
+@then("optional location and device assertions should be present")
+def step_assert_optional_metadata_present(context) -> None:
+    """Verify consented optional metadata is embedded on the active manifest."""
+    assert context.summary.has_gps_metadata is True
+    assert context.summary.has_device_metadata is True
 
 
 @then("required actions and hash assertions should remain")

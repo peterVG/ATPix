@@ -15,7 +15,7 @@ describe("upload flow UI (UI-SCR-005)", () => {
       "browse files",
     );
     expect(document.querySelectorAll('[data-testid="upload-format-chips"] .format-chip').length).toBe(
-      3,
+      2,
     );
     expect(document.querySelector('[data-testid="upload-signer-did"]')?.textContent).toContain(
       "ATPix will sign this photo as created by:",

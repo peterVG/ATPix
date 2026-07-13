@@ -1,0 +1,5 @@
+[behave.formatters]
+allure = allure_behave.formatter:AllureFormatter
+
+[behave.userdata]
+outfiles = tests/allure-results

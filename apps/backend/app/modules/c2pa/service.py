@@ -20,9 +20,10 @@ from app.modules.c2pa.constants import (
     ATPIX_CLAIM_GENERATOR_VERSION,
     ATPIX_CREATOR_ASSERTION_LABEL,
     MAX_EMBED_BYTES,
+    MAX_OUTPUT_BYTES,
     SUPPORTED_EMBED_MIME_TYPES,
 )
-from app.modules.c2pa.signer import create_callback_signer
+from app.modules.c2pa.signer import C2paSigningNotConfiguredError, create_callback_signer
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,16 @@ class ManifestSummary:
     has_device_metadata: bool
     embedded: bool
     raw_json: str
+
+
+@dataclass(frozen=True)
+class ManifestValidationResult:
+    """Validation summary returned by the validator scaffold (BE-1.2)."""
+
+    state: str
+    first_action: str | None
+    creator_did: str | None
+    embedded: bool
 
 
 class C2paServiceError(Exception):
@@ -69,43 +80,54 @@ def _asset_has_manifest(image_bytes: bytes, mime_type: str) -> bool:
     Returns:
         Whether a manifest store is embedded in the asset.
     """
-    with c2pa.Context() as context:
-        reader = c2pa.Reader.try_create(mime_type, io.BytesIO(image_bytes), context=context)
-        if reader is None:
-            return False
+    try:
+        with c2pa.Context() as context:
+            reader = c2pa.Reader.try_create(mime_type, io.BytesIO(image_bytes), context=context)
+            if reader is None:
+                return False
 
-        with reader:
-            return reader.is_embedded()
+            with reader:
+                return reader.is_embedded()
+    except Exception as error:
+        raise C2paServiceError(f"Unable to inspect existing manifest: {error}") from error
 
 
 def _optional_metadata_assertions(
     *,
     include_gps: bool,
     include_device: bool,
+    gps_coords: dict[str, Any] | None = None,
+    device_info: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """Build optional metadata assertions honoring privacy opt-outs.
 
     Args:
         include_gps: Whether GPS coordinates may be embedded.
         include_device: Whether device identifiers may be embedded.
+        gps_coords: Consented GPS coordinates when available.
+        device_info: Consented device metadata when available.
 
     Returns:
         Zero or more assertion dictionaries for the manifest definition.
     """
     metadata: dict[str, Any] = {}
-    if include_gps:
-        metadata["exif:GPS"] = {
-            "@type": "c2pa.GpsCoordinates",
-            "latitude": 52.37,
-            "longitude": 4.89,
-        }
-    if include_device:
-        metadata["exif:Device"] = {"@type": "c2pa.Device", "manufacturer": "ATPix-Test-Device"}
+    if include_gps and gps_coords:
+        metadata["exif:GPS"] = gps_coords
+    if include_device and device_info:
+        metadata["exif:Device"] = device_info
 
     if not metadata:
         return []
 
-    return [{"label": "c2pa.metadata", "data": metadata}]
+    metadata_with_context = {
+        "@context": {
+            "exif": "http://ns.adobe.com/exif/1.0/",
+            "c2pa": "http://c2pa.org/claims/",
+        },
+        **metadata,
+    }
+
+    return [{"label": "c2pa.metadata", "data": metadata_with_context}]
 
 
 def _build_manifest_definition(
@@ -115,6 +137,8 @@ def _build_manifest_definition(
     first_action: str,
     include_gps: bool,
     include_device: bool,
+    gps_coords: dict[str, Any] | None = None,
+    device_info: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Create a C2PA manifest definition for capture or import flows.
 
@@ -124,6 +148,8 @@ def _build_manifest_definition(
         first_action: `c2pa.created` or `c2pa.opened`.
         include_gps: Whether optional GPS metadata is allowed.
         include_device: Whether optional device metadata is allowed.
+        gps_coords: Optional consented GPS coordinates.
+        device_info: Optional consented device metadata.
 
     Returns:
         Manifest definition dictionary for `c2pa.Builder`.
@@ -139,7 +165,12 @@ def _build_manifest_definition(
         },
     ]
     assertions.extend(
-        _optional_metadata_assertions(include_gps=include_gps, include_device=include_device),
+        _optional_metadata_assertions(
+            include_gps=include_gps,
+            include_device=include_device,
+            gps_coords=gps_coords,
+            device_info=device_info,
+        ),
     )
 
     return {
@@ -149,6 +180,132 @@ def _build_manifest_definition(
         "format": mime_type,
         "assertions": assertions,
     }
+
+
+def _active_manifest(payload: dict[str, Any]) -> dict[str, Any] | None:
+    """Return the active manifest dictionary from parsed manifest JSON.
+
+    Args:
+        payload: Parsed manifest JSON from `Reader.json()`.
+
+    Returns:
+        Active manifest dictionary when present.
+    """
+    manifests = payload.get("manifests")
+    active_label = payload.get("active_manifest")
+    if not isinstance(manifests, dict) or not isinstance(active_label, str):
+        return None
+
+    manifest = manifests.get(active_label)
+    if isinstance(manifest, dict):
+        return manifest
+
+    return None
+
+
+def _active_manifest_validation_entries(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return validation result entries scoped to the active manifest.
+
+    Args:
+        payload: Parsed manifest JSON from `Reader.json()`.
+
+    Returns:
+        Flattened validation entries for the active manifest.
+    """
+    validation = payload.get("validation_results")
+    if not isinstance(validation, dict):
+        return []
+
+    active_results = validation.get("activeManifest")
+    if not isinstance(active_results, dict):
+        return []
+
+    entries: list[dict[str, Any]] = []
+    for bucket in ("success", "informational", "failure"):
+        bucket_entries = active_results.get(bucket)
+        if isinstance(bucket_entries, list):
+            entries.extend(entry for entry in bucket_entries if isinstance(entry, dict))
+
+    return entries
+
+
+def _manifest_has_hash_data(manifest: dict[str, Any], payload: dict[str, Any]) -> bool:
+    """Return True when the active manifest includes a `c2pa.hash.data` binding.
+
+    Args:
+        manifest: Active manifest dictionary.
+        payload: Parsed manifest JSON from `Reader.json()`.
+
+    Returns:
+        Whether hard-binding hash data is present on the active manifest.
+    """
+    assertions = manifest.get("assertions")
+    if isinstance(assertions, list):
+        for assertion in assertions:
+            if isinstance(assertion, dict) and assertion.get("label") == "c2pa.hash.data":
+                return True
+            if isinstance(assertion, str) and "c2pa.hash.data" in assertion:
+                return True
+
+    for entry in _active_manifest_validation_entries(payload):
+        if "c2pa.hash.data" in str(entry.get("url", "")):
+            return True
+
+    return False
+
+
+def _manifest_has_ingredient(manifest: dict[str, Any]) -> bool:
+    """Return True when the active manifest includes ingredient references.
+
+    Args:
+        manifest: Active manifest dictionary.
+
+    Returns:
+        Whether ingredient linkage is present on the active manifest.
+    """
+    ingredients = manifest.get("ingredients")
+    if isinstance(ingredients, list) and ingredients:
+        return True
+
+    assertions = manifest.get("assertions")
+    if not isinstance(assertions, list):
+        return False
+
+    ingredient_labels = {"c2pa.ingredient", "c2pa.ingredient.v3", "c2pa.ingredients"}
+    for assertion in assertions:
+        if not isinstance(assertion, dict):
+            continue
+        if assertion.get("label") in ingredient_labels:
+            return True
+        data = assertion.get("data")
+        if isinstance(data, dict) and "ingredients" in data:
+            return True
+
+    return False
+
+
+def _manifest_has_metadata_token(manifest: dict[str, Any], token: str) -> bool:
+    """Return True when optional metadata containing `token` is on the active manifest.
+
+    Args:
+        manifest: Active manifest dictionary.
+        token: Case-insensitive substring to locate in metadata assertions.
+
+    Returns:
+        Whether the active manifest contains matching optional metadata.
+    """
+    assertions = manifest.get("assertions")
+    if not isinstance(assertions, list):
+        return False
+
+    needle = token.lower()
+    for assertion in assertions:
+        if not isinstance(assertion, dict) or assertion.get("label") != "c2pa.metadata":
+            continue
+        if needle in json.dumps(assertion.get("data", {})).lower():
+            return True
+
+    return False
 
 
 def summarize_manifest(image_bytes: bytes, mime_type: str) -> ManifestSummary:
@@ -166,28 +323,33 @@ def summarize_manifest(image_bytes: bytes, mime_type: str) -> ManifestSummary:
     """
     _assert_supported_mime(mime_type)
 
-    with c2pa.Context() as context:
-        reader = c2pa.Reader.try_create(mime_type, io.BytesIO(image_bytes), context=context)
-        if reader is None:
-            raise C2paServiceError("No C2PA manifest found in signed asset")
+    try:
+        with c2pa.Context() as context:
+            reader = c2pa.Reader.try_create(mime_type, io.BytesIO(image_bytes), context=context)
+            if reader is None:
+                raise C2paServiceError("No C2PA manifest found in signed asset")
 
-        with reader:
-            raw_json = reader.json()
-            embedded = reader.is_embedded()
+            with reader:
+                raw_json = reader.json()
+                embedded = reader.is_embedded()
+    except C2paServiceError:
+        raise
+    except Exception as error:
+        raise C2paServiceError(f"Unable to read signed manifest: {error}") from error
 
     payload = json.loads(raw_json)
-    text = json.dumps(payload).lower()
+    active = _active_manifest(payload)
     actions = _extract_first_action(payload)
     creator_did = _extract_creator_did(payload)
 
     return ManifestSummary(
         first_action=actions,
-        has_hash_data="c2pa.hash.data" in text,
+        has_hash_data=_manifest_has_hash_data(active, payload) if active else False,
         has_creator_did=creator_did is not None,
         creator_did=creator_did,
-        has_ingredient="ingredient" in text,
-        has_gps_metadata="gps" in text,
-        has_device_metadata="device" in text,
+        has_ingredient=_manifest_has_ingredient(active) if active else False,
+        has_gps_metadata=_manifest_has_metadata_token(active, "gps") if active else False,
+        has_device_metadata=_manifest_has_metadata_token(active, "device") if active else False,
         embedded=embedded,
         raw_json=raw_json,
     )
@@ -283,6 +445,50 @@ def _extract_creator_did(payload: dict[str, Any]) -> str | None:
     return None
 
 
+def update_manifest(
+    image_bytes: bytes,
+    mime_type: str,
+    creator_did: str,
+) -> bytes:
+    """Update an existing manifest on edit flows (BE-1.2 scaffold).
+
+    Args:
+        image_bytes: Asset bytes containing an existing manifest store.
+        mime_type: Asset MIME type.
+        creator_did: Uploader atproto DID for the update assertion.
+
+    Returns:
+        Updated manifest-bearing bytes.
+
+    Raises:
+        C2paServiceError: Until edit/update signing is implemented in Task 4.x.
+    """
+    raise C2paServiceError("Manifest update signing is not implemented yet")
+
+
+def validate_manifest(image_bytes: bytes, mime_type: str) -> ManifestValidationResult:
+    """Validate a signed asset and return a summary scaffold (BE-1.2).
+
+    Args:
+        image_bytes: Signed asset bytes.
+        mime_type: Asset MIME type.
+
+    Returns:
+        Validation summary for the active manifest.
+
+    Raises:
+        C2paServiceError: When manifest data cannot be read.
+    """
+    summary = summarize_manifest(image_bytes, mime_type)
+    state = "well-formed" if summary.has_hash_data and summary.embedded else "invalid"
+    return ManifestValidationResult(
+        state=state,
+        first_action=summary.first_action,
+        creator_did=summary.creator_did,
+        embedded=summary.embedded,
+    )
+
+
 def embed_manifest(
     image_bytes: bytes,
     mime_type: str,
@@ -290,6 +496,8 @@ def embed_manifest(
     *,
     include_gps: bool = False,
     include_device: bool = False,
+    gps_coords: dict[str, Any] | None = None,
+    device_info: dict[str, Any] | None = None,
 ) -> bytes:
     """Embed a signed C2PA manifest into JPEG or PNG bytes.
 
@@ -299,6 +507,8 @@ def embed_manifest(
         creator_did: Uploader atproto DID for `net.atpix.gallery.creatorDid`.
         include_gps: Whether optional GPS metadata assertions are allowed.
         include_device: Whether optional device metadata assertions are allowed.
+        gps_coords: Optional consented GPS coordinates for metadata assertions.
+        device_info: Optional consented device metadata for metadata assertions.
 
     Returns:
         Manifest-bearing image bytes ready for `uploadBlob`.
@@ -322,31 +532,43 @@ def embed_manifest(
         first_action=first_action,
         include_gps=include_gps,
         include_device=include_device,
+        gps_coords=gps_coords,
+        device_info=device_info,
     )
 
     extension = ".jpg" if mime_type == "image/jpeg" else ".png"
 
-    with tempfile.TemporaryDirectory() as temp_dir:
-        source_path = Path(temp_dir) / f"source{extension}"
-        output_path = Path(temp_dir) / f"signed{extension}"
-        source_path.write_bytes(image_bytes)
+    try:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_path = Path(temp_dir) / f"source{extension}"
+            output_path = Path(temp_dir) / f"signed{extension}"
+            source_path.write_bytes(image_bytes)
 
-        with c2pa.Context() as context:
-            with create_callback_signer() as signer:
-                with c2pa.Builder(manifest_definition, context) as builder:
-                    if is_import:
-                        builder.set_intent(c2pa.C2paBuilderIntent.EDIT)
-                        ingredient = {"title": "source asset", "relationship": "parentOf"}
-                        with source_path.open("rb") as ingredient_stream:
-                            builder.add_ingredient_from_stream(
-                                ingredient,
-                                mime_type,
-                                ingredient_stream,
-                            )
+            with c2pa.Context() as context:
+                with create_callback_signer() as signer:
+                    with c2pa.Builder(manifest_definition, context) as builder:
+                        if is_import:
+                            builder.set_intent(c2pa.C2paBuilderIntent.EDIT)
+                            ingredient = {"title": "source asset", "relationship": "parentOf"}
+                            with source_path.open("rb") as ingredient_stream:
+                                builder.add_ingredient_from_stream(
+                                    ingredient,
+                                    mime_type,
+                                    ingredient_stream,
+                                )
 
-                    builder.sign_file(str(source_path), str(output_path), signer)
+                        builder.sign_file(str(source_path), str(output_path), signer)
 
             signed_bytes = output_path.read_bytes()
+    except C2paSigningNotConfiguredError as error:
+        raise C2paServiceError(str(error)) from error
+    except C2paServiceError:
+        raise
+    except Exception as error:
+        raise C2paServiceError(f"C2PA signing failed: {error}") from error
+
+    if len(signed_bytes) > MAX_OUTPUT_BYTES:
+        raise C2paServiceError("Signed asset exceeds maximum upload size after manifest embedding")
 
     summary = summarize_manifest(signed_bytes, mime_type)
     if summary.first_action != first_action:

@@ -1,5 +1,9 @@
 import { escapeHtml } from "../utils/html.js";
 
+import {
+  C2PA_EMBED_ACCEPT,
+  UPLOAD_FORMAT_LABELS,
+} from "../upload/constants.js";
 import { prepareUploadFile } from "../upload/prepareUploadFile.js";
 
 /**
@@ -10,12 +14,34 @@ import { prepareUploadFile } from "../upload/prepareUploadFile.js";
  * @typedef {object} UploadQueueItem
  * @property {string} id - Queue item id.
  * @property {string} name - Filename label.
+ * @property {File} sourceFile - Original browser file for retries.
  * @property {"selected" | "signing" | "ready" | "error"} state - UI state.
- * @property {number} [progress] - Percent complete while signing.
  * @property {boolean} [c2paSigned] - Whether C2PA signing completed.
  * @property {string} [errorMessage] - Actionable error copy.
  * @property {PreparedUploadFile} [prepared] - Signed output when ready.
  */
+
+/**
+ * Parse comma-separated tag input into normalized labels.
+ *
+ * @param {string} raw - Raw tag input value.
+ * @returns {string[]} Distinct non-empty tag labels.
+ */
+function parseTags(raw) {
+  const seen = new Set();
+  const tags = [];
+
+  for (const part of raw.split(",")) {
+    const label = part.trim();
+    if (!label || seen.has(label)) {
+      continue;
+    }
+    seen.add(label);
+    tags.push(label);
+  }
+
+  return tags;
+}
 
 /**
  * Render the upload workspace main content (UI-SCR-005).
@@ -32,8 +58,27 @@ export function renderUploadPanel({ mount, identity }) {
   let activeId = null;
   let includeGps = false;
   let includeDevice = false;
+  let destination = "public";
+  /** @type {string[]} */
+  let tags = [];
 
   const displayHandle = identity.handle ? `@${identity.handle}` : identity.did;
+
+  const renderTagPills = () =>
+    tags
+      .map(
+        (tag, index) => `
+          <button
+            type="button"
+            class="tag-pill"
+            data-testid="upload-tag-pill"
+            data-tag-index="${index}"
+          >
+            ${escapeHtml(tag)} <span aria-hidden="true">×</span>
+          </button>
+        `,
+      )
+      .join("");
 
   const render = () => {
     const activeItem = queue.find((item) => item.id === activeId) ?? queue[0] ?? null;
@@ -42,7 +87,7 @@ export function renderUploadPanel({ mount, identity }) {
         const activeClass = item.id === activeItem?.id ? " upload-queue__item--active" : "";
         const progress =
           item.state === "signing"
-            ? `<span class="upload-queue__progress" data-testid="upload-progress">${item.progress ?? 0}% Signing C2PA manifest</span>`
+            ? `<span class="upload-queue__progress upload-queue__progress--indeterminate" data-testid="upload-progress">Signing C2PA manifest…</span>`
             : "";
         const c2paBadge = item.c2paSigned
           ? `<span class="status-chip status-chip--trusted" data-testid="upload-c2pa-badge">C2PA</span>`
@@ -66,6 +111,17 @@ export function renderUploadPanel({ mount, identity }) {
       })
       .join("");
 
+    const formatChips = UPLOAD_FORMAT_LABELS.map(
+      (label) => `<span class="format-chip">${label}</span>`,
+    ).join("");
+
+    const publicDestinationClass =
+      destination === "public" ? " destination-card destination-card--active" : " destination-card";
+    const permissionedDestinationClass =
+      destination === "permissioned"
+        ? " destination-card destination-card--active"
+        : " destination-card";
+
     mount.innerHTML = `
       <section class="upload-screen" data-testid="upload-screen">
         <header class="route-header">
@@ -79,12 +135,8 @@ export function renderUploadPanel({ mount, identity }) {
               <p class="upload-dropzone__hint">
                 Drag and drop images here or <button type="button" class="link-btn" data-testid="upload-browse">browse files</button>
               </p>
-              <div class="format-chips" data-testid="upload-format-chips">
-                <span class="format-chip">RAW</span>
-                <span class="format-chip">PNG</span>
-                <span class="format-chip">JPEG</span>
-              </div>
-              <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden data-testid="upload-input" />
+              <div class="format-chips" data-testid="upload-format-chips">${formatChips}</div>
+              <input type="file" accept="${C2PA_EMBED_ACCEPT}" multiple hidden data-testid="upload-input" />
             </div>
             <ul class="upload-queue" data-testid="upload-queue">${queueMarkup}</ul>
           </div>
@@ -99,15 +151,15 @@ export function renderUploadPanel({ mount, identity }) {
             <input id="upload-caption-input" class="sign-in-input" data-testid="upload-caption-input" />
             <label class="sign-in-label" for="upload-tags-input">Tags</label>
             <input id="upload-tags-input" class="sign-in-input" data-testid="upload-tags-input" placeholder="sunset, lake" />
-            <div class="tag-pills" data-testid="upload-tag-pills"></div>
+            <div class="tag-pills" data-testid="upload-tag-pills">${renderTagPills()}</div>
             <section class="upload-destination" data-testid="upload-destination">
               <p class="label-caps">Destination</p>
-              <label class="destination-card destination-card--active">
-                <input type="radio" name="destination" value="public" checked data-testid="destination-public" />
+              <label class="${publicDestinationClass}">
+                <input type="radio" name="destination" value="public" ${destination === "public" ? "checked" : ""} data-testid="destination-public" />
                 <span>My Public Repository</span>
               </label>
-              <label class="destination-card">
-                <input type="radio" name="destination" value="permissioned" data-testid="destination-permissioned" />
+              <label class="${permissionedDestinationClass}">
+                <input type="radio" name="destination" value="permissioned" ${destination === "permissioned" ? "checked" : ""} data-testid="destination-permissioned" />
                 <span>Permissioned Space — visible to invited members only</span>
                 <small>Membership-gated access via HappyView spaces (not encrypted).</small>
               </label>
@@ -127,15 +179,14 @@ export function renderUploadPanel({ mount, identity }) {
     bindUploadPanelEvents();
   };
 
-  const signFile = async (file) => {
-    const itemId = crypto.randomUUID();
+  const signFile = async (file, itemId = crypto.randomUUID()) => {
     queue = [
       ...queue,
       {
         id: itemId,
         name: file.name,
+        sourceFile: file,
         state: "signing",
-        progress: 35,
       },
     ];
     activeId = itemId;
@@ -165,7 +216,6 @@ export function renderUploadPanel({ mount, identity }) {
       return {
         ...item,
         state: "ready",
-        progress: 100,
         c2paSigned: true,
         prepared,
       };
@@ -188,10 +238,7 @@ export function renderUploadPanel({ mount, identity }) {
 
     queue = queue.filter((item) => item.id !== id);
     render();
-
-    const blob = existing.prepared?.signedBlob ?? new Blob();
-    const retryFile = new File([blob], existing.name, { type: blob.type || "image/jpeg" });
-    await signFile(retryFile);
+    await signFile(existing.sourceFile, id);
   };
 
   const bindUploadPanelEvents = () => {
@@ -200,6 +247,7 @@ export function renderUploadPanel({ mount, identity }) {
     const dropzone = mount.querySelector('[data-testid="upload-dropzone"]');
     const gpsToggle = mount.querySelector('[data-testid="privacy-gps"]');
     const deviceToggle = mount.querySelector('[data-testid="privacy-device"]');
+    const tagsInput = mount.querySelector('[data-testid="upload-tags-input"]');
 
     browse?.addEventListener("click", () => {
       if (input instanceof HTMLInputElement) {
@@ -239,6 +287,29 @@ export function renderUploadPanel({ mount, identity }) {
       });
     }
 
+    if (tagsInput instanceof HTMLInputElement) {
+      tagsInput.value = tags.join(", ");
+      tagsInput.addEventListener("input", () => {
+        tags = parseTags(tagsInput.value);
+        const pills = mount.querySelector('[data-testid="upload-tag-pills"]');
+        if (pills instanceof HTMLElement) {
+          pills.innerHTML = renderTagPills();
+          bindTagPillEvents();
+        }
+      });
+    }
+
+    mount.querySelectorAll('input[name="destination"]').forEach((radio) => {
+      radio.addEventListener("change", () => {
+        if (radio instanceof HTMLInputElement && radio.checked) {
+          destination = radio.value;
+          render();
+        }
+      });
+    });
+
+    bindTagPillEvents();
+
     mount.querySelectorAll("[data-select-id]").forEach((button) => {
       button.addEventListener("click", () => {
         activeId = button.getAttribute("data-select-id");
@@ -252,6 +323,20 @@ export function renderUploadPanel({ mount, identity }) {
         if (id) {
           void retryItem(id);
         }
+      });
+    });
+  };
+
+  const bindTagPillEvents = () => {
+    mount.querySelectorAll("[data-tag-index]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const indexValue = button.getAttribute("data-tag-index");
+        const index = Number(indexValue);
+        if (!Number.isInteger(index) || index < 0 || index >= tags.length) {
+          return;
+        }
+        tags = tags.filter((_, tagIndex) => tagIndex !== index);
+        render();
       });
     });
   };

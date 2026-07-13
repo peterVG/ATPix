@@ -5,19 +5,20 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.modules.c2pa.signer import is_signing_configured
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "c2pa"
 
 
 def test_c2pa_status_reports_ready_generator() -> None:
-    """GET /c2pa/status reports an active claim generator."""
+    """GET /c2pa/status reports readiness based on signing material."""
     client = TestClient(app)
     response = client.get("/c2pa/status")
 
     assert response.status_code == 200
     body = response.json()
     assert body["module"] == "c2pa"
-    assert body["ready"] is True
+    assert body["ready"] is is_signing_configured()
     assert body["spec_version"] == "2.2"
     assert "image/jpeg" in body["supported_mime_types"]
 
@@ -53,3 +54,19 @@ def test_manifest_embed_rejects_unsupported_mime_type() -> None:
     )
 
     assert response.status_code == 415
+
+
+def test_manifest_embed_rejects_oversized_payload() -> None:
+    """POST /c2pa/manifest/embed rejects uploads above the embed limit."""
+    from app.modules.c2pa.constants import MAX_EMBED_BYTES
+
+    client = TestClient(app)
+    oversized = b"\xff\xd8\xff" + b"\x00" * (MAX_EMBED_BYTES + 1)
+
+    response = client.post(
+        "/c2pa/manifest/embed",
+        data={"creator_did": "did:plc:api-test"},
+        files={"file": ("big.jpg", oversized, "image/jpeg")},
+    )
+
+    assert response.status_code == 413

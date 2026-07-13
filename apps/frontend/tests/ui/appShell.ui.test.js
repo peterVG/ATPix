@@ -29,6 +29,38 @@ describe("UI-SHELL-001 application chrome (production build)", () => {
     expect(document.querySelector('[data-testid="sign-out"]')?.textContent).toBe("Sign Out");
   });
 
+  it("navigates to the upload workspace from header and sidebar controls", async () => {
+    await loadProductionBuild({ url: "http://127.0.0.1:5173/#/gallery" });
+
+    const waitForUploadScreen = async () => {
+      const deadline = Date.now() + 3000;
+      while (Date.now() < deadline) {
+        if (document.querySelector('[data-testid="upload-screen"]')) {
+          return;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      throw new Error("Upload screen did not render after navigation");
+    };
+
+    document.querySelector('[data-testid="header-upload"]')?.dispatchEvent(
+      new MouseEvent("click", { bubbles: true }),
+    );
+
+    expect(window.location.hash).toBe("#/upload");
+    await waitForUploadScreen();
+
+    window.location.hash = "#/gallery";
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    document.querySelector('[data-testid="sidebar-upload"]')?.dispatchEvent(
+      new MouseEvent("click", { bubbles: true }),
+    );
+
+    expect(window.location.hash).toBe("#/upload");
+    await waitForUploadScreen();
+  });
+
   it("marks the active route tab when navigating to Discovery", async () => {
     await loadProductionBuild({ url: "http://127.0.0.1:5173/#/discovery" });
 

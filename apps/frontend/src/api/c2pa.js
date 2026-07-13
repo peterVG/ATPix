@@ -1,3 +1,5 @@
+import { readActiveAccessToken } from "../auth/getAccessToken.js";
+import { MAX_OUTPUT_BYTES } from "../upload/constants.js";
 import { getBackendUrl } from "./backend.js";
 import { isTestC2paStubEnabled, stubEmbedManifest } from "../c2pa/testC2paStub.js";
 
@@ -34,9 +36,16 @@ export async function embedManifestBeforeUpload({
   formData.append("include_gps", String(includeGps));
   formData.append("include_device", String(includeDevice));
 
+  const headers = {};
+  const accessToken = readActiveAccessToken();
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+
   const response = await fetch(`${getBackendUrl()}/c2pa/manifest/embed`, {
     method: "POST",
     body: formData,
+    headers,
   });
 
   if (!response.ok) {
@@ -45,6 +54,10 @@ export async function embedManifestBeforeUpload({
   }
 
   const signedBlob = await response.blob();
+  if (signedBlob.size > MAX_OUTPUT_BYTES) {
+    throw new Error("Signed file exceeds the 50 MB upload limit after C2PA embedding");
+  }
+
   return {
     signedBlob,
     firstAction: response.headers.get("X-C2PA-First-Action") ?? "c2pa.created",

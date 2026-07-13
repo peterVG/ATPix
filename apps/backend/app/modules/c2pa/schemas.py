@@ -2,22 +2,24 @@
 
 from pydantic import BaseModel, Field
 
+from app.modules.c2pa.constants import SUPPORTED_EMBED_MIME_TYPES
+
 
 class C2paStatusResponse(BaseModel):
     """C2PA module readiness and specification target.
 
     Attributes:
         module: Module identifier.
-        ready: Whether claim-generator wiring is complete.
+        ready: Whether claim-generator signing material is configured.
         spec_version: Target C2PA specification version.
         supported_mime_types: Image MIME types accepted for embedding.
     """
 
     module: str = Field(default="c2pa")
-    ready: bool = Field(default=True)
+    ready: bool = Field(default=False)
     spec_version: str = Field(default="2.2")
     supported_mime_types: list[str] = Field(
-        default_factory=lambda: ["image/jpeg", "image/png"],
+        default_factory=lambda: sorted(SUPPORTED_EMBED_MIME_TYPES),
     )
 
 

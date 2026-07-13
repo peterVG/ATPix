@@ -3,12 +3,12 @@
  */
 
 /**
- * Return true when the C2PA test stub build flag is enabled.
+ * Return true when the C2PA test stub build flag is enabled in Vite test mode.
  *
  * @returns {boolean} Whether stub C2PA embedding should be used.
  */
 export function isTestC2paStubEnabled() {
-  return import.meta.env.VITE_TEST_C2PA_STUB === "true";
+  return import.meta.env.MODE === "test" && import.meta.env.VITE_TEST_C2PA_STUB === "true";
 }
 
 /**
