@@ -100,16 +100,74 @@
    *
    * @param {string} docPath - Normalized markdown path.
    */
+  /**
+   * Set collapsed or expanded state on a TOC section node.
+   *
+   * @param {HTMLElement} sectionNode - Section wrapper with panel children.
+   * @param {boolean} collapsed - Whether the section should be collapsed.
+   */
+  function setTocSectionCollapsed(sectionNode, collapsed) {
+    var toggle = findDirectSectionToggle(sectionNode);
+    if (collapsed) {
+      sectionNode.classList.add(COLLAPSED_CLASS);
+    } else {
+      sectionNode.classList.remove(COLLAPSED_CLASS);
+    }
+    if (toggle) {
+      toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    }
+  }
+
+  /**
+   * Expand ancestor TOC sections so an active link remains visible.
+   *
+   * @param {HTMLElement} link - Active table-of-contents link element.
+   */
+  function expandTocAncestors(link) {
+    var section = link.closest("[data-toc-section]");
+    while (section) {
+      setTocSectionCollapsed(section, false);
+      var parentPanel = section.closest(".docs-toc-panel");
+      if (!parentPanel) {
+        break;
+      }
+      section = parentPanel.closest("[data-toc-section]");
+    }
+  }
+
+  /**
+   * Collapse all top-level TOC sections in the navigation sidebar.
+   */
+  function collapseTopLevelTocSections() {
+    var nav = document.querySelector(".docs-toc nav");
+    if (!nav) {
+      return;
+    }
+
+    Array.prototype.forEach.call(nav.children, function (child) {
+      if (child.classList.contains("docs-toc-section")) {
+        setTocSectionCollapsed(child, true);
+      }
+    });
+  }
+
   function setActiveTocLink(docPath) {
     var links = document.querySelectorAll(".doc-link");
+    var activeLink = null;
+
     links.forEach(function (link) {
       var target = normalizeDocPath(link.getAttribute("data-path") || link.getAttribute("href"));
       if (target === docPath) {
         link.classList.add(ACTIVE_CLASS);
+        activeLink = link;
       } else {
         link.classList.remove(ACTIVE_CLASS);
       }
     });
+
+    if (activeLink) {
+      expandTocAncestors(activeLink);
+    }
   }
 
   /**
@@ -306,11 +364,8 @@
    * @param {HTMLElement} sectionNode - Section wrapper with panel children.
    */
   function toggleTocSection(sectionNode) {
-    var toggle = findDirectSectionToggle(sectionNode);
-    var isCollapsed = sectionNode.classList.toggle(COLLAPSED_CLASS);
-    if (toggle) {
-      toggle.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
-    }
+    var isCollapsed = !sectionNode.classList.contains(COLLAPSED_CLASS);
+    setTocSectionCollapsed(sectionNode, isCollapsed);
   }
 
   /**
@@ -513,6 +568,7 @@
   function bootPortal() {
     initMermaid();
     initTocCollapse();
+    collapseTopLevelTocSections();
     initColumnResizer();
 
     var hash = window.location.hash.replace(/^#/, "");

@@ -77,21 +77,19 @@ body {
 }
 
 .docs-toc-chevron {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1rem;
-  height: 1rem;
-  font-size: 0.75rem;
-  line-height: 1;
-  color: #24292f;
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
   transition: transform 0.15s ease;
   flex-shrink: 0;
 }
 
 .docs-toc-section.is-collapsed .docs-toc-chevron,
 .docs-toc-nested.is-collapsed .docs-toc-chevron {
-  transform: rotate(-90deg);
+  transform: rotate(-45deg);
 }
 
 .docs-toc-section-title {
