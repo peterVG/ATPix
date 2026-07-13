@@ -78,12 +78,26 @@ Granular checklist for the Vite vanilla JS client. Global sequencing: [docs/plan
 
 ---
 
-## Phase FE-4: Discovery & Sharing
+> **Execution priority (R&D):** Phase FE-4 (permissioned albums) runs **before** Phase FE-5 (discovery & public sharing). Task IDs `FE-4.x` / `FE-5.x` are unchanged for traceability. Phase FE-5 is **deferred until after spaces validation** (F-008 / RC-007).
+
+## Phase FE-4: Permissioned Albums
+
+- [ ] **Task FE-5.1: Permissioned album creation and space admin UI**
+  - **Description:** `visibility: permissioned` album flow; space URI display; UI-SCR-006 member directory (Authority/Contributor/Viewer → `read`/`write`), token invite + direct addMember, mint policy dropdown (`member-list`/`public`/`managing-app`), access-denied state without metadata leak. Permissioned upload uses `space.createRecord` + `space.getBlob`. Include minimal permissioned photo viewing until FE-4.3 unifies detail UX.
+  - **Estimated Time:** 14 hours
+  - **Dependencies:** Task FE-3.3
+  - **Related Requirements:** [F-008](../../../docs/prd.md#f-008-permissioned-gallery--album-access-happyview-permissioned-spaces-validation), [SRS-F-008](../../../docs/srs.md#srs-f-008-permissioned-album-access-happyview-spaces), [NFR-002](../../../docs/prd.md#nfr-002-public-by-default-transparency), [UI-SCR-006](../../../docs/ui-requirements.md#ui-scr-006-permissioned-space-administration), [ADR-010](../../../docs/architecture/010-permissioned-spaces-storage.md)
+  - **Related Tests:** [`permissioned_albums_SRS-F-008.feature`](../tests/features/permissioned_albums_SRS-F-008.feature), [`ui_permissioned_space_UI-SCR-006.feature`](../tests/features/ui_permissioned_space_UI-SCR-006.feature)
+  - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task FE-5.1. Holistic permissioned album + space admin. DPoP for member reads; document Bearer credential path for thumbnails. Invoke @feature-writer. Walkthrough, check off, commit, push.`
+
+---
+
+## Phase FE-5: Discovery & Sharing *(deferred post–spaces validation)*
 
 - [ ] **Task FE-4.1: Discovery feed (Path B)**
   - **Description:** UI-SCR-002 Following/Hashtags tabs; `listFeedPhotos` + `collectionRule` management preview; add Path B photos to albums.
   - **Estimated Time:** 8 hours
-  - **Dependencies:** Task FE-3.3
+  - **Dependencies:** Task FE-5.1
   - **Related Requirements:** [F-010](../../../docs/prd.md#f-010-network-discovery-feed-and-album-sourcing-path-b--happyview-index), [SRS-F-010](../../../docs/srs.md#srs-f-010-network-discovery-feed-path-b), [UI-SCR-002](../../../docs/ui-requirements.md#ui-scr-002-discovery-feed-path-b)
   - **Related Tests:** [`network_discovery_SRS-F-010.feature`](../tests/features/network_discovery_SRS-F-010.feature), [`ui_discovery_feed_UI-SCR-002.feature`](../tests/features/ui_discovery_feed_UI-SCR-002.feature)
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task FE-4.1. No custom firehose—HappyView queries only. Walkthrough, check off, commit, push.`
@@ -97,7 +111,7 @@ Granular checklist for the Vite vanilla JS client. Global sequencing: [docs/plan
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task FE-4.2. Walkthrough, check off, commit, push.`
 
 - [ ] **Task FE-4.3: Photo detail and deletion UX**
-  - **Description:** UI-SCR-003 detail panel: visibility chip, C2PA summary placeholder, delete confirmation, remove-from-album. Dual provenance labels (TC-011).
+  - **Description:** UI-SCR-003 detail panel: visibility chip, C2PA summary placeholder, delete confirmation, remove-from-album. Dual provenance labels (TC-011). Unifies public, unlisted, and permissioned photo UX after FE-5.1.
   - **Estimated Time:** 6 hours
   - **Dependencies:** Task FE-4.2
   - **Related Requirements:** [F-009](../../../docs/prd.md#f-009-photo-deletion-and-album-membership-management), [SRS-F-009](../../../docs/srs.md#srs-f-009-photo-deletion-and-album-membership), [UI-SCR-003](../../../docs/ui-requirements.md#ui-scr-003-photo-detail)
@@ -106,24 +120,12 @@ Granular checklist for the Vite vanilla JS client. Global sequencing: [docs/plan
 
 ---
 
-## Phase FE-5: Permissioned Albums
-
-- [ ] **Task FE-5.1: Permissioned album creation and space admin UI**
-  - **Description:** `visibility: permissioned` album flow; space URI display; UI-SCR-006 member directory (Authority/Contributor/Viewer → `read`/`write`), token invite + direct addMember, mint policy dropdown (`member-list`/`public`/`managing-app`), access-denied state without metadata leak. Permissioned upload uses `space.createRecord` + `space.getBlob`.
-  - **Estimated Time:** 14 hours
-  - **Dependencies:** Task FE-4.3
-  - **Related Requirements:** [F-008](../../../docs/prd.md#f-008-permissioned-gallery--album-access-happyview-permissioned-spaces-validation), [SRS-F-008](../../../docs/srs.md#srs-f-008-permissioned-album-access-happyview-spaces), [NFR-002](../../../docs/prd.md#nfr-002-public-by-default-transparency), [UI-SCR-006](../../../docs/ui-requirements.md#ui-scr-006-permissioned-space-administration), [ADR-010](../../../docs/architecture/010-permissioned-spaces-storage.md)
-  - **Related Tests:** [`permissioned_albums_SRS-F-008.feature`](../tests/features/permissioned_albums_SRS-F-008.feature), [`ui_permissioned_space_UI-SCR-006.feature`](../tests/features/ui_permissioned_space_UI-SCR-006.feature)
-  - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task FE-5.1. Holistic permissioned album + space admin. DPoP for member reads; document Bearer credential path for thumbnails. Invoke @feature-writer. Walkthrough, check off, commit, push.`
-
----
-
 ## Phase FE-6: C2PA UI
 
 - [ ] **Task FE-6.1: C2PA validation and trust configuration UI**
   - **Description:** UI-SCR-008 trust list; photo detail C2PA Levels 1–3 disclosure (F-014); neutral copy per NFR-016; ingredient/derivative display (F-015); edit-chain refresh after caption edit (F-013).
   - **Estimated Time:** 10 hours
-  - **Dependencies:** Task FE-5.1; backend BE-6.1
+  - **Dependencies:** Task FE-4.3; backend BE-6.1
   - **Related Requirements:** [F-013](../../../docs/prd.md#f-013-c2pa-provenance-on-edit-and-publish) through [F-016](../../../docs/prd.md#f-016-c2pa-trust-configuration), [NFR-015](../../../docs/prd.md#nfr-015-c2pa-privacy-and-selective-disclosure), [NFR-016](../../../docs/prd.md#nfr-016-c2pa-neutral-trust-presentation), [UI-SCR-008](../../../docs/ui-requirements.md#ui-scr-008-c2pa-trust-configuration)
   - **Related Tests:** [`c2pa_validation_ui_SRS-F-014.feature`](../tests/features/c2pa_validation_ui_SRS-F-014.feature), [`c2pa_trust_config_SRS-F-016.feature`](../tests/features/c2pa_trust_config_SRS-F-016.feature)
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task FE-6.1. No "authentic/fake" language. Walkthrough, check off, commit, push.`
@@ -145,4 +147,4 @@ Granular checklist for the Vite vanilla JS client. Global sequencing: [docs/plan
 ## Summary Timeline
 
 - **Total Estimated Time:** ~77 hours
-- **Critical Path:** FE-1 → FE-2 (holistic shell) → FE-3 (upload/gallery/albums) → FE-5 (permissioned) → FE-6 (C2PA UI) → FE-7
+- **Critical Path:** FE-1 → FE-2 (holistic shell) → FE-3 (upload/gallery/albums) → **FE-5.1 (permissioned / RC-007)** → FE-4 (discovery & sharing) → FE-6 (C2PA UI) → FE-7
