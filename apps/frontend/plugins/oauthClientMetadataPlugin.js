@@ -8,9 +8,12 @@
 import { writeFileSync } from "node:fs";
 import path from "node:path";
 
-import { buildOAuthClientMetadata } from "../src/config/oauthClientMetadata.js";
+import { loadEnv } from "vite";
 
-const METADATA_PATH = "/oauth-client-metadata.json";
+import {
+  OAUTH_CLIENT_METADATA_PATH,
+  buildOAuthClientMetadata,
+} from "../src/config/oauthClientMetadata.js";
 
 /**
  * Resolve deployment origin from an incoming HTTP request.
@@ -55,7 +58,7 @@ function sendMetadataResponse(res, origin) {
  */
 function attachMetadataMiddleware(middlewares) {
   middlewares.use((req, res, next) => {
-    if (!req.url || req.url.split("?")[0] !== METADATA_PATH) {
+    if (!req.url || req.url.split("?")[0] !== OAUTH_CLIENT_METADATA_PATH) {
       next();
       return;
     }
@@ -70,8 +73,17 @@ function attachMetadataMiddleware(middlewares) {
  * @returns {import("vite").Plugin} Vite plugin instance.
  */
 export function oauthClientMetadataPlugin() {
+  /** @type {string} */
+  let resolvedOutDir = "dist";
+  /** @type {Record<string, string>} */
+  let loadedEnv = {};
+
   return {
     name: "atpix-oauth-client-metadata",
+    configResolved(config) {
+      resolvedOutDir = config.build.outDir;
+      loadedEnv = loadEnv(config.mode, config.envDir, "");
+    },
     configureServer(server) {
       attachMetadataMiddleware(server.middlewares);
     },
@@ -79,14 +91,17 @@ export function oauthClientMetadataPlugin() {
       attachMetadataMiddleware(server.middlewares);
     },
     closeBundle() {
-      const configuredOrigin = process.env.VITE_DEPLOYMENT_ORIGIN;
-      const origin =
-        typeof configuredOrigin === "string" && configuredOrigin.length > 0
-          ? configuredOrigin
-          : "http://127.0.0.1:5173";
+      const configuredOrigin = loadedEnv.VITE_DEPLOYMENT_ORIGIN?.trim();
+      if (!configuredOrigin) {
+        throw new Error(
+          "VITE_DEPLOYMENT_ORIGIN is required to emit oauth-client-metadata.json during build",
+        );
+      }
 
-      const outDir = path.resolve(process.cwd(), "dist");
-      const metadata = buildOAuthClientMetadata(origin);
+      const outDir = path.isAbsolute(resolvedOutDir)
+        ? resolvedOutDir
+        : path.resolve(process.cwd(), resolvedOutDir);
+      const metadata = buildOAuthClientMetadata(configuredOrigin);
       const targetPath = path.join(outDir, "oauth-client-metadata.json");
 
       writeFileSync(targetPath, `${JSON.stringify(metadata, null, 2)}\n`, "utf8");

@@ -197,16 +197,18 @@ curl -sS -o /dev/null -w "http_code=%{http_code}\n" http://127.0.0.1:5173/
 curl -sS http://127.0.0.1:5173/oauth-client-metadata.json
 ```
 
-**Expected metadata checks:**
+**Expected metadata checks (local dev uses loopback client-id — not the metadata URL):**
 
-| JSON field | Expected value (local dev) |
-|------------|----------------------------|
-| `client_id` | `http://127.0.0.1:5173/oauth-client-metadata.json` |
+| JSON field | Expected value (local dev on `127.0.0.1:5173`) |
+|------------|--------------------------------------------------|
+| `client_id` | Loopback URL (e.g. `http://localhost/oauth/callback?redirect_uri=…`) encoding `http://127.0.0.1:5173/oauth/callback` — copy the full value from `curl` |
 | `client_name` | `ATPix` |
 | `redirect_uris` | `["http://127.0.0.1:5173/oauth/callback"]` |
 | `dpop_bound_access_tokens` | `true` |
 | `token_endpoint_auth_method` | `"none"` |
 | `scope` | contains `atproto`, `blob:*/*`, `repo:net.atpix.gallery.photo` |
+
+Production builds (`VITE_DEPLOYMENT_ORIGIN=https://your-domain`) emit `client_id` as `https://your-domain/oauth-client-metadata.json` instead.
 
 Open **http://127.0.0.1:5173/** in a browser — you should see the R&D overview page with **HappyView endpoint: `http://127.0.0.1:3001`**.
 
@@ -230,7 +232,7 @@ HappyView must know about your app **before** users can sign in via OAuth. You r
 | Field | Value |
 |-------|-------|
 | **Type** | Public (browser app; no client secret) |
-| **Client ID** | `http://127.0.0.1:5173/oauth-client-metadata.json` — must match the `client_id` from Step 5 exactly |
+| **Client ID** | Copy the **`client_id`** field from Step 5 exactly (loopback URL locally; `https://…/oauth-client-metadata.json` in production) |
 | **Allowed origins** | `http://127.0.0.1:5173` (and `http://localhost:5173` if you use that hostname) |
 | **Scopes** | Include at minimum: `atproto`, `blob:*/*`, and the `repo:net.atpix.gallery.*` collections listed in the metadata `scope` field |
 
@@ -268,7 +270,7 @@ When permissioned albums are implemented, creating a private album will call Hap
 ```json
 {
   "type": "allowList",
-  "allowed": ["http://127.0.0.1:5173/oauth-client-metadata.json"]
+  "allowed": ["<same client_id URL you registered in Step 6>"]
 }
 ```
 

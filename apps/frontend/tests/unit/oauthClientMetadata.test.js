@@ -5,26 +5,45 @@ import {
   OAUTH_CLIENT_METADATA_PATH,
   OAUTH_CLIENT_NAME,
   OAUTH_CLIENT_SCOPE,
+  OAUTH_CLIENT_SCOPE_LIST,
   buildOAuthClientMetadata,
   buildSpaceAppAccess,
   getOAuthClientId,
   getOAuthRedirectUri,
+  isLoopbackOrigin,
   normalizeOrigin,
 } from "../../src/config/oauthClientMetadata.js";
 
 describe("oauthClientMetadata", () => {
   const origin = "https://app.example.com";
+  const loopbackOrigin = "http://127.0.0.1:5173";
 
   it("normalizes trailing slashes on origins", () => {
     expect(normalizeOrigin("https://app.example.com/")).toBe("https://app.example.com");
   });
 
-  it("builds client_id at oauth-client-metadata.json path", () => {
+  it("detects loopback origins", () => {
+    expect(isLoopbackOrigin(loopbackOrigin)).toBe(true);
+    expect(isLoopbackOrigin(origin)).toBe(false);
+  });
+
+  it("builds production client_id at oauth-client-metadata.json path", () => {
     expect(getOAuthClientId(origin)).toBe(`https://app.example.com${OAUTH_CLIENT_METADATA_PATH}`);
   });
 
-  it("builds redirect URI at /oauth/callback", () => {
+  it("builds loopback client_id for local development", () => {
+    const clientId = getOAuthClientId(loopbackOrigin);
+
+    expect(clientId).toMatch(/^http:\/\/localhost\/oauth\/callback\?redirect_uri=/);
+    expect(decodeURIComponent(clientId)).toContain("http://127.0.0.1:5173/oauth/callback");
+  });
+
+  it("builds production redirect URI at /oauth/callback", () => {
     expect(getOAuthRedirectUri(origin)).toBe(`https://app.example.com${OAUTH_CALLBACK_PATH}`);
+  });
+
+  it("builds loopback redirect URI at 127.0.0.1", () => {
+    expect(getOAuthRedirectUri(loopbackOrigin)).toBe(`http://127.0.0.1:5173${OAUTH_CALLBACK_PATH}`);
   });
 
   it("returns metadata required by ADR-006 and HappyView OAuth docs", () => {
@@ -42,11 +61,12 @@ describe("oauthClientMetadata", () => {
     expect(metadata.dpop_bound_access_tokens).toBe(true);
   });
 
-  it("includes gallery record scopes and blob upload scope", () => {
-    expect(OAUTH_CLIENT_SCOPE).toContain("atproto");
-    expect(OAUTH_CLIENT_SCOPE).toContain("blob:*/*");
-    expect(OAUTH_CLIENT_SCOPE).toContain("repo:net.atpix.gallery.photo");
-    expect(OAUTH_CLIENT_SCOPE).toContain("repo:net.atpix.gallery.album");
+  it("includes gallery record scopes and blob upload scope as exact tokens", () => {
+    expect(OAUTH_CLIENT_SCOPE_LIST).toContain("atproto");
+    expect(OAUTH_CLIENT_SCOPE_LIST).toContain("blob:*/*");
+    expect(OAUTH_CLIENT_SCOPE_LIST).toContain("repo:net.atpix.gallery.photo");
+    expect(OAUTH_CLIENT_SCOPE_LIST).toContain("repo:net.atpix.gallery.album");
+    expect(OAUTH_CLIENT_SCOPE_LIST).toContain("repo:net.atpix.gallery.albumItem");
   });
 
   it("builds space appAccess allowList with OAuth clientId URL (ADR-010)", () => {

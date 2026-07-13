@@ -73,6 +73,13 @@ $ cat dist/oauth-client-metadata.json
 }
 ```
 
+## Cubic review fixes (PR #8)
+
+- Loopback `client_id` for `127.0.0.1` / `localhost` via `buildLoopbackClientId` (P1)
+- Vite `loadEnv` + `configResolved` for build origin and `outDir` (P1/P3)
+- Reuse `OAUTH_CLIENT_METADATA_PATH` in plugin (P3)
+- Exact scope token matching via `OAUTH_CLIENT_SCOPE_LIST` (P2)
+
 ## Operator next steps
 
 1. Start frontend (`npm run dev`) and verify `curl http://127.0.0.1:5173/oauth-client-metadata.json`.
