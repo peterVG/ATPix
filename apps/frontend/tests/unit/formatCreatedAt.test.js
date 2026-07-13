@@ -7,6 +7,11 @@ describe("formatCreatedAtUtc", () => {
     const formatted = formatCreatedAtUtc("2026-07-13T14:30:00.000Z");
     expect(formatted).toContain("2026");
     expect(formatted).toContain("UTC");
+    expect(formatted).not.toContain("Z");
+  });
+
+  it("formats fractional-second UTC timestamps without a trailing Z", () => {
+    expect(formatCreatedAtUtc("2026-07-13T14:30:00.123Z")).toBe("2026-07-13 14:30:00.123 UTC");
   });
 });
 

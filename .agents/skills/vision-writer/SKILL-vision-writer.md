@@ -59,7 +59,7 @@ AGENT: [Searches Dutch public sector NextCloud usage to ground the conversation]
 AGENT: "I see you're targeting the Dutch public sector. Would this primarily serve as a 'dark archive' for compliance, or a functional extension for daily users? This will help us define the 'Product Vision' and 'Core Features'."
 ...
 AGENT: [Finalizes all sections]
-AGENT: [Creates docs/vision.md]
+AGENT: [Creates docs/overview/001-product-vision.md]
 
 ## Success Criteria
 - ✅ **Completness:** Every placeholder in the template is replaced with specific, high-fidelity content.

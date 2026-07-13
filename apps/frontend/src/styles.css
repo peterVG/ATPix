@@ -360,6 +360,14 @@ body {
   color: #b91c1c;
 }
 
+[data-theme="light"] .status-chip--wellformed {
+  color: #005bb5;
+}
+
+[data-theme="light"] .status-chip--permissioned {
+  color: #5b21b6;
+}
+
 .sign-in-error {
   margin: 0 0 1rem;
   padding: 0.75rem;
@@ -447,6 +455,21 @@ body {
 
 .gallery-search {
   min-width: 14rem;
+  flex: 1 1 12rem;
+}
+
+[data-breakpoint="mobile"] .gallery-header {
+  align-items: stretch;
+}
+
+[data-breakpoint="mobile"] .gallery-toolbar {
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+[data-breakpoint="mobile"] .gallery-search {
+  min-width: 0;
+  width: 100%;
 }
 
 .gallery-card__media {
@@ -483,7 +506,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  background: color-mix(in srgb, var(--surface-container-highest) 50%, transparent);
+  background: color-mix(in srgb, var(--surface-container-high) 50%, transparent);
   z-index: 2;
 }
 

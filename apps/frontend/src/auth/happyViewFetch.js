@@ -52,7 +52,7 @@ export async function getHappyViewFetchHandler() {
     storage: new LocalStorageAdapter(),
   });
 
-  const restored = await browserClient.initRestore();
+  const restored = await browserClient.init();
   const handler = restored?.session?.fetchHandler;
   if (typeof handler !== "function") {
     throw new Error("HappyView OAuth session is required for gallery operations");

@@ -24,7 +24,11 @@ export function formatCreatedAtUtc(isoUtc) {
     return isoUtc;
   }
 
-  return `${date.toISOString().replace("T", " ").replace(".000Z", " UTC")}`;
+  return date
+    .toISOString()
+    .replace("T", " ")
+    .replace(/\.000Z$/, " UTC")
+    .replace(/Z$/, " UTC");
 }
 
 /**

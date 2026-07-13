@@ -7,6 +7,24 @@
  */
 
 /**
+ * Map a lexicon `c2paValidationState` token to gallery badge inputs.
+ *
+ * @param {string | undefined} state - Cached C2PA validation state from a photo record.
+ * @returns {C2paBadgeState} Badge state consumed by `selectPhotoBadges`.
+ */
+export function mapC2paValidationState(state) {
+  if (state === "trusted") {
+    return "trusted";
+  }
+
+  if (state === "invalid") {
+    return "invalid";
+  }
+
+  return "valid";
+}
+
+/**
  * Select badge labels for a gallery media card.
  *
  * @param {object} options - Badge inputs.

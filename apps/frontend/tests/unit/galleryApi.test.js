@@ -24,6 +24,7 @@ describe("galleryApi", () => {
       expect.objectContaining({
         method: "POST",
         headers: expect.objectContaining({ "Content-Type": "image/jpeg" }),
+        body: expect.any(Blob),
       }),
     );
     expect(result.ref.$link).toBe("bafytest");
@@ -43,9 +44,29 @@ describe("galleryApi", () => {
 
     expect(fetchHandler).toHaveBeenCalledWith(
       "/xrpc/net.atpix.gallery.createPhoto",
-      expect.objectContaining({ method: "POST" }),
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          image: { $type: "blob", ref: { $link: "bafytest" }, mimeType: "image/jpeg", size: 3 },
+          visibility: "public",
+          title: "Sunset",
+        }),
+      }),
     );
     expect(result.uri).toContain("net.atpix.gallery.photo");
+  });
+
+  it("rejects malformed JSON on successful XRPC responses", async () => {
+    const fetchHandler = vi.fn(async () => ({
+      ok: true,
+      json: async () => {
+        throw new Error("invalid json");
+      },
+    }));
+
+    await expect(uploadBlob(fetchHandler, new Blob(["x"]), "image/jpeg")).rejects.toThrow(
+      "Invalid JSON in XRPC response",
+    );
   });
 
   it("listPhotos queries did and cursor parameters", async () => {

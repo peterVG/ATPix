@@ -19,7 +19,16 @@ import { buildXrpcHeaders } from "./happyview.js";
  * @returns {Promise<object>} Parsed JSON body.
  */
 async function parseXrpcJson(response) {
-  const body = await response.json().catch(() => ({}));
+  let body;
+  try {
+    body = await response.json();
+  } catch {
+    if (response.ok) {
+      throw new Error(`Invalid JSON in XRPC response (HTTP ${response.status})`);
+    }
+    body = {};
+  }
+
   if (!response.ok) {
     const message = typeof body.message === "string" ? body.message : `HTTP ${response.status}`;
     throw new Error(message);

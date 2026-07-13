@@ -67,6 +67,7 @@ function createStubPhoto(title) {
     record: {
       title,
       visibility: "public",
+      c2paValidationState: "trusted",
       createdAt: nowRfc3339Utc(),
       image: {
         $type: "blob",

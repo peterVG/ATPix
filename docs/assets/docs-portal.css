@@ -46,6 +46,11 @@ body {
   text-decoration: none;
 }
 
+.docs-toc-header a:hover,
+.docs-toc-header a:focus-visible {
+  text-decoration: underline;
+}
+
 .docs-toc nav {
   font-size: 0.9rem;
 }

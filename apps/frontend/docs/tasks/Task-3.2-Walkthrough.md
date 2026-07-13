@@ -21,7 +21,7 @@ Implemented Path A public upload and My Gallery grid (frontend-only; backend rem
 | SRS-F-003.2 empty state | `GalleryPanel.js`, `myGallery.ui.test.js` |
 | SRS-NFR-005 RFC 3339 UTC | `formatCreatedAt.js`, `formatCreatedAt.test.js` |
 | UI-SCR-001 My Gallery | `GalleryPanel.js`, `myGallery.ui.test.js` |
-| UI-SCR-005 upload progress | `UploadPanel.js`, `uploadGallery.ui.test.js` |
+| UI-SCR-005 upload progress | `UploadPanel.js` (no UI assertion for progress yet) |
 
 ## Test output (raw CLI)
 
@@ -83,4 +83,4 @@ UI test builds use repo-root `.env.test`:
 | `VITE_TEST_C2PA_STUB=true` | Stub C2PA embed without live FastAPI |
 | `VITE_TEST_GALLERY_STUB=true` | Stub HappyView `uploadBlob` / `createPhoto` / `listPhotos` XRPC |
 
-Replace stub values with real HappyView OAuth session and live services for manual end-to-end verification (README Steps 7–8).
+Manual E2E uses the normal development `.env` from README Steps 7–8; test stubs are scoped to `npm run test:ui` (`MODE=test`).

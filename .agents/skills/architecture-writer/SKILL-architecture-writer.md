@@ -69,7 +69,7 @@ Write the new `docs/overview/000-architecture.md`. For each ISO 42010 Viewpoint 
 
 ### Step 6: Verify and Save
 
-Save the output to `docs/overview/000-architecture.md`. Ensure all links to PRD/SRS/ADRs use correct relative formatting (e.g. `[PRD](./prd.md)` format). DO NOT use absolute paths.
+Save the output to `docs/overview/000-architecture.md`. Ensure links use the actual relative filenames, e.g. `[PRD](./002-prd.md)`, `[SRS](./003-srs.md)`, and `[ADR](../architecture/[ADR].md)`. DO NOT use absolute paths.
 
 ## Success Criteria
 

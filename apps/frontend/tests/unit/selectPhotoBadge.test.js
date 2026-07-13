@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { selectPhotoBadges } from "../../src/gallery/selectPhotoBadge.js";
+import { mapC2paValidationState, selectPhotoBadges } from "../../src/gallery/selectPhotoBadge.js";
 
 describe("selectPhotoBadges", () => {
   it("returns Trusted and Valid for public C2PA-signed uploads", () => {
@@ -28,5 +28,23 @@ describe("selectPhotoBadges", () => {
         c2paState: "invalid",
       }),
     ).toEqual(["Invalid"]);
+  });
+
+  it("returns Valid for non-trusted valid state", () => {
+    expect(
+      selectPhotoBadges({
+        visibility: "public",
+        c2paState: "valid",
+      }),
+    ).toEqual(["Valid"]);
+  });
+});
+
+describe("mapC2paValidationState", () => {
+  it("maps lexicon validation tokens to badge states", () => {
+    expect(mapC2paValidationState("trusted")).toBe("trusted");
+    expect(mapC2paValidationState("invalid")).toBe("invalid");
+    expect(mapC2paValidationState("wellFormed")).toBe("valid");
+    expect(mapC2paValidationState(undefined)).toBe("valid");
   });
 });

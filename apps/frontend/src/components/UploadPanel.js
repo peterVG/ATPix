@@ -1,4 +1,8 @@
-import { notifyGalleryRefresh, setPendingGalleryUploads } from "../gallery/galleryEvents.js";
+import {
+  notifyGalleryRefresh,
+  removePendingGalleryUpload,
+  upsertPendingGalleryUpload,
+} from "../gallery/galleryEvents.js";
 import {
   C2PA_EMBED_ACCEPT,
   UPLOAD_FORMAT_LABELS,
@@ -61,6 +65,8 @@ export function renderUploadPanel({ mount, identity }) {
   let includeGps = false;
   let includeDevice = false;
   let destination = "public";
+  let publishTitle = "";
+  let publishCaption = "";
   /** @type {string[]} */
   let tags = [];
 
@@ -155,9 +161,9 @@ export function renderUploadPanel({ mount, identity }) {
               <p class="metadata-code" data-testid="upload-signer-did">ATPix will sign this photo as created by: ${escapeHtml(displayHandle)}</p>
             </section>
             <label class="sign-in-label" for="upload-title-input">Title</label>
-            <input id="upload-title-input" class="sign-in-input" data-testid="upload-title-input" />
+            <input id="upload-title-input" class="sign-in-input" data-testid="upload-title-input" value="${escapeHtml(publishTitle)}" />
             <label class="sign-in-label" for="upload-caption-input">Caption</label>
-            <input id="upload-caption-input" class="sign-in-input" data-testid="upload-caption-input" />
+            <input id="upload-caption-input" class="sign-in-input" data-testid="upload-caption-input" value="${escapeHtml(publishCaption)}" />
             <label class="sign-in-label" for="upload-tags-input">Tags</label>
             <input id="upload-tags-input" class="sign-in-input" data-testid="upload-tags-input" placeholder="sunset, lake" />
             <div class="tag-pills" data-testid="upload-tag-pills">${renderTagPills()}</div>
@@ -193,15 +199,11 @@ export function renderUploadPanel({ mount, identity }) {
     bindUploadPanelEvents();
   };
 
-  const readPublishMetadata = () => {
-    const titleInput = mount.querySelector('[data-testid="upload-title-input"]');
-    const captionInput = mount.querySelector('[data-testid="upload-caption-input"]');
-    return {
-      title: titleInput instanceof HTMLInputElement ? titleInput.value.trim() : "",
-      caption: captionInput instanceof HTMLInputElement ? captionInput.value.trim() : "",
-      keywords: tags,
-    };
-  };
+  const readPublishMetadata = () => ({
+    title: publishTitle.trim(),
+    caption: publishCaption.trim(),
+    keywords: tags,
+  });
 
   const publishItem = async (itemId) => {
     const item = queue.find((entry) => entry.id === itemId);
@@ -209,15 +211,13 @@ export function renderUploadPanel({ mount, identity }) {
       return;
     }
 
+    const metadata = readPublishMetadata();
+
     queue = queue.map((entry) =>
       entry.id === itemId ? { ...entry, state: "uploading", uploadProgress: 0, errorMessage: undefined } : entry,
     );
-    setPendingGalleryUploads([
-      { id: itemId, label: item.name, progress: 0 },
-    ]);
+    upsertPendingGalleryUpload({ id: itemId, label: item.name, progress: 0 });
     render();
-
-    const metadata = readPublishMetadata();
     const result = await publishPreparedPhoto({
       signedBlob: item.prepared.signedBlob,
       mimeType: item.sourceFile.type,
@@ -230,12 +230,12 @@ export function renderUploadPanel({ mount, identity }) {
         queue = queue.map((entry) =>
           entry.id === itemId ? { ...entry, uploadProgress: progress } : entry,
         );
-        setPendingGalleryUploads([{ id: itemId, label: item.name, progress }]);
+        upsertPendingGalleryUpload({ id: itemId, label: item.name, progress });
         render();
       },
     });
 
-    setPendingGalleryUploads([]);
+    removePendingGalleryUpload(itemId);
 
     if (result.status === "error") {
       queue = queue.map((entry) =>
@@ -367,6 +367,20 @@ export function renderUploadPanel({ mount, identity }) {
       });
     }
 
+    const titleInput = mount.querySelector('[data-testid="upload-title-input"]');
+    if (titleInput instanceof HTMLInputElement) {
+      titleInput.addEventListener("input", () => {
+        publishTitle = titleInput.value;
+      });
+    }
+
+    const captionInput = mount.querySelector('[data-testid="upload-caption-input"]');
+    if (captionInput instanceof HTMLInputElement) {
+      captionInput.addEventListener("input", () => {
+        publishCaption = captionInput.value;
+      });
+    }
+
     if (tagsInput instanceof HTMLInputElement) {
       tagsInput.value = tags.join(", ");
       tagsInput.addEventListener("input", () => {
@@ -381,9 +395,21 @@ export function renderUploadPanel({ mount, identity }) {
 
     mount.querySelectorAll('input[name="destination"]').forEach((radio) => {
       radio.addEventListener("change", () => {
-        if (radio instanceof HTMLInputElement && radio.checked) {
-          destination = radio.value;
-          render();
+        if (!(radio instanceof HTMLInputElement) || !radio.checked) {
+          return;
+        }
+
+        const previousDestination = destination;
+        destination = radio.value;
+        render();
+
+        if (destination === "public" && previousDestination !== "public") {
+          const readyItems = queue.filter((entry) => entry.state === "ready");
+          void (async () => {
+            for (const entry of readyItems) {
+              await publishItem(entry.id);
+            }
+          })();
         }
       });
     });

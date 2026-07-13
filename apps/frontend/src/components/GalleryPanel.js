@@ -2,9 +2,17 @@ import { listPhotos } from "../api/galleryApi.js";
 import { getHappyViewUrl } from "../api/happyview.js";
 import { getHappyViewFetchHandler } from "../auth/happyViewFetch.js";
 import { formatCreatedAtUtc } from "../gallery/formatCreatedAt.js";
-import { getPendingGalleryUploads, onGalleryRefresh } from "../gallery/galleryEvents.js";
+import {
+  getPendingGalleryUploads,
+  onGalleryRefresh,
+  onPendingUploadsChange,
+} from "../gallery/galleryEvents.js";
 import { resolveImageUrl } from "../gallery/resolveImageUrl.js";
-import { badgeClassForLabel, selectPhotoBadges } from "../gallery/selectPhotoBadge.js";
+import {
+  badgeClassForLabel,
+  mapC2paValidationState,
+  selectPhotoBadges,
+} from "../gallery/selectPhotoBadge.js";
 import { GALLERY_PAGE_SIZE } from "../gallery/constants.js";
 import { GRID_COLUMNS, breakpointFromWidth } from "../layout/breakpoint.js";
 import { escapeHtml } from "../utils/html.js";
@@ -38,7 +46,7 @@ function filterPhotos(photos, query) {
 function renderBadges(record) {
   const labels = selectPhotoBadges({
     visibility: record.visibility ?? "public",
-    c2paState: "trusted",
+    c2paState: mapC2paValidationState(record.c2paValidationState),
   });
 
   return labels
@@ -58,13 +66,48 @@ function renderBadges(record) {
 }
 
 /**
+ * Apply gallery card background images through DOM APIs to avoid style-attribute injection.
+ *
+ * @param {HTMLElement} mount - Gallery mount element.
+ * @param {object[]} filteredPhotos - Photos currently visible in the grid.
+ * @param {string} fallbackDid - Signed-in author DID for blob resolution.
+ * @returns {void}
+ */
+function applyCardBackgrounds(mount, filteredPhotos, fallbackDid) {
+  mount.querySelectorAll('[data-testid="gallery-card"]').forEach((card) => {
+    if (!(card instanceof HTMLElement)) {
+      return;
+    }
+
+    const indexValue = card.getAttribute("data-card-index");
+    if (indexValue === null) {
+      return;
+    }
+
+    const index = Number(indexValue);
+    const photo = filteredPhotos[index];
+    const media = card.querySelector(".gallery-card__media");
+    if (!photo || !(media instanceof HTMLElement)) {
+      return;
+    }
+
+    const record = photo.record ?? {};
+    const authorDid = typeof photo.author === "string" ? photo.author : fallbackDid;
+    const imageUrl = resolveImageUrl(record.image, getHappyViewUrl(), authorDid);
+    if (imageUrl) {
+      media.style.backgroundImage = `url("${imageUrl}")`;
+    }
+  });
+}
+
+/**
  * Render the authenticated My Gallery screen (UI-SCR-001).
  *
  * @param {object} options - Render options.
  * @param {HTMLElement} options.mount - DOM node to render into.
  * @param {{ did: string, handle?: string }} options.identity - Signed-in identity.
  * @param {() => void} options.onUpload - Upload navigation handler.
- * @returns {{ refresh: () => Promise<void> }} Panel controls.
+ * @returns {{ refresh: () => Promise<void>, destroy: () => void }} Panel controls.
  */
 export function renderGalleryPanel({ mount, identity, onUpload }) {
   let photos = [];
@@ -73,19 +116,20 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
   let cursorHistory = [];
   let searchQuery = "";
   let loading = true;
+  let loadingSearchPages = false;
   let errorMessage = null;
   let pageNumber = 1;
 
   const renderCard = (photo, index) => {
     const record = photo.record ?? {};
-    const imageUrl = resolveImageUrl(record.image, getHappyViewUrl());
     const title = record.title ? escapeHtml(record.title) : "Untitled";
-    const timestamp = record.createdAt ? formatCreatedAtUtc(record.createdAt) : "";
-    const imageStyle = imageUrl ? ` style="background-image:url('${imageUrl}')"` : "";
+    const timestamp = record.createdAt
+      ? escapeHtml(formatCreatedAtUtc(record.createdAt))
+      : "";
 
     return `
       <article class="gallery-card gallery-card--loaded" data-testid="gallery-card" data-card-index="${index}">
-        <div class="gallery-card__media"${imageStyle} role="img" aria-label="${title}"></div>
+        <div class="gallery-card__media" role="img" aria-label="${title}"></div>
         <div class="gallery-card__badges">${renderBadges(record)}</div>
         <p class="gallery-card__meta">${timestamp}</p>
       </article>
@@ -109,7 +153,13 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
     const columns = GRID_COLUMNS[breakpoint];
     const pending = getPendingGalleryUploads();
     const filtered = filterPhotos(photos, searchQuery);
-    const showEmpty = !loading && !errorMessage && filtered.length === 0 && pending.length === 0;
+    const showEmpty = !loading && !errorMessage && photos.length === 0 && pending.length === 0;
+    const showNoResults =
+      !loading &&
+      !errorMessage &&
+      searchQuery.trim().length > 0 &&
+      filtered.length === 0 &&
+      (photos.length > 0 || pending.length > 0);
     const showPagination = !loading && (nextCursor || cursorHistory.length > 0);
 
     const cards = [
@@ -136,11 +186,17 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
           </div>
         </header>
         ${loading ? `<p class="gallery-status" data-testid="gallery-loading">Loading your gallery…</p>` : ""}
+        ${loadingSearchPages ? `<p class="gallery-status" data-testid="gallery-search-loading">Searching your vault…</p>` : ""}
         ${errorMessage ? `<p class="gallery-error" data-testid="gallery-error">${escapeHtml(errorMessage)}</p>` : ""}
         ${showEmpty ? `
           <div class="gallery-empty" data-testid="gallery-empty">
             <p>Upload your first photo to start your personal archive.</p>
             <button type="button" class="btn btn-primary" data-testid="gallery-empty-upload">Upload your first photo</button>
+          </div>
+        ` : ""}
+        ${showNoResults ? `
+          <div class="gallery-empty" data-testid="gallery-no-results">
+            <p>No photos match your search.</p>
           </div>
         ` : ""}
         <div
@@ -161,6 +217,7 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
       </section>
     `;
 
+    applyCardBackgrounds(mount, filtered, identity.did);
     bindGalleryEvents();
   };
 
@@ -188,6 +245,35 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
     }
   };
 
+  const loadRemainingPagesForSearch = async () => {
+    if (!searchQuery.trim() || !nextCursor || loadingSearchPages) {
+      return;
+    }
+
+    loadingSearchPages = true;
+    render();
+
+    try {
+      const fetchHandler = await getHappyViewFetchHandler();
+      let pendingCursor = nextCursor;
+      while (pendingCursor) {
+        const page = await listPhotos(fetchHandler, {
+          did: identity.did,
+          limit: GALLERY_PAGE_SIZE,
+          cursor: pendingCursor,
+        });
+        photos = [...photos, ...(page.photos ?? [])];
+        pendingCursor = page.cursor;
+      }
+      nextCursor = undefined;
+    } catch (error) {
+      errorMessage = error instanceof Error ? error.message : "Unable to search gallery";
+    } finally {
+      loadingSearchPages = false;
+      render();
+    }
+  };
+
   const refresh = async () => {
     cursorHistory = [];
     pageNumber = 1;
@@ -202,7 +288,20 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
     if (search instanceof HTMLInputElement) {
       search.addEventListener("input", () => {
         searchQuery = search.value;
+        const selectionStart = search.selectionStart;
+        const selectionEnd = search.selectionEnd;
+        const hadFocus = document.activeElement === search;
         render();
+        if (hadFocus) {
+          const nextSearch = mount.querySelector('[data-testid="gallery-search"]');
+          if (nextSearch instanceof HTMLInputElement) {
+            nextSearch.focus();
+            if (selectionStart !== null && selectionEnd !== null) {
+              nextSearch.setSelectionRange(selectionStart, selectionEnd);
+            }
+          }
+        }
+        void loadRemainingPagesForSearch();
       });
     }
 
@@ -225,14 +324,20 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
     });
   };
 
-  const unsubscribe = onGalleryRefresh(() => {
+  const unsubscribeRefresh = onGalleryRefresh(() => {
     void refresh();
+  });
+  const unsubscribePending = onPendingUploadsChange(() => {
+    render();
   });
 
   void refresh();
 
   return {
     refresh,
-    destroy: () => unsubscribe(),
+    destroy: () => {
+      unsubscribeRefresh();
+      unsubscribePending();
+    },
   };
 }
