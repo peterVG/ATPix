@@ -266,7 +266,6 @@ sequenceDiagram
 | Gallery index | SQLite (dev) / Postgres optional (prod) | **HappyView** | [011](./architecture/011-sqlite-index-database.md) |
 | ATPix backend | None (stateless) | ATPix | [011](./architecture/011-sqlite-index-database.md) |
 | Lexicon registry | HappyView admin DB | HappyView | [009](./architecture/009-lexicon-namespace-authority.md) |
-| Postgres / Elasticsearch in root compose | Template services | Not wired to ATPix app code | — (gap: present in `docker-compose.yml` but unused by gallery path) |
 
 ---
 
@@ -296,8 +295,6 @@ graph TB
             Promtail[Promtail]
             Prometheus[Prometheus 9090]
             Redpanda[Redpanda 9092]
-            PostgresTpl[postgres 5432 template]
-            ElasticTpl[elasticsearch 9200 template]
         end
 
         subgraph LocalVolumes [./data bind mounts]
@@ -305,8 +302,6 @@ graph TB
             LokiData[(loki_data)]
             PromData[(prometheus_data)]
             RedpandaData[(redpanda_data)]
-            PostgresData[(postgres_data)]
-            ElasticData[(es_data)]
         end
 
         subgraph HappyViewCompose [docker-compose.happyview.yml]
@@ -335,8 +330,6 @@ graph TB
     LokiData --- Loki
     PromData --- Prometheus
     RedpandaData --- Redpanda
-    PostgresData --- PostgresTpl
-    ElasticData --- ElasticTpl
     HVSqlite --- HVApp
     HVData --- HVApp
 ```
@@ -354,8 +347,6 @@ graph TB
 | `promtail` | grafana/promtail | — | Scrapes Docker `stdout` via socket |
 | `prometheus` | prom/prometheus | 9090 | Metrics scrape |
 | `redpanda` | redpanda | 9092 | Kafka-compatible log buffer |
-| `postgres` | postgres:16 | 5432 | Template datastore — **not** used by ATPix gallery code path |
-| `elasticsearch` | elasticsearch:8 | 9200 | Template search — **not** used by ATPix gallery code path |
 
 HappyView is intentionally **absent** from the root compose file to avoid port conflicts with Grafana ([ADR-003](./architecture/003-observability-stack.md)). The backend container reaches a host-run HappyView via `host.docker.internal:3001` when ATPix apps run in Docker but HappyView runs on the host.
 
@@ -377,8 +368,6 @@ All persistent Docker volumes live under `./data/` at the repository root:
 | `./data/loki_data` | Loki | Indexed log chunks |
 | `./data/prometheus_data` | Prometheus | Time-series metrics |
 | `./data/redpanda_data` | Redpanda | Kafka topic data |
-| `./data/postgres_data` | Postgres | Template DB files (unused by ATPix apps) |
-| `./data/es_data` | Elasticsearch | Template index files (unused by ATPix apps) |
 | `./data/happyview_data` | HappyView (`docker-compose.happyview.yml`) | SQLite DB (`happyview.db`), OAuth sessions, provisioned lexicon registry |
 
 Wiping `./data/happyview_data/` resets the **local HappyView index and sessions** only — user records on remote PDSes remain intact. Re-run `scripts/provision_happyview.py` and HappyView backfill to rebuild the index.
@@ -512,7 +501,6 @@ ATPix `backend` and `frontend` containers MUST NOT write log files on disk; Prom
 
 | Item | Notes |
 |------|-------|
-| `postgres` / `elasticsearch` in compose | Present from template; no ATPix application wiring yet |
 | CI/CD workflows | No GitHub Actions in repository |
 | Production deployment ADR | Deferred; local/Docker dev documented in [README](../README.md) |
 | Lexicon DNS publication | Publish `_lexicon.gallery.atpix.net` TXT before public network launch ([ADR-009](./architecture/009-lexicon-namespace-authority.md)) |
