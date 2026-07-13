@@ -22,10 +22,26 @@ from urllib.request import Request, urlopen
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 MANIFEST_PATH = REPO_ROOT / "config" / "happyview" / "provision-manifest.json"
+ENV_FILE = REPO_ROOT / ".env"
 DEFAULT_URL = "http://127.0.0.1:3001"
 SPACES_FLAG = "feature.spaces_enabled"
 RECORD_TYPES = frozenset({"record"})
 QUERY_PROCEDURE_TYPES = frozenset({"query", "procedure"})
+
+
+def _load_dotenv() -> None:
+    """Load root ``.env`` into ``os.environ`` when keys are not already set."""
+    if not ENV_FILE.is_file():
+        return
+    for line in ENV_FILE.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        key, _, value = stripped.partition("=")
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = value
 
 
 def _load_manifest() -> dict[str, Any]:
@@ -202,6 +218,7 @@ def main() -> int:
         help="Verify existing HappyView provisioning (requires admin key).",
     )
     args = parser.parse_args()
+    _load_dotenv()
 
     manifest = _load_manifest()
     validation_errors = validate_manifest(manifest)

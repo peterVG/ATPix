@@ -85,6 +85,19 @@ Live HappyView scenarios (lexicon upload, spaces flag, idempotency) require Dock
 
 Replace placeholder credentials and start HappyView before Task 1.3 (OAuth client registration).
 
+## Cubic PR #6 fix verification (2026-07-13)
+
+```text
+pytest tests/unit/test_lexicon_artifacts.py -v
+# 27 passed in 0.46s
+
+python3 scripts/provision_happyview.py --check-only
+# manifest OK (23 lexicons)
+
+ruff check tests/features/steps/happyview_steps.py tests/unit/test_lexicon_artifacts.py
+# All checks passed!
+```
+
 ## Files added/changed
 
 | Path | Purpose |

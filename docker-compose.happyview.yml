@@ -21,7 +21,7 @@ services:
     volumes:
       - ./data/happyview_data:/app/data
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3001/health || exit 1"]
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:3001/health >/dev/null || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 12

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import os
 import subprocess
@@ -18,6 +19,19 @@ MANIFEST_PATH = REPO_ROOT / "config" / "happyview" / "provision-manifest.json"
 PROVISION_SCRIPT = REPO_ROOT / "scripts" / "provision_happyview.py"
 RECORD_TYPES = frozenset({"record"})
 QUERY_PROCEDURE_TYPES = frozenset({"query", "procedure"})
+FORBIDDEN_SYNC_IMPORT_MARKERS = ("jetstream", "firehose")
+FORBIDDEN_SYNC_CALL_NAMES = frozenset(
+    {
+        "subscribe_repos",
+        "subscribeRepos",
+        "FirehoseConsumer",
+        "firehose_consumer",
+    }
+)
+SYNC_SCAN_ROOTS = (
+    REPO_ROOT / "apps" / "backend" / "app",
+    REPO_ROOT / "apps" / "frontend" / "src",
+)
 
 
 def _lexicon_type(lexicon_json: dict) -> str | None:
@@ -44,6 +58,61 @@ def _admin_request(context, method: str, path: str, body: dict | None = None) ->
         raw = response.read().decode("utf-8")
         payload = json.loads(raw) if raw else None
         return response.status, payload
+
+
+def _manifest_nsids() -> set[str]:
+    """Return NSIDs listed in the HappyView provision manifest."""
+    with MANIFEST_PATH.open(encoding="utf-8") as handle:
+        manifest = json.load(handle)
+    nsids: set[str] = set()
+    for entry in manifest["upload_order"]:
+        path = LEXICON_DIR / entry["file"]
+        with path.open(encoding="utf-8") as handle:
+            nsids.add(json.load(handle)["id"])
+    return nsids
+
+
+def _run_provision_script(context) -> subprocess.CompletedProcess[str]:
+    """Execute the HappyView provision script with context URL and admin key."""
+    env = os.environ.copy()
+    env["HAPPYVIEW_URL"] = context.happyview_url
+    env["HAPPYVIEW_ADMIN_KEY"] = context.happyview_admin_key
+    return subprocess.run(
+        [sys.executable, str(PROVISION_SCRIPT)],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def _find_sync_subscription_violations(path: Path) -> list[str]:
+    """Return AST-detected Jetstream/firehose client usage in a Python source file."""
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+    except SyntaxError:
+        return []
+
+    violations: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if any(marker in alias.name for marker in FORBIDDEN_SYNC_IMPORT_MARKERS):
+                    violations.append(f"{path}: import {alias.name}")
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            if any(marker in module for marker in FORBIDDEN_SYNC_IMPORT_MARKERS):
+                violations.append(f"{path}: from {module} import ...")
+        elif isinstance(node, ast.Call):
+            name = None
+            if isinstance(node.func, ast.Name):
+                name = node.func.id
+            elif isinstance(node.func, ast.Attribute):
+                name = node.func.attr
+            if name in FORBIDDEN_SYNC_CALL_NAMES:
+                violations.append(f"{path}: call {name}()")
+    return violations
 
 
 def _happyview_healthy(context) -> bool:
@@ -77,8 +146,23 @@ def step_spaces_enabled(context) -> None:
 
 @given("HappyView has feature.spaces_enabled disabled")
 def step_spaces_disabled(context) -> None:
-    """Placeholder for permissioned-spaces negative tests (Task BE-4.1)."""
+    """Ensure permissioned spaces feature flag is off (negative-path tests)."""
     step_happyview_running(context)
+    status, flags = _admin_request(context, "GET", "/admin/feature-flags")
+    assert status == 200
+    spaces = next((flag for flag in flags if flag.get("key") == "feature.spaces_enabled"), None)
+    if spaces and spaces.get("enabled"):
+        disable_status, _ = _admin_request(
+            context,
+            "PUT",
+            "/admin/settings/feature.spaces_enabled",
+            {"value": "false"},
+        )
+        assert disable_status in (200, 201, 204)
+        status, flags = _admin_request(context, "GET", "/admin/feature-flags")
+        spaces = next((flag for flag in flags if flag.get("key") == "feature.spaces_enabled"), None)
+    assert spaces is not None
+    assert spaces.get("enabled") is False, "feature.spaces_enabled must be disabled"
 
 
 @given("HappyView is not reachable")
@@ -89,8 +173,20 @@ def step_happyview_unreachable(context) -> None:
 
 @given("lexicons are already uploaded to HappyView")
 def step_lexicons_already_uploaded(context) -> None:
-    """Assume provisioning was completed before this scenario."""
+    """Provision once (if needed) and verify manifest NSIDs are registered."""
     step_happyview_running(context)
+    expected = _manifest_nsids()
+    status, lexicons = _admin_request(context, "GET", "/admin/lexicons")
+    assert status == 200
+    uploaded = {item["id"] for item in lexicons}
+    if expected - uploaded:
+        first_run = _run_provision_script(context)
+        assert first_run.returncode == 0, first_run.stderr or first_run.stdout
+        status, lexicons = _admin_request(context, "GET", "/admin/lexicons")
+        assert status == 200
+        uploaded = {item["id"] for item in lexicons}
+    missing = expected - uploaded
+    assert not missing, f"lexicons not registered before idempotency re-run: {sorted(missing)}"
 
 
 @when("I validate docs/lexicon JSON files")
@@ -107,17 +203,7 @@ def step_validate_lexicon_files(context) -> None:
 def step_upload_lexicons(context) -> None:
     """Run the provision script to upload lexicons."""
     step_happyview_running(context)
-    env = os.environ.copy()
-    env["HAPPYVIEW_URL"] = context.happyview_url
-    env["HAPPYVIEW_ADMIN_KEY"] = context.happyview_admin_key
-    result = subprocess.run(
-        [sys.executable, str(PROVISION_SCRIPT)],
-        cwd=REPO_ROOT,
-        env=env,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    result = _run_provision_script(context)
     context.provision_result = result
     assert result.returncode == 0, result.stderr or result.stdout
 
@@ -242,18 +328,21 @@ def step_backfill_indexing_placeholder(context) -> None:
 
 @then("ATPix should not run a separate Jetstream subscription")
 def step_no_jetstream_in_atpix(context) -> None:
-    """ATPix application code must not contain relay firehose subscribers (TC-012)."""
-    app_root = REPO_ROOT / "apps" / "backend" / "app"
-    forbidden = ("jetstream", "firehose")
-    for path in app_root.rglob("*.py"):
-        text = path.read_text(encoding="utf-8", errors="ignore").lower()
-        for term in forbidden:
-            assert term not in text, f"{term} found in {path}"
+    """ATPix application code must not instantiate Jetstream/firehose clients (TC-012)."""
+    violations: list[str] = []
+    for root in SYNC_SCAN_ROOTS:
+        if not root.is_dir():
+            continue
+        for path in root.rglob("*.py"):
+            violations.extend(_find_sync_subscription_violations(path))
+    assert not violations, "sync boundary violations:\n" + "\n".join(violations)
 
 
 @then("the encoded size should be well under 1 MiB")
 def step_cbor_size_under_limit(context) -> None:
-    """Sample photo metadata encoding must stay under 1 MiB."""
+    """Sample photo metadata CBOR encoding must stay under 1 MiB."""
+    import cbor2
+
     sample = {
         "title": "x" * 500,
         "description": "y" * 5000,
@@ -261,4 +350,4 @@ def step_cbor_size_under_limit(context) -> None:
         "createdAt": "2026-07-13T12:00:00.000Z",
         "visibility": "public",
     }
-    assert len(json.dumps(sample).encode("utf-8")) < 1024 * 1024
+    assert len(cbor2.dumps(sample)) < 1024 * 1024

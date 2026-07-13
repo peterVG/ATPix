@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import cbor2
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -89,6 +90,7 @@ def test_photo_record_cbor_size_headroom() -> None:
         "createdAt": "2026-07-13T12:00:00.000Z",
         "visibility": "public",
     }
-    encoded = json.dumps(sample_record).encode("utf-8")
+    # DAG-CBOR is the atproto record wire format; cbor2 approximates encoded size for headroom.
+    encoded = cbor2.dumps(sample_record)
     assert len(encoded) < 1024 * 1024
     assert photo_lexicon["defs"]["main"]["type"] == "record"

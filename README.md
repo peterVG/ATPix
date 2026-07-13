@@ -40,8 +40,8 @@ ATPix follows the standard [AT Protocol](https://atproto.com) split: a **Persona
 
 | Layer | Role in ATPix | Canonical user photos & records? |
 |-------|---------------|----------------------------------|
-| **User PDS** (remote) | Hosts blobs + `net.atpix.gallery.*` records for each account | **Yes** — source of truth |
-| **HappyView** (external, port 3001) | App View: index, OAuth write proxy, XRPC, permissioned spaces | No — index/cache + proxy only |
+| **User PDS** (remote) | Hosts blobs + public/unlisted `net.atpix.gallery.*` records; `net.atpix.gallery.album` metadata (with `spaceUri` when permissioned) | **Yes** — source of truth for public/unlisted content and album containers |
+| **HappyView** (external, port 3001) | App View: index, OAuth write proxy, XRPC, permissioned spaces | **Public/unlisted:** index/cache + proxy only. **Permissioned:** `net.atpix.gallery.photo` and `net.atpix.gallery.albumItem` in the album's space repo are canonical there |
 | **`apps/backend/`** | C2PA claim generation/validation, health | No |
 | **`apps/frontend/`** | Gallery UI, OAuth client | No — browser session state only |
 
@@ -53,7 +53,7 @@ Typical write path once the gallery UI is implemented:
 Browser (ATPix) → HappyView (OAuth + XRPC proxy) → user's PDS
 ```
 
-**Permissioned albums** ([ADR-010](docs/architecture/010-permissioned-spaces-storage.md)): some album **records** may live in a HappyView **space repo**, but **image blobs remain on the author's PDS** and are served via `com.atproto.space.getBlob` with membership checks.
+**Permissioned albums** ([ADR-010](docs/architecture/010-permissioned-spaces-storage.md)): the `net.atpix.gallery.album` container record stays in the owner's **PDS** and links `spaceUri`. The HappyView **space repo** holds permissioned `net.atpix.gallery.photo` and `net.atpix.gallery.albumItem` records. **Image blobs remain on the author's PDS** and are served via `com.atproto.space.getBlob` with membership checks.
 
 **Local Docker persistence:** HappyView stores its own SQLite index, OAuth sessions, and provisioned lexicons under `./data/happyview_data/` (bind-mounted in `docker-compose.happyview.yml`). Stopping the container does **not** delete user PDS data. Wiping `./data/happyview_data/` loses local index and sessions only — records on users' PDSes remain; re-run [provisioning](#run-the-application) and backfill to rebuild the index.
 
@@ -93,11 +93,13 @@ docker compose -f docker-compose.happyview.yml up -d
 curl http://127.0.0.1:3001/health
 
 # Log in at http://127.0.0.1:3001/ with your atproto handle (first user = super user).
-# Create an admin API key (Settings → API Keys) with lexicons:create and settings:manage.
+# Create an admin API key (Settings → API Keys) with lexicons:create, lexicons:read,
+# and settings:manage (read is required for --verify-only and post-upload checks).
 
-# Copy .env.example to .env and set HAPPYVIEW_ADMIN_KEY=hv_...
+cp .env.example .env   # set HAPPYVIEW_ADMIN_KEY=hv_... — the provision script loads .env automatically
 python3 scripts/provision_happyview.py          # upload lexicons + enable feature.spaces_enabled
 python3 scripts/provision_happyview.py --verify-only   # confirm provisioning
+# Or export inline: HAPPYVIEW_ADMIN_KEY=hv_... python3 scripts/provision_happyview.py
 ```
 
 See [docs/lexicon/README.md](docs/lexicon/README.md) for lexicon upload order and [happyview.dev](https://happyview.dev) for full App View docs.
