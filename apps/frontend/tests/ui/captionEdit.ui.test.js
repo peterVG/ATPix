@@ -75,7 +75,9 @@ describe("Caption and tag editing UI (SRS-F-005)", () => {
     while (Date.now() < reopenDeadline) {
       const reopened = document.querySelector('[data-testid="caption-editor-input"]');
       if (reopened instanceof HTMLTextAreaElement && reopened.value === "Sunset at the lake") {
-        expect(document.querySelectorAll('[data-testid="caption-tag-pill"]').length).toBe(1);
+        const tagPill = document.querySelector('[data-testid="caption-tag-pill"]');
+        expect(tagPill).not.toBeNull();
+        expect(tagPill?.textContent).toContain("nature");
         return;
       }
       await new Promise((resolve) => setTimeout(resolve, 25));

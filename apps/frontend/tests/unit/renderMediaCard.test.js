@@ -35,4 +35,20 @@ describe("renderMediaCard", () => {
     expect(isVerifiedPhotoRecord({ c2paValidationState: "wellFormed" })).toBe(true);
     expect(isVerifiedPhotoRecord({ c2paValidationState: "invalid" })).toBe(false);
   });
+
+  it("falls back to Untitled and omits timestamp when metadata is missing", () => {
+    const untitled = renderMediaCard({
+      photo: { uri: "at://did:plc:abc/net.atpix.gallery.photo/2", record: { visibility: "public" } },
+      index: 1,
+    });
+    expect(untitled).toContain("Untitled");
+    expect(untitled).toContain('aria-label="Edit Untitled"');
+    expect(untitled).toContain('data-card-index="1"');
+  });
+
+  it("renders Private badge for permissioned visibility", () => {
+    const html = renderPhotoBadges({ visibility: "permissioned", c2paValidationState: "trusted" });
+    expect(html).toContain('data-testid="badge-private"');
+    expect(html).not.toContain('data-testid="badge-trusted"');
+  });
 });

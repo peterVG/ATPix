@@ -77,7 +77,6 @@ export function albumDetailHref(albumUri) {
 export function navigateToRoute(route) {
   const next = SHELL_ROUTES.includes(route) ? route : "gallery";
   window.location.hash = `/${next}`;
-  window.dispatchEvent(new HashChangeEvent("hashchange"));
 }
 
 /**
@@ -88,7 +87,6 @@ export function navigateToRoute(route) {
  */
 export function navigateToAlbum(albumUri) {
   window.location.hash = `/albums/${encodeURIComponent(albumUri)}`;
-  window.dispatchEvent(new HashChangeEvent("hashchange"));
 }
 
 /**
