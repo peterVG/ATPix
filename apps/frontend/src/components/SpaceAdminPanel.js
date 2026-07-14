@@ -288,6 +288,7 @@ export function renderSpaceAdminPanel({ mount, identity, albumUri }) {
 
   const scheduleInviteResolve = () => {
     inviteResolvedDid = null;
+    errorMessage = null;
     inviteResolveGeneration += 1;
     const generation = inviteResolveGeneration;
 

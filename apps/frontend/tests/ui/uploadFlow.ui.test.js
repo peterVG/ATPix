@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { TEST_ALBUM_PERMISSIONED_KEY } from "../../src/gallery/testGalleryStub.js";
 import { loadProductionBuild } from "./helpers/loadProductionBuild.js";
 
 describe("upload flow UI (UI-SCR-005)", () => {
@@ -112,5 +113,47 @@ describe("upload flow UI (UI-SCR-005)", () => {
     }
 
     throw new Error("Uploaded photo did not appear in gallery grid");
+  });
+
+  it("publishes a signed photo to a permissioned album via space.createRecord", async () => {
+    localStorage.setItem(TEST_ALBUM_PERMISSIONED_KEY, "true");
+    await loadProductionBuild({ url: "http://127.0.0.1:5173/#/upload" });
+
+    const permissionedDestination = document.querySelector('[data-testid="destination-permissioned"]');
+    expect(permissionedDestination instanceof HTMLInputElement).toBe(true);
+    permissionedDestination.checked = true;
+    permissionedDestination.dispatchEvent(new Event("change", { bubbles: true }));
+
+    const albumDeadline = Date.now() + 3000;
+    while (Date.now() < albumDeadline) {
+      const select = document.querySelector('[data-testid="upload-permissioned-album"]');
+      if (select instanceof HTMLSelectElement && select.options.length > 1) {
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+
+    const albumSelect = document.querySelector('[data-testid="upload-permissioned-album"]');
+    expect(albumSelect instanceof HTMLSelectElement).toBe(true);
+    expect(albumSelect.options.length).toBeGreaterThan(1);
+
+    const input = document.querySelector('[data-testid="upload-input"]');
+    expect(input instanceof HTMLInputElement).toBe(true);
+
+    const file = new File([new Uint8Array([0xff, 0xd8, 0xff, 0x01])], "permissioned.jpg", {
+      type: "image/jpeg",
+    });
+    Object.defineProperty(input, "files", { configurable: true, value: [file] });
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+
+    const deadline = Date.now() + 5000;
+    while (Date.now() < deadline) {
+      if (document.querySelector('[data-testid="upload-complete"]')) {
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+
+    throw new Error("Permissioned upload did not complete");
   });
 });

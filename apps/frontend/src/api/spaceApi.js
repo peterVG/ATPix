@@ -3,33 +3,7 @@
  */
 
 import { buildXrpcHeaders } from "./happyview.js";
-
-/**
- * Parse an XRPC JSON response or throw a descriptive error.
- *
- * @param {Response} response - Fetch response from HappyView.
- * @returns {Promise<object>} Parsed JSON body.
- */
-async function parseXrpcJson(response) {
-  let body;
-  try {
-    body = await response.json();
-  } catch {
-    if (response.ok) {
-      throw new Error(`Invalid JSON in XRPC response (HTTP ${response.status})`);
-    }
-    body = {};
-  }
-
-  if (!response.ok) {
-    const message = typeof body.message === "string" ? body.message : `HTTP ${response.status}`;
-    const error = new Error(message);
-    error.status = response.status;
-    throw error;
-  }
-
-  return body;
-}
+import { parseXrpcJson, parseXrpcVoid } from "./xrpcResponse.js";
 
 /**
  * List members of a permissioned space.
@@ -170,21 +144,33 @@ export async function deleteSpaceRecord(fetchHandler, input) {
     body: JSON.stringify(input),
   });
 
-  if (response.ok) {
-    return;
+  await parseXrpcVoid(response);
+}
+
+/**
+ * Fetch a permissioned space blob and return a revocable object URL for UI rendering.
+ *
+ * @param {(path: string, init?: RequestInit) => Promise<Response>} fetchHandler - DPoP fetch handler.
+ * @param {string} spaceUri - Linked permissioned space URI.
+ * @param {string} cid - Blob CID link.
+ * @returns {Promise<string>} Object URL for the gated blob bytes.
+ */
+export async function fetchSpaceBlobObjectUrl(fetchHandler, spaceUri, cid) {
+  const search = new URLSearchParams({ space: spaceUri, cid });
+  const response = await fetchHandler(`/xrpc/com.atproto.space.getBlob?${search.toString()}`, {
+    method: "GET",
+    headers: buildXrpcHeaders(),
+  });
+
+  if (!response.ok) {
+    const message = `HTTP ${response.status}`;
+    const error = new Error(message);
+    error.status = response.status;
+    throw error;
   }
 
-  let body = {};
-  try {
-    body = await response.json();
-  } catch {
-    body = {};
-  }
-
-  const message = typeof body.message === "string" ? body.message : `HTTP ${response.status}`;
-  const error = new Error(message);
-  error.status = response.status;
-  throw error;
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
 }
 
 /**

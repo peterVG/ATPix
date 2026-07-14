@@ -8,12 +8,20 @@ import {
   getAlbum,
   listAlbums,
   listPhotos,
+  PERMISSIONED_ALBUM_SPACE_CONFIG,
   removeFromAlbum,
   updatePhoto,
   uploadBlob,
 } from "../../src/api/galleryApi.js";
 
 describe("galleryApi", () => {
+  it("exports ADR-010 permissioned album space config spec", () => {
+    expect(PERMISSIONED_ALBUM_SPACE_CONFIG).toEqual({
+      membershipPublic: false,
+      recordsPublic: false,
+    });
+  });
+
   it("uploadBlob posts signed bytes to com.atproto.repo.uploadBlob", async () => {
     const fetchHandler = vi.fn(async () => ({
       ok: true,

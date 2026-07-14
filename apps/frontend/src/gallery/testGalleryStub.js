@@ -39,7 +39,7 @@ let blobCounter = 0;
 let albumCounter = 0;
 let spaceRecordCounter = 0;
 
-/** @type {{ uri: string, cid: string, collection: string, value: object }[]} */
+/** @type {{ uri: string, cid: string, collection: string, space: string, value: object }[]} */
 let spaceRecords = [];
 
 /** @type {((path: string, init?: RequestInit) => Promise<Response>) | null} */
@@ -79,20 +79,23 @@ export function resetTestGalleryStub() {
     seedPublicAlbumFixture();
   }
 
-  if (
-    typeof localStorage !== "undefined" &&
-    localStorage.getItem(TEST_ALBUM_PERMISSIONED_KEY) === "true"
-  ) {
+  const wantsPermissionedFixture =
+    (typeof localStorage !== "undefined" &&
+      localStorage.getItem(TEST_ALBUM_PERMISSIONED_KEY) === "true") ||
+    (typeof localStorage !== "undefined" &&
+      localStorage.getItem(TEST_ALBUM_SPACE_ADMIN_KEY) === "true") ||
+    (typeof localStorage !== "undefined" &&
+      localStorage.getItem(TEST_ALBUM_SPACE_DENIED_KEY) === "true");
+
+  if (wantsPermissionedFixture) {
     seedPermissionedAlbumFixture();
   }
 
   if (typeof localStorage !== "undefined" && localStorage.getItem(TEST_ALBUM_SPACE_ADMIN_KEY) === "true") {
-    seedPermissionedAlbumFixture();
     seedSpaceAdminFixture();
   }
 
   if (typeof localStorage !== "undefined" && localStorage.getItem(TEST_ALBUM_SPACE_DENIED_KEY) === "true") {
-    seedPermissionedAlbumFixture();
     spaceAdminDenied = true;
   }
 }
@@ -193,7 +196,7 @@ function seedPublicAlbumFixture() {
 }
 
 /**
- * Seed a permissioned album with space URI for UI-SCR-004 permissioned tests.
+ * Seed space member directory data for UI-SCR-006 admin tests.
  *
  * @returns {void}
  */
@@ -214,6 +217,11 @@ function seedSpaceAdminFixture() {
   ];
 }
 
+/**
+ * Seed a permissioned album with space URI for UI-SCR-004 permissioned tests.
+ *
+ * @returns {void}
+ */
 function seedPermissionedAlbumFixture() {
   const trusted = createStubPhoto("Trusted Member", { c2paValidationState: "trusted" });
   photos.push(trusted);
@@ -229,13 +237,56 @@ function seedPermissionedAlbumFixture() {
 }
 
 /**
+ * Normalize AT/ATS record URIs for stub lookups.
+ *
+ * @param {string} uri - Record URI.
+ * @returns {string} Normalized ATS URI.
+ */
+function normalizeRecordUri(uri) {
+  return uri.replace(/^at:\/\//, "ats://");
+}
+
+/**
  * Find a photo by AT URI in the stub store.
  *
  * @param {string} uri - Photo AT URI.
  * @returns {object | undefined} Matching photo view.
  */
 function findPhoto(uri) {
-  return photos.find((photo) => photo.uri === uri);
+  const normalized = normalizeRecordUri(uri);
+  return photos.find((photo) => normalizeRecordUri(photo.uri) === normalized);
+}
+
+/**
+ * Remove stub gallery state for deleted space records.
+ *
+ * @param {object} body - deleteRecord procedure input.
+ * @returns {void}
+ */
+function removeDeletedSpaceRecords(body) {
+  const removed = spaceRecords.filter(
+    (record) =>
+      record.space === body.space &&
+      record.collection === body.collection &&
+      record.uri.endsWith(`/${body.rkey}`),
+  );
+
+  spaceRecords = spaceRecords.filter((record) => !removed.includes(record));
+
+  for (const record of removed) {
+    const normalizedUri = normalizeRecordUri(record.uri);
+
+    if (record.collection === "net.atpix.gallery.photo") {
+      photos = photos.filter((photo) => normalizeRecordUri(photo.uri) !== normalizedUri);
+      albumItems = albumItems.filter(
+        (item) => normalizeRecordUri(item.photoUri) !== normalizedUri,
+      );
+    }
+
+    if (record.collection === "net.atpix.gallery.albumItem") {
+      albumItems = albumItems.filter((item) => normalizeRecordUri(item.uri) !== normalizedUri);
+    }
+  }
 }
 
 /**
@@ -401,24 +452,40 @@ export function createTestFetchHandler() {
         uri,
         cid,
         collection: body.collection,
+        space: body.space,
         value: body.record ?? {},
       });
 
       if (body.collection === "net.atpix.gallery.photo") {
-        const photo = createStubPhoto(body.record?.title ?? "Space Photo", {
-          visibility: "permissioned",
-          spaceUri: body.space,
-          image: body.record?.image,
+        const submitted = body.record ?? {};
+        photos.unshift({
+          uri,
+          cid,
+          author: "did:plc:atpixuitest",
+          record: {
+            $type: "net.atpix.gallery.photo",
+            title: submitted.title ?? "Space Photo",
+            caption: submitted.caption,
+            keywords: submitted.keywords,
+            createdAt: submitted.createdAt ?? nowRfc3339Utc(),
+            visibility: "permissioned",
+            spaceUri: body.space,
+            image: submitted.image,
+            c2paValidationState: "trusted",
+          },
         });
-        photo.uri = uri.replace(/^ats:/, "at:");
-        photo.cid = cid;
-        photos.unshift(photo);
       }
 
       if (body.collection === "net.atpix.gallery.albumItem") {
-        const photo = findPhoto(body.record?.photoUri) ?? createStubPhoto("Space Photo");
+        const photo = findPhoto(body.record?.photoUri);
         const album = findAlbum(body.record?.albumUri);
-        if (album && !albumItems.some((item) => item.albumUri === album.uri && item.photoUri === photo.uri)) {
+        if (
+          album &&
+          photo &&
+          !albumItems.some(
+            (item) => item.albumUri === album.uri && normalizeRecordUri(item.photoUri) === normalizeRecordUri(photo.uri),
+          )
+        ) {
           linkPhotoToAlbum(album, photo);
         }
       }
@@ -428,14 +495,20 @@ export function createTestFetchHandler() {
 
     if (path.includes("/xrpc/com.atproto.space.deleteRecord")) {
       const body = init.body ? JSON.parse(String(init.body)) : {};
-      spaceRecords = spaceRecords.filter(
-        (record) =>
-          !(
-            record.collection === body.collection &&
-            record.uri.endsWith(`/${body.rkey}`)
-          ),
-      );
+      removeDeletedSpaceRecords(body);
       return jsonResponse({});
+    }
+
+    if (path.includes("/xrpc/com.atproto.space.getBlob")) {
+      if (spaceAdminDenied) {
+        return jsonResponse({ message: "Forbidden" }, 403);
+      }
+
+      const bytes = new Uint8Array([0xff, 0xd8, 0xff, 0xd9]);
+      return new Response(bytes, {
+        status: 200,
+        headers: { "Content-Type": "image/jpeg" },
+      });
     }
 
     if (path.includes("/xrpc/com.atproto.space.listRecords")) {
@@ -444,7 +517,10 @@ export function createTestFetchHandler() {
       }
       const url = new URL(path, "http://stub.test");
       const collection = url.searchParams.get("collection");
-      const records = spaceRecords.filter((record) => record.collection === collection);
+      const space = url.searchParams.get("space");
+      const records = spaceRecords.filter(
+        (record) => record.collection === collection && record.space === space,
+      );
       return jsonResponse({ records });
     }
 

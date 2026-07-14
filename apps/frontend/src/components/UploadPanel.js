@@ -71,6 +71,7 @@ export function renderUploadPanel({ mount, identity }) {
   /** @type {object[]} */
   let permissionedAlbums = [];
   let selectedPermissionedAlbumUri = "";
+  let permissionedAlbumsError = null;
   let publishTitle = "";
   let publishCaption = "";
   /** @type {string[]} */
@@ -209,6 +210,11 @@ export function renderUploadPanel({ mount, identity }) {
                   <p class="upload-step upload-step--note" data-testid="upload-permissioned-note">
                     Uploads are membership-gated via HappyView spaces — not client-side encrypted.
                   </p>
+                  ${
+                    permissionedAlbumsError
+                      ? `<p class="gallery-error" data-testid="upload-permissioned-error">${escapeHtml(permissionedAlbumsError)}</p>`
+                      : ""
+                  }
                 `
                 : ""
             }
@@ -243,12 +249,15 @@ export function renderUploadPanel({ mount, identity }) {
     });
   };
 
+  const isSelectedAlbumValid = () =>
+    permissionedAlbums.some((album) => album.uri === selectedPermissionedAlbumUri);
+
   const canAutoPublish = () => {
     if (destination === "public") {
       return true;
     }
 
-    return destination === "permissioned" && Boolean(selectedPermissionedAlbumUri);
+    return destination === "permissioned" && isSelectedAlbumValid();
   };
 
   const readPublishMetadata = () => ({
@@ -361,6 +370,10 @@ export function renderUploadPanel({ mount, identity }) {
   };
 
   const publishReadyQueue = async () => {
+    if (destination === "permissioned" && !isSelectedAlbumValid()) {
+      return;
+    }
+
     const readyItems = queue.filter((entry) => entry.state === "ready");
     for (const entry of readyItems) {
       await publishItem(entry.id);
@@ -368,6 +381,7 @@ export function renderUploadPanel({ mount, identity }) {
   };
 
   const loadPermissionedAlbums = async () => {
+    permissionedAlbumsError = null;
     try {
       const fetchHandler = await getHappyViewFetchHandler();
       let collected = [];
@@ -388,16 +402,18 @@ export function renderUploadPanel({ mount, identity }) {
       } while (cursor);
 
       permissionedAlbums = collected;
-      if (!selectedPermissionedAlbumUri && permissionedAlbums[0]) {
-        selectedPermissionedAlbumUri = permissionedAlbums[0].uri;
+      if (!isSelectedAlbumValid()) {
+        selectedPermissionedAlbumUri = permissionedAlbums[0]?.uri ?? "";
       }
       render();
 
-      if (destination === "permissioned" && selectedPermissionedAlbumUri) {
+      if (destination === "permissioned" && isSelectedAlbumValid()) {
         await publishReadyQueue();
       }
-    } catch {
+    } catch (error) {
       permissionedAlbums = [];
+      permissionedAlbumsError =
+        error instanceof Error ? error.message : "Unable to load permissioned albums";
       render();
     }
   };

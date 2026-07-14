@@ -42,6 +42,47 @@ export function parseSpaceRecordRkey(uri) {
 }
 
 /**
+ * Best-effort rollback for permissioned upload writes.
+ *
+ * @param {(path: string, init?: RequestInit) => Promise<Response>} fetchHandler - DPoP fetch handler.
+ * @param {string} spaceUri - Linked permissioned space URI.
+ * @param {{ uri: string } | null} photo - Created photo record, if any.
+ * @param {{ uri: string } | null} albumItem - Created album-item record, if any.
+ * @returns {Promise<void>} Resolves when rollback attempts complete.
+ */
+export async function rollbackPermissionedUpload(fetchHandler, spaceUri, photo, albumItem) {
+  if (albumItem?.uri) {
+    const albumItemRkey = parseSpaceRecordRkey(albumItem.uri);
+    if (albumItemRkey) {
+      try {
+        await deleteSpaceRecord(fetchHandler, {
+          space: spaceUri,
+          collection: "net.atpix.gallery.albumItem",
+          rkey: albumItemRkey,
+        });
+      } catch {
+        // Rollback is best-effort.
+      }
+    }
+  }
+
+  if (photo?.uri) {
+    const photoRkey = parseSpaceRecordRkey(photo.uri);
+    if (photoRkey) {
+      try {
+        await deleteSpaceRecord(fetchHandler, {
+          space: spaceUri,
+          collection: "net.atpix.gallery.photo",
+          rkey: photoRkey,
+        });
+      } catch {
+        // Rollback is best-effort.
+      }
+    }
+  }
+}
+
+/**
  * Publish a prepared upload into a permissioned space (uploadBlob → space.createRecord).
  *
  * @param {PublishPermissionedPhotoInput} input - Signed upload payload and space targets.
@@ -55,6 +96,7 @@ export async function publishPermissionedPhoto(input) {
   };
 
   let createdPhoto = null;
+  let createdAlbumItem = null;
 
   try {
     report(10);
@@ -81,7 +123,7 @@ export async function publishPermissionedPhoto(input) {
     });
     report(80);
 
-    await createSpaceRecord(fetchHandler, {
+    createdAlbumItem = await createSpaceRecord(fetchHandler, {
       space: input.spaceUri,
       collection: "net.atpix.gallery.albumItem",
       record: {
@@ -99,20 +141,11 @@ export async function publishPermissionedPhoto(input) {
       createdAt,
     };
   } catch (error) {
-    if (createdPhoto?.uri) {
-      try {
-        const fetchHandler = await getHappyViewFetchHandler();
-        const rkey = parseSpaceRecordRkey(createdPhoto.uri);
-        if (rkey) {
-          await deleteSpaceRecord(fetchHandler, {
-            space: input.spaceUri,
-            collection: "net.atpix.gallery.photo",
-            rkey,
-          });
-        }
-      } catch {
-        // Rollback is best-effort; surface the original album-item failure below.
-      }
+    try {
+      const fetchHandler = await getHappyViewFetchHandler();
+      await rollbackPermissionedUpload(fetchHandler, input.spaceUri, createdPhoto, createdAlbumItem);
+    } catch {
+      // Rollback is best-effort; surface the original failure below.
     }
 
     const message = error instanceof Error ? error.message : "Permissioned upload failed";

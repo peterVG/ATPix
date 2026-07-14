@@ -51,9 +51,9 @@ describe("Albums list UI (SRS-F-004)", () => {
   });
 
   it("shows permissioned privacy disclosure without encryption claims", async () => {
-    document.querySelector('[data-testid="album-visibility-permissioned"]')?.dispatchEvent(
-      new Event("click", { bubbles: true }),
-    );
+    const permissionedChip = document.querySelector('[data-testid="album-visibility-permissioned"]');
+    expect(permissionedChip).not.toBeNull();
+    permissionedChip.dispatchEvent(new Event("click", { bubbles: true }));
 
     const deadline = Date.now() + 3000;
     while (Date.now() < deadline) {

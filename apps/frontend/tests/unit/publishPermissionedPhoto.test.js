@@ -9,6 +9,7 @@ vi.mock("../../src/auth/happyViewFetch.js", () => ({
 import {
   parseSpaceRecordRkey,
   publishPermissionedPhoto,
+  rollbackPermissionedUpload,
 } from "../../src/upload/publishPermissionedPhoto.js";
 
 describe("publishPermissionedPhoto", () => {
@@ -73,8 +74,8 @@ describe("publishPermissionedPhoto", () => {
     );
   });
 
-  it("rolls back the photo record when album-item creation fails", async () => {
-    const calls = [];
+  it("rolls back photo and album-item records when album-item creation fails", async () => {
+    const deleteBodies = [];
 
     fetchHandler.mockImplementation(async (path, init) => {
       if (path.includes("uploadBlob")) {
@@ -92,8 +93,8 @@ describe("publishPermissionedPhoto", () => {
       }
 
       if (path.includes("createRecord")) {
-        calls.push("create");
-        if (calls.length === 1) {
+        const body = init?.body ? JSON.parse(String(init.body)) : {};
+        if (body.collection === "net.atpix.gallery.photo") {
           return {
             ok: true,
             json: async () => ({
@@ -102,6 +103,7 @@ describe("publishPermissionedPhoto", () => {
             }),
           };
         }
+
         return {
           ok: false,
           status: 500,
@@ -110,13 +112,7 @@ describe("publishPermissionedPhoto", () => {
       }
 
       if (path.includes("deleteRecord")) {
-        calls.push("delete");
-        const body = init?.body ? JSON.parse(String(init.body)) : {};
-        expect(body).toEqual({
-          space: "ats://did:plc:space/net.atpix.gallery.albumSpace/album1",
-          collection: "net.atpix.gallery.photo",
-          rkey: "stub9",
-        });
+        deleteBodies.push(init?.body ? JSON.parse(String(init.body)) : {});
         return { ok: true, json: async () => ({}) };
       }
 
@@ -133,6 +129,45 @@ describe("publishPermissionedPhoto", () => {
     });
 
     expect(result.status).toBe("error");
-    expect(calls).toEqual(["create", "create", "delete"]);
+    expect(deleteBodies).toEqual([
+      {
+        space: "ats://did:plc:space/net.atpix.gallery.albumSpace/album1",
+        collection: "net.atpix.gallery.photo",
+        rkey: "stub9",
+      },
+    ]);
+  });
+
+  it("deletes album-item before photo during explicit rollback", async () => {
+    const deleteBodies = [];
+
+    fetchHandler.mockImplementation(async (path, init) => {
+      if (path.includes("deleteRecord")) {
+        deleteBodies.push(init?.body ? JSON.parse(String(init.body)) : {});
+        return { ok: true, json: async () => ({}) };
+      }
+
+      return { ok: true, json: async () => ({}) };
+    });
+
+    await rollbackPermissionedUpload(
+      fetchHandler,
+      "ats://did:plc:space/net.atpix.gallery.albumSpace/album1",
+      { uri: "ats://did:plc:space/net.atpix.gallery.photo/stub9" },
+      { uri: "ats://did:plc:space/net.atpix.gallery.albumItem/stub10" },
+    );
+
+    expect(deleteBodies).toEqual([
+      {
+        space: "ats://did:plc:space/net.atpix.gallery.albumSpace/album1",
+        collection: "net.atpix.gallery.albumItem",
+        rkey: "stub10",
+      },
+      {
+        space: "ats://did:plc:space/net.atpix.gallery.albumSpace/album1",
+        collection: "net.atpix.gallery.photo",
+        rkey: "stub9",
+      },
+    ]);
   });
 });

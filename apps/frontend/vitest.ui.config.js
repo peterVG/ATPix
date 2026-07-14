@@ -11,6 +11,5 @@ export default defineConfig({
     include: ["tests/ui/**/*.ui.test.js"],
     setupFiles: ["tests/ui/setup.js"],
     testTimeout: 15000,
-    fileParallelism: false,
   },
 });

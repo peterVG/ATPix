@@ -18,17 +18,17 @@ export function resolveImageUrl(image, happyViewUrl, authorDid, spaceUri) {
     return null;
   }
 
+  const link = image.ref?.$link;
+  if (typeof spaceUri === "string" && spaceUri.length > 0 && typeof link === "string" && link.length > 0) {
+    return buildSpaceBlobUrl(happyViewUrl, spaceUri, link);
+  }
+
   if (typeof image.url === "string" && image.url.length > 0) {
     return image.url;
   }
 
-  const link = image.ref?.$link;
   if (typeof link !== "string" || link.length === 0) {
     return null;
-  }
-
-  if (typeof spaceUri === "string" && spaceUri.length > 0) {
-    return buildSpaceBlobUrl(happyViewUrl, spaceUri, link);
   }
 
   const base = happyViewUrl.replace(/\/$/, "");

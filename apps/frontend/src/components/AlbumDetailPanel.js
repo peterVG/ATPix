@@ -290,7 +290,7 @@ export function renderAlbumDetailPanel({ mount, identity, albumUri }) {
 
     const grid = mount.querySelector('[data-testid="album-media-grid"]');
     if (grid instanceof HTMLElement) {
-      applyCardBackgrounds(grid, photosForGrid, identity.did);
+      void applyCardBackgrounds(grid, photosForGrid, identity.did);
     }
   };
 
