@@ -376,11 +376,13 @@ cd apps/backend && source .venv/bin/activate && ruff check . --fix && ruff forma
 cd apps/frontend && npm run format && npm run lint
 ```
 
-**Backend** (`apps/backend/`, venv active):
+**Backend** (`apps/backend/`):
 
 ```bash
-pytest
+./test
 ```
+
+Or with the venv activated: `source .venv/bin/activate && pytest`
 
 **Frontend** (`apps/frontend/`):
 

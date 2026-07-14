@@ -24,7 +24,8 @@ pip install -r requirements-dev.txt
 
 ## Testing
 
-- Backend: `cd apps/backend && pytest` → `tests/allure-results/`
+- Backend: `cd apps/backend && ./test` (uses `.venv` and installs `allure-pytest` automatically) → `tests/allure-results/`
+- Or activate the venv first: `source .venv/bin/activate && pytest`
 - Frontend: `cd apps/frontend && npm run test:unit` → `tests/allure-results/`
 
 See [docs/architecture/001-test-runners-and-reporting.md](../docs/architecture/001-test-runners-and-reporting.md).
