@@ -1,7 +1,7 @@
 # UI Requirements Specification: ATPix
 
-**Version:** 1.0  
-**Last Updated:** 2026-07-12T23:00:00Z  
+**Version:** 1.1  
+**Last Updated:** 2026-07-14T12:00:00Z
 **Status:** Draft — aligned with UX guide and v1 mockups  
 **Sources:** [UX Guide](../references/000-UX-guide.md) · [SRS](./003-srs.md) · [PRD](./002-prd.md) · [Mockups](../references/mockups/)
 
@@ -86,6 +86,40 @@ Users MUST be able to switch between **dark** and **light** appearance while pre
 ---
 
 # Screen requirements
+
+## UI-SCR-009: Sign-in and PDS onboarding
+
+**Route:** `/` (unauthenticated)  
+**SRS:** SRS-F-001, SRS-F-001.4, SRS-F-017 (v1.1 link); SRS-F-018 (embedded mode post-v1)  
+**PRD:** F-001, F-017; F-018–F-021 post-v1
+
+### Layout (v1.1 — link mode)
+
+| Element | Requirement |
+|---------|-------------|
+| **Headline** | `Sign in to ATPix` |
+| **Lede** | State that users sign in with an existing PDS account; ATPix does not store passwords. |
+| **Handle field** | Text input with placeholder e.g. `you.bsky.social` or `theirname.pds.atpix.net`. |
+| **Submit** | Primary button **Sign in with atproto** → F-001 OAuth. |
+| **PDS signup CTA** | When `VITE_PDS_SIGNUP_URL` is set, show secondary copy with link (`data-testid="pds-signup-link"`) to hosted PDS registration; MUST mention `*.pds.atpix.net` handles. |
+| **HappyView meta** | Display configured HappyView endpoint URL. |
+
+### Layout (post-v1 — embedded mode, F-018)
+
+When embedded signup ships (Task 9.1), the same route MUST support a tab or stepper: **Sign in** \| **Create account**, with handle picker constrained to available `*.pds.atpix.net` names, invite-code field when PDS policy requires it (F-019), and optional apex-handle upgrade path (F-020) behind operator approval.
+
+### States
+
+| State | Behavior |
+|-------|----------|
+| **Default** | Sign-in form visible; signup link visible only when env configured. |
+| **Error** | Inline alert (`data-testid="sign-in-error"`) on OAuth start failure. |
+| **Embedded signup (future)** | In-panel registration form; MUST NOT duplicate password storage in ATPix. |
+
+**Source:** [README](../../README.md) Phase B.8; [002-prd.md](./002-prd.md) F-017–F-021  
+**Tests:** [`signIn.ui.test.js`](../../apps/frontend/tests/ui/signIn.ui.test.js), [`signInPanel.test.js`](../../apps/frontend/tests/unit/signInPanel.test.js), [`oauth_sign_in_SRS-F-001.feature`](../../apps/frontend/tests/features/oauth_sign_in_SRS-F-001.feature)
+
+---
 
 ## UI-SCR-001: My Gallery (Path A)
 
@@ -419,6 +453,7 @@ The v1 mockups are **directional**. Implementation MUST correct these PRD confli
 
 | UI ID | Screen | SRS | PRD | Mockup |
 |-------|--------|-----|-----|--------|
+| UI-SCR-009 | Sign-in / PDS onboarding | SRS-F-001.4, SRS-F-017 | F-001, F-017 | — |
 | UI-SCR-001 | My Gallery | SRS-F-003 | F-003 | [02](../references/mockups/02-my-gallery.jpg) |
 | UI-SCR-002 | Discovery | SRS-F-010 | F-010 | [01](../references/mockups/01-discovery-feed.jpg) |
 | UI-SCR-003 | Photo detail | SRS-F-005, F-009, F-014 | F-005, F-009, F-014 | [03](../references/mockups/03-photo-detail.jpg) |

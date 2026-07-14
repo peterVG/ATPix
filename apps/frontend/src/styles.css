@@ -171,6 +171,21 @@ body {
   font-family: var(--font-body);
 }
 
+.sign-in-signup {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.sign-in-signup a {
+  color: var(--atproto-blue, #0085ff);
+  text-decoration: none;
+}
+
+.sign-in-signup a:hover {
+  text-decoration: underline;
+}
+
 .sign-in-meta code {
   color: var(--atproto-blue);
   font-family: var(--font-mono);

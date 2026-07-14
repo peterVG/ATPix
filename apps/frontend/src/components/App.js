@@ -1,4 +1,5 @@
 import { OAUTH_CALLBACK_PATH } from "../config/oauthClientMetadata.js";
+import { getPdsSignupUrl } from "../config/pdsSignup.js";
 import { createOAuthClient } from "../auth/createOAuthClient.js";
 import { navigateToRoute, onRouteChange, parseRouteFromHash } from "../router/router.js";
 import {
@@ -98,6 +99,7 @@ export async function bootstrapApp({ mount, happyviewUrl, oauthClient }) {
       renderSignInPanel({
         mount,
         happyviewUrl,
+        pdsSignupUrl: getPdsSignupUrl(),
         onSignIn: async (handle) => {
           await client.signIn(handle);
         },

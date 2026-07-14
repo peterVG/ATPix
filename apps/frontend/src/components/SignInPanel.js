@@ -27,11 +27,20 @@ function renderSignInError(mount, message) {
  * @param {object} options - Render options.
  * @param {HTMLElement} options.mount - DOM node to render into.
  * @param {string} options.happyviewUrl - HappyView App View base URL.
+ * @param {string} [options.pdsSignupUrl] - Hosted PDS registration URL (F-017); omit to hide signup link.
  * @param {(handle: string) => Promise<void>} options.onSignIn - Invoked when the user submits a handle.
  * @returns {void}
  */
-export function renderSignInPanel({ mount, happyviewUrl, onSignIn }) {
+export function renderSignInPanel({ mount, happyviewUrl, pdsSignupUrl, onSignIn }) {
   const safeHappyviewUrl = escapeHtml(happyviewUrl);
+  const signupLink =
+    typeof pdsSignupUrl === "string" && pdsSignupUrl.length > 0
+      ? `<p class="sign-in-signup" data-testid="pds-signup-cta">
+          Don&rsquo;t have an account?
+          <a href="${escapeHtml(pdsSignupUrl)}" data-testid="pds-signup-link">Create a <code>*.pds.atpix.net</code> handle</a>
+          on the ATPix PDS, then return here to sign in.
+        </p>`
+      : "";
 
   mount.innerHTML = `
     <section class="sign-in-panel" data-testid="sign-in-panel">
@@ -59,6 +68,7 @@ export function renderSignInPanel({ mount, happyviewUrl, onSignIn }) {
           Sign in with atproto
         </button>
       </form>
+      ${signupLink}
       <p class="sign-in-meta" data-testid="happyview-url">
         HappyView endpoint: <code>${safeHappyviewUrl}</code>
       </p>
