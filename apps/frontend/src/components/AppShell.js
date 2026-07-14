@@ -1,6 +1,8 @@
-import { routeHref } from "../router/router.js";
+import { parseAlbumUriFromHash, routeHref } from "../router/router.js";
 import { escapeHtml } from "../utils/html.js";
 
+import { renderAlbumDetailPanel } from "./AlbumDetailPanel.js";
+import { renderAlbumsPanel } from "./AlbumsPanel.js";
 import { renderGalleryPanel } from "./GalleryPanel.js";
 import { bindAppearanceControls, renderRouteContent } from "./GalleryPlaceholder.js";
 import { renderUploadPanel } from "./UploadPanel.js";
@@ -185,6 +187,19 @@ export function renderAppShell({
         onUpload: openUpload,
       });
       registerPanelDestroy?.(panel.destroy);
+    } else if (route === "albums") {
+      const albumUri = parseAlbumUriFromHash();
+      if (albumUri) {
+        const panel = renderAlbumDetailPanel({
+          mount: main,
+          identity,
+          albumUri,
+        });
+        registerPanelDestroy?.(panel.destroy);
+      } else {
+        const panel = renderAlbumsPanel({ mount: main, identity });
+        registerPanelDestroy?.(panel.destroy);
+      }
     } else {
       renderRouteContent({
         mount: main,

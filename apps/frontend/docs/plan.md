@@ -68,7 +68,7 @@ Granular checklist for the Vite vanilla JS client. Global sequencing: [docs/over
   - **Related Tests:** [`photo_upload_SRS-F-002.feature`](../tests/features/photo_upload_SRS-F-002.feature), [`personal_gallery_SRS-F-003.feature`](../tests/features/personal_gallery_SRS-F-003.feature), [`ui_my_gallery_UI-SCR-001.feature`](../tests/features/ui_my_gallery_UI-SCR-001.feature)
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task FE-3.2. Production-build vitest. Invoke @feature-writer. Walkthrough, check off, commit, push.`
 
-- [ ] **Task FE-3.3: Album organization, captions, and album view**
+- [x] **Task FE-3.3: Album organization, captions, and album view**
   - **Description:** `createAlbum`, `addToAlbum`, `listAlbums`, visibility chips (PUBLIC/UNLISTED/PERMISSIONED), caption/tag edit (F-005), UI-SCR-004 album detail with member-list seeding from Path A.
   - **Estimated Time:** 10 hours
   - **Dependencies:** Task FE-3.2

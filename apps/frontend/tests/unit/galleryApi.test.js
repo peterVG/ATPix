@@ -1,6 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { createPhoto, listPhotos, uploadBlob } from "../../src/api/galleryApi.js";
+import {
+  addToAlbum,
+  createAlbum,
+  createPhoto,
+  deleteAlbum,
+  listAlbums,
+  listPhotos,
+  removeFromAlbum,
+  updatePhoto,
+  uploadBlob,
+} from "../../src/api/galleryApi.js";
 
 describe("galleryApi", () => {
   it("uploadBlob posts signed bytes to com.atproto.repo.uploadBlob", async () => {
@@ -81,5 +91,118 @@ describe("galleryApi", () => {
       "/xrpc/net.atpix.gallery.listPhotos?did=did%3Aplc%3Aabc&limit=20&cursor=cursor-1",
       expect.objectContaining({ method: "GET" }),
     );
+  });
+
+  it("createAlbum posts JSON to net.atpix.gallery.createAlbum", async () => {
+    const fetchHandler = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        uri: "at://did:plc:abc/net.atpix.gallery.album/1",
+        cid: "bafyalbum",
+      }),
+    }));
+
+    await createAlbum(fetchHandler, { name: "Summer Trip", visibility: "public" });
+
+    expect(fetchHandler).toHaveBeenCalledWith(
+      "/xrpc/net.atpix.gallery.createAlbum",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ name: "Summer Trip", visibility: "public" }),
+      }),
+    );
+  });
+
+  it("listAlbums queries author DID", async () => {
+    const fetchHandler = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ albums: [] }),
+    }));
+
+    await listAlbums(fetchHandler, { did: "did:plc:abc", limit: 20 });
+
+    expect(fetchHandler).toHaveBeenCalledWith(
+      "/xrpc/net.atpix.gallery.listAlbums?did=did%3Aplc%3Aabc&limit=20",
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  it("addToAlbum posts album and photo URIs", async () => {
+    const fetchHandler = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ uri: "at://did:plc:abc/net.atpix.gallery.albumItem/1", cid: "bafyitem" }),
+    }));
+
+    await addToAlbum(fetchHandler, {
+      albumUri: "at://did:plc:abc/net.atpix.gallery.album/1",
+      photoUri: "at://did:plc:abc/net.atpix.gallery.photo/1",
+    });
+
+    expect(fetchHandler).toHaveBeenCalledWith(
+      "/xrpc/net.atpix.gallery.addToAlbum",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          albumUri: "at://did:plc:abc/net.atpix.gallery.album/1",
+          photoUri: "at://did:plc:abc/net.atpix.gallery.photo/1",
+        }),
+      }),
+    );
+  });
+
+  it("updatePhoto posts caption and keywords", async () => {
+    const fetchHandler = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ uri: "at://did:plc:abc/net.atpix.gallery.photo/1", cid: "bafyrec" }),
+    }));
+
+    await updatePhoto(fetchHandler, {
+      uri: "at://did:plc:abc/net.atpix.gallery.photo/1",
+      caption: "New caption",
+      keywords: ["nature"],
+    });
+
+    expect(fetchHandler).toHaveBeenCalledWith(
+      "/xrpc/net.atpix.gallery.updatePhoto",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          uri: "at://did:plc:abc/net.atpix.gallery.photo/1",
+          caption: "New caption",
+          keywords: ["nature"],
+        }),
+      }),
+    );
+  });
+
+  it("deleteAlbum posts album URI in the body", async () => {
+    const fetchHandler = vi.fn(async () => ({
+      ok: true,
+      text: async () => "",
+    }));
+
+    await deleteAlbum(fetchHandler, { uri: "at://did:plc:abc/net.atpix.gallery.album/1" });
+
+    expect(fetchHandler).toHaveBeenCalledWith(
+      "/xrpc/net.atpix.gallery.deleteAlbum",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ uri: "at://did:plc:abc/net.atpix.gallery.album/1" }),
+      }),
+    );
+  });
+
+  it("removeFromAlbum succeeds with an empty response body", async () => {
+    const fetchHandler = vi.fn(async () => ({
+      ok: true,
+      text: async () => "",
+    }));
+
+    await expect(
+      removeFromAlbum(fetchHandler, {
+        albumUri: "at://did:plc:abc/net.atpix.gallery.album/1",
+        photoUri: "at://did:plc:abc/net.atpix.gallery.photo/1",
+      }),
+    ).resolves.toBeUndefined();
   });
 });
