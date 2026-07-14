@@ -15,6 +15,9 @@ import {
   buildOAuthClientMetadata,
 } from "../src/config/oauthClientMetadata.js";
 
+/** @constant {string} Local dev default when repo root `.env` omits VITE_DEPLOYMENT_ORIGIN. */
+const DEFAULT_DEPLOYMENT_ORIGIN = "http://127.0.0.1:5173";
+
 /**
  * Resolve deployment origin from an incoming HTTP request.
  *
@@ -91,10 +94,11 @@ export function oauthClientMetadataPlugin() {
       attachMetadataMiddleware(server.middlewares);
     },
     closeBundle() {
-      const configuredOrigin = loadedEnv.VITE_DEPLOYMENT_ORIGIN?.trim();
-      if (!configuredOrigin) {
-        throw new Error(
-          "VITE_DEPLOYMENT_ORIGIN is required to emit oauth-client-metadata.json during build",
+      const configuredOrigin = loadedEnv.VITE_DEPLOYMENT_ORIGIN?.trim() || DEFAULT_DEPLOYMENT_ORIGIN;
+      if (!loadedEnv.VITE_DEPLOYMENT_ORIGIN?.trim()) {
+        console.warn(
+          `[atpix-oauth-client-metadata] VITE_DEPLOYMENT_ORIGIN unset; emitting metadata for ${DEFAULT_DEPLOYMENT_ORIGIN}. ` +
+            "Copy .env.example to .env and set VITE_DEPLOYMENT_ORIGIN before production deployment.",
         );
       }
 
