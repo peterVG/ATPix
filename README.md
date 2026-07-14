@@ -102,6 +102,7 @@ Use this order after merging Task 5.1. Each phase depends on the ones above it.
 | **I** | Manual feature walkthrough (gallery, albums, permissioned spaces) | G, H | [Phase I — Steps 9–11](#step-9--photo-upload-and-my-gallery-task-32) |
 | **J** | Network lexicon authority (`goat lex publish`) — optional for local dev | B (PDS + `lexicon.atpix.net`); [Phase E](#step-4--provision-lexicons-and-enable-permissioned-spaces) for App View | [Phase J — Lexicon authority](#phase-j--network-lexicon-authority-optional-before-production) |
 | **K** | Automated tests (optional) | D–I as applicable | [Step 12](#step-12--run-automated-tests-optional) |
+| — | **Manual feature tests** (after C–H) | B–H | [What you can test right now](#what-you-can-test-right-now) |
 
 ```mermaid
 flowchart TD
@@ -140,9 +141,90 @@ ATPix does **not** host user accounts. HappyView proxies writes to whichever PDS
 
 **Ports (local dev):** HappyView **3001**, Grafana **3000**, frontend **5173**, backend **8000**. HappyView must reach your PDS over HTTPS (e.g. `curl https://pds.atpix.net/xrpc/_health` from the host running Docker).
 
-### What works today (Task 5.1)
+## What you can test right now
 
-HappyView provisioning (lexicons + spaces flag), OAuth client metadata at `/oauth-client-metadata.json`, **atproto OAuth sign-in** with application shell and optional **hosted PDS signup link** (`VITE_PDS_SIGNUP_URL`, F-017), **C2PA pre-upload signing**, **public-path upload** (`uploadBlob` → `createPhoto`), **My Gallery** (UI-SCR-001), **albums** (UI-SCR-004), **caption/tag editing** (SRS-F-005), **permissioned albums** + **space admin** (UI-SCR-006), **permissioned upload** (`space.createRecord` + authenticated `space.getBlob` thumbnails), and backend **multi-account spaces BDD**. **Not yet:** discovery feed, unified photo detail/deletion (Task 5.x).
+After [Task 5.1](docs/overview/005-plan.md) and [Task 5.2](docs/overview/005-plan.md) (F-017), the following features are implemented end-to-end. Complete [First-time install](#first-time-install-and-test) Phases **C–H** before manual UI tests (Phase **B** as well for the OVH / `*.pds.atpix.net` path). Walkthrough with raw test output: [Task-5.2-Walkthrough.md](apps/frontend/docs/tasks/Task-5.2-Walkthrough.md). Install steps: [Manual walkthrough (Phases C–I)](#manual-walkthrough-phases-ci).
+
+### Before you start
+
+| Requirement | How to verify |
+|-------------|---------------|
+| HappyView running | `curl -sS http://127.0.0.1:3001/health` → JSON |
+| Lexicons provisioned | `python3 scripts/provision_happyview.py --verify-only` → 23 lexicons + `spaces_enabled=true` |
+| Frontend dev server | `npm run dev` in `apps/frontend/` → [http://127.0.0.1:5173](http://127.0.0.1:5173) |
+| `hvc_*` client key | Set in root `.env`; restart `npm run dev` after adding |
+| Backend C2PA API | `uvicorn app.main:app --reload --port 8000` in `apps/backend/` (venv active) |
+| Signed in | OAuth shell visible (header tabs, sidebar handle) |
+| PDS signup link (optional) | `VITE_PDS_SIGNUP_URL=https://pds.atpix.net/account` in `.env` → link on sign-in panel |
+
+**OVH path only:** `alice.pds.atpix.net` / `bob.pds.atpix.net` resolve (`goat resolve …`) and `https://pds.atpix.net/xrpc/_health` returns JSON.
+
+### Test 1 — Sign-in and hosted PDS signup link (F-001, F-017)
+
+1. Sign out if already signed in.
+2. Open **http://127.0.0.1:5173/** — confirm **Sign in to ATPix** panel.
+3. If `VITE_PDS_SIGNUP_URL` is set, confirm **Create a `*.pds.atpix.net` handle** link points to your PDS `/account` URL.
+4. Enter your handle (`alice.pds.atpix.net` on OVH path, or `you.bsky.social` for Bluesky shortcut) → **Sign in with atproto**.
+5. Complete OAuth on your PDS; land on **My Gallery** with shell chrome (Gallery / Discovery / Albums tabs, sidebar handle, **Sign Out**).
+6. Toggle color scheme (header ◐ and Settings → Appearance) — preference persists after reload.
+
+### Test 2 — C2PA signing and public upload (F-002, F-012)
+
+1. Ensure backend is running (`curl -sS http://127.0.0.1:8000/c2pa/status`).
+2. Click **Upload Media** → select a JPEG or PNG (≤ 50 MB).
+3. Confirm **C2PA** badge on the queue item after signing completes.
+4. Set title/caption/tags, visibility **Public** → **Publish**.
+5. Open **Gallery** → **My Gallery** — photo appears with C2PA badge (**Trusted** / **Valid** when applicable).
+6. Use vault search to filter by title or tag.
+
+### Test 3 — Albums and caption editing (F-004, F-005)
+
+1. Open **Albums** → create album with name + visibility **Public** or **Unlisted** → confirm album detail view.
+2. **Manage Photos** → add a photo from Test 2.
+3. Return to **My Gallery** → open a photo card → edit caption/tags (≤ 2000 chars) → save.
+4. Create a **Permissioned** album — confirm **Invite Members** and **Space URI** appear; share link hidden.
+
+### Test 4 — Permissioned space admin (F-008, UI-SCR-006)
+
+1. On a permissioned album, click **Invite Members** (or **Manage space** on Collaborators tab).
+2. Verify space admin panel: Space DID, **Gated** badge, member directory, invite-by-handle form.
+3. **OVH multi-account:** sign in as `alice.pds.atpix.net`, invite `bob.pds.atpix.net`; sign in as Bob in a separate browser profile and accept/open the album (when invite flow is configured on your PDS).
+
+### Test 5 — Permissioned upload (F-002 permissioned path)
+
+1. **Upload Media** → destination **Permissioned Space** → select the permissioned album from Test 3/4.
+2. Publish a photo — records written via `space.createRecord`; thumbnails load through authenticated `space.getBlob`.
+3. Confirm photo appears in the permissioned album grid (member session required).
+
+### Test 6 — Automated tests (no live OAuth)
+
+From repository root (frontend uses `.env.test` stubs — no real PDS tokens):
+
+```bash
+cd apps/frontend && npm run lint && npm run test:unit && npm run test:ui
+cd ../backend && source .venv/bin/activate
+ruff check . --fix && ruff format . && ./test
+```
+
+View Allure reports: `allure serve apps/frontend/tests/allure-results` (see [Run tests](#run-tests)).
+
+### Test 7 — Live multi-account BDD (optional, BE-4.1)
+
+Requires HappyView, `HAPPYVIEW_ADMIN_KEY`, `HAPPYVIEW_CLIENT_KEY`, and `TEST_OWNER_*` / `TEST_MEMBER_*` in root `.env` after signing in both accounts via ATPix:
+
+```bash
+cd apps/backend && source .venv/bin/activate
+behave tests/features/permissioned_spaces_integration_SRS-F-008.feature
+```
+
+### Not available yet
+
+| Feature | Planned task |
+|---------|----------------|
+| Discovery feed / Following–Hashtags (Path B) | Task 4.1 |
+| Public profile gallery and shareable links | Task 4.2 |
+| Unified photo detail and deletion (UI-SCR-003) | Task 4.3 |
+| Embedded signup on atpix.net (F-018) | Task 9.1 |
 
 # Setup Development Environment
 
@@ -153,6 +235,8 @@ Follow [First-time install and test](#first-time-install-and-test) for the full 
 ```bash
 # HappyView (ADR-007, port 3001)
 docker compose -f docker-compose.happyview.yml up -d
+# Provision (requires apps/backend venv — see Step 1b)
+cd apps/backend && source .venv/bin/activate && cd ../..
 python3 scripts/provision_happyview.py && python3 scripts/provision_happyview.py --verify-only
 
 # Backend (from apps/backend/, venv activated)
@@ -422,10 +506,7 @@ Behave writes Allure results to `apps/backend/tests/allure-results/` via `apps/b
 
 `npm run test:ui` builds production artifacts (`vite build --mode test`) and runs vitest DOM assertions against `dist/` per [ADR-001](docs/architecture/001-test-runners-and-reporting.md).
 
-#### What you cannot test yet
-
-- **Discovery feed and collection rules** — Task 5.x (deferred post–spaces validation).
-- **Unified photo detail and deletion** — Task 5.x (UI-SCR-003).
+See [What you can test right now](#what-you-can-test-right-now) for the feature checklist and manual test scripts.
 
 #### Permissioned albums and `appAccess`
 
