@@ -1,11 +1,11 @@
 import { addToAlbum, deleteAlbum, getAlbum, listPhotos } from "../api/galleryApi.js";
-import { getHappyViewUrl } from "../api/happyview.js";
 import { getHappyViewFetchHandler } from "../auth/happyViewFetch.js";
-import { albumDetailHref, navigateToRoute } from "../router/router.js";
-import { GRID_COLUMNS, breakpointFromWidth } from "../layout/breakpoint.js";
+import { applyCardBackgrounds } from "../gallery/applyCardBackgrounds.js";
+import { normalizeAlbumPhotoItem } from "../gallery/normalizeAlbumItem.js";
 import { isVerifiedPhotoRecord, renderMediaCard } from "../gallery/renderMediaCard.js";
-import { resolveImageUrl } from "../gallery/resolveImageUrl.js";
 import { renderVisibilityChip } from "../gallery/visibilityChip.js";
+import { GRID_COLUMNS, breakpointFromWidth } from "../layout/breakpoint.js";
+import { albumDetailHref, navigateToRoute } from "../router/router.js";
 import { escapeHtml } from "../utils/html.js";
 
 /** @typedef {"all" | "verified" | "collaborators"} AlbumTab */
@@ -48,40 +48,6 @@ function buildProvenanceSummary(photos) {
   });
 
   return `${trusted} Trusted · ${valid} Valid · ${invalid} Invalid manifest states in this album.`;
-}
-
-/**
- * Apply gallery card background images for album grid cards.
- *
- * @param {HTMLElement} grid - Album media grid element.
- * @param {object[]} photos - Visible photo views.
- * @param {string} fallbackDid - Author DID for blob resolution.
- * @returns {void}
- */
-function applyCardBackgrounds(grid, photos, fallbackDid) {
-  grid.querySelectorAll('[data-testid="gallery-card"]').forEach((card) => {
-    if (!(card instanceof HTMLElement)) {
-      return;
-    }
-
-    const indexValue = card.getAttribute("data-card-index");
-    if (indexValue === null) {
-      return;
-    }
-
-    const photo = photos[Number(indexValue)];
-    const media = card.querySelector(".gallery-card__media");
-    if (!photo || !(media instanceof HTMLElement)) {
-      return;
-    }
-
-    const record = photo.record ?? {};
-    const authorDid = typeof photo.author === "string" ? photo.author : fallbackDid;
-    const imageUrl = resolveImageUrl(record.image, getHappyViewUrl(), authorDid);
-    if (imageUrl) {
-      media.style.backgroundImage = `url("${imageUrl}")`;
-    }
-  });
 }
 
 /**
@@ -131,7 +97,7 @@ export function renderAlbumDetailPanel({ mount, identity, albumUri }) {
         return `
           <button
             type="button"
-            class="album-tab${active ? " album-tab--active" : ""}"
+            class="album-tab${active ? " chip--active" : ""}"
             data-album-tab="${tab.id}"
             data-testid="album-tab-${tab.id}"
             aria-pressed="${active ? "true" : "false"}"
@@ -147,7 +113,9 @@ export function renderAlbumDetailPanel({ mount, identity, albumUri }) {
     }
 
     return `
-      <button type="button" class="btn btn-primary" data-testid="album-invite-members">Invite Members</button>
+      <p class="album-invite-unavailable" data-testid="album-invite-members">
+        Invite Members — available after permissioned spaces ship (FE-5.1).
+      </p>
     `;
   };
 
@@ -185,12 +153,8 @@ export function renderAlbumDetailPanel({ mount, identity, albumUri }) {
 
   const renderCollaboratorsPanel = () => `
     <div class="album-collaborators" data-testid="album-collaborators-panel">
-      <div class="avatar-stack" data-testid="album-collaborator-stack" aria-label="Collaborators">
-        <span class="avatar-chip">A</span>
-        <span class="avatar-chip">B</span>
-      </div>
-      <p data-testid="album-collaborator-count">2 collaborators</p>
-      <p class="album-collaborators__note">Full member directory ships with permissioned spaces (FE-5.1).</p>
+      <p data-testid="album-collaborator-empty">No collaborator directory yet.</p>
+      <p class="album-collaborators__note">Member lists ship with permissioned spaces (FE-5.1).</p>
     </div>
   `;
 
@@ -330,8 +294,8 @@ export function renderAlbumDetailPanel({ mount, identity, albumUri }) {
       const payload = await getAlbum(fetchHandler, { uri: albumUri, hydrateItems: true });
       albumView = payload.album;
       memberPhotos = (payload.items ?? [])
-        .map((item) => item.photo)
-        .filter((photo) => photo && photo.record);
+        .map((item) => normalizeAlbumPhotoItem(item))
+        .filter((photo) => photo !== null);
       loading = false;
       syncView();
     } catch (error) {
@@ -347,8 +311,18 @@ export function renderAlbumDetailPanel({ mount, identity, albumUri }) {
 
     try {
       const fetchHandler = await getHappyViewFetchHandler();
-      const page = await listPhotos(fetchHandler, { did: identity.did, limit: 100 });
-      availablePhotos = page.photos ?? [];
+      let collected = [];
+      let pendingCursor = undefined;
+      do {
+        const page = await listPhotos(fetchHandler, {
+          did: identity.did,
+          limit: 100,
+          cursor: pendingCursor,
+        });
+        collected = [...collected, ...(page.photos ?? [])];
+        pendingCursor = page.cursor;
+      } while (pendingCursor);
+      availablePhotos = collected;
       syncView();
     } catch (error) {
       errorMessage = error instanceof Error ? error.message : "Unable to load uploads";

@@ -7,6 +7,7 @@ import {
   deleteAlbum,
   listAlbums,
   listPhotos,
+  removeFromAlbum,
   updatePhoto,
   uploadBlob,
 } from "../../src/api/galleryApi.js";
@@ -139,7 +140,13 @@ describe("galleryApi", () => {
 
     expect(fetchHandler).toHaveBeenCalledWith(
       "/xrpc/net.atpix.gallery.addToAlbum",
-      expect.objectContaining({ method: "POST" }),
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          albumUri: "at://did:plc:abc/net.atpix.gallery.album/1",
+          photoUri: "at://did:plc:abc/net.atpix.gallery.photo/1",
+        }),
+      }),
     );
   });
 
@@ -158,6 +165,7 @@ describe("galleryApi", () => {
     expect(fetchHandler).toHaveBeenCalledWith(
       "/xrpc/net.atpix.gallery.updatePhoto",
       expect.objectContaining({
+        method: "POST",
         body: JSON.stringify({
           uri: "at://did:plc:abc/net.atpix.gallery.photo/1",
           caption: "New caption",
@@ -167,17 +175,34 @@ describe("galleryApi", () => {
     );
   });
 
-  it("deleteAlbum posts album URI", async () => {
+  it("deleteAlbum posts album URI in the body", async () => {
     const fetchHandler = vi.fn(async () => ({
       ok: true,
-      json: async () => ({}),
+      text: async () => "",
     }));
 
     await deleteAlbum(fetchHandler, { uri: "at://did:plc:abc/net.atpix.gallery.album/1" });
 
     expect(fetchHandler).toHaveBeenCalledWith(
       "/xrpc/net.atpix.gallery.deleteAlbum",
-      expect.objectContaining({ method: "POST" }),
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ uri: "at://did:plc:abc/net.atpix.gallery.album/1" }),
+      }),
     );
+  });
+
+  it("removeFromAlbum succeeds with an empty response body", async () => {
+    const fetchHandler = vi.fn(async () => ({
+      ok: true,
+      text: async () => "",
+    }));
+
+    await expect(
+      removeFromAlbum(fetchHandler, {
+        albumUri: "at://did:plc:abc/net.atpix.gallery.album/1",
+        photoUri: "at://did:plc:abc/net.atpix.gallery.photo/1",
+      }),
+    ).resolves.toBeUndefined();
   });
 });

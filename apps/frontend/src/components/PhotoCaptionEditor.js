@@ -73,56 +73,104 @@ export function renderPhotoCaptionEditor({ mount, photo, onClose, onSaved }) {
         </section>
       </div>
     `;
+  };
 
-    const textarea = mount.querySelector('[data-testid="caption-editor-input"]');
-    if (textarea instanceof HTMLTextAreaElement && textarea.value !== caption) {
-      textarea.value = caption;
+  const updateCaptionCounter = () => {
+    const counter = mount.querySelector('[data-testid="caption-char-count"]');
+    if (counter) {
+      counter.textContent = `${caption.length} / ${CAPTION_MAX_LENGTH}`;
     }
+  };
+
+  const updateTagList = () => {
+    const list = mount.querySelector('[data-testid="caption-tag-list"]');
+    if (list instanceof HTMLElement) {
+      list.innerHTML = renderKeywordPills();
+    }
+  };
+
+  const showError = (message) => {
+    errorMessage = message;
+    let errorNode = mount.querySelector('[data-testid="caption-editor-error"]');
+    if (errorNode) {
+      errorNode.textContent = message;
+      return;
+    }
+
+    const tagInputNode = mount.querySelector('[data-testid="caption-tag-input"]');
+    if (tagInputNode instanceof HTMLElement) {
+      const errorEl = document.createElement("p");
+      errorEl.className = "gallery-error";
+      errorEl.dataset.testid = "caption-editor-error";
+      errorEl.textContent = message;
+      tagInputNode.insertAdjacentElement("afterend", errorEl);
+    }
+  };
+
+  const clearError = () => {
+    errorMessage = null;
+    mount.querySelector('[data-testid="caption-editor-error"]')?.remove();
   };
 
   const addTag = (raw) => {
     const normalized = raw.trim().replace(/^#/, "").toLowerCase();
-    if (!normalized || normalized.length > KEYWORD_MAX_LENGTH) {
+    if (!normalized) {
+      return;
+    }
+    if (normalized.length > KEYWORD_MAX_LENGTH) {
+      showError(`Each keyword must be ${KEYWORD_MAX_LENGTH} characters or fewer.`);
       return;
     }
     if (keywords.length >= KEYWORDS_MAX_COUNT) {
+      showError(`You can add up to ${KEYWORDS_MAX_COUNT} keywords.`);
       return;
     }
     if (keywords.includes(normalized)) {
+      showError("That keyword is already listed.");
       return;
     }
 
     keywords = [...keywords, normalized];
     tagInput = "";
-    errorMessage = null;
-    syncView();
+    clearError();
+    updateTagList();
+    const tagInputNode = mount.querySelector('[data-testid="caption-tag-input"]');
+    if (tagInputNode instanceof HTMLInputElement) {
+      tagInputNode.value = "";
+    }
   };
 
   const save = async () => {
     const validation = validateCaptionLength(caption);
     if (!validation.valid) {
-      errorMessage = validation.message ?? "Caption is too long.";
-      syncView();
+      showError(validation.message ?? "Caption is too long.");
       return;
     }
 
     saving = true;
-    errorMessage = null;
-    syncView();
+    clearError();
+    const saveButton = mount.querySelector('[data-testid="caption-editor-save"]');
+    if (saveButton instanceof HTMLButtonElement) {
+      saveButton.disabled = true;
+      saveButton.textContent = "Saving…";
+    }
 
     try {
       const fetchHandler = await getHappyViewFetchHandler();
       await updatePhoto(fetchHandler, {
         uri: photo.uri,
-        caption: caption.trim() || undefined,
+        caption: caption.trim(),
         keywords,
       });
       onSaved?.();
       onClose();
     } catch (error) {
       saving = false;
-      errorMessage = error instanceof Error ? error.message : "Unable to save caption";
-      syncView();
+      showError(error instanceof Error ? error.message : "Unable to save caption");
+      if (saveButton instanceof HTMLButtonElement) {
+        saveButton.disabled = false;
+        saveButton.textContent = "Save";
+      }
     }
   };
 
@@ -137,7 +185,10 @@ export function renderPhotoCaptionEditor({ mount, photo, onClose, onSaved }) {
       return;
     }
 
-    if (target.closest('[data-testid="caption-editor-backdrop"]') && target === target.closest('[data-testid="caption-editor-backdrop"]')) {
+    if (
+      target.closest('[data-testid="caption-editor-backdrop"]') &&
+      target === target.closest('[data-testid="caption-editor-backdrop"]')
+    ) {
       onClose();
       return;
     }
@@ -146,7 +197,8 @@ export function renderPhotoCaptionEditor({ mount, photo, onClose, onSaved }) {
     if (removeTag instanceof HTMLElement) {
       const tag = removeTag.getAttribute("data-remove-tag");
       keywords = keywords.filter((entry) => entry !== tag);
-      syncView();
+      clearError();
+      updateTagList();
       return;
     }
 
@@ -163,7 +215,7 @@ export function renderPhotoCaptionEditor({ mount, photo, onClose, onSaved }) {
 
     if (target.dataset.testid === "caption-editor-input") {
       caption = target.value;
-      syncView();
+      updateCaptionCounter();
       return;
     }
 

@@ -38,6 +38,28 @@ async function parseXrpcJson(response) {
 }
 
 /**
+ * Confirm an XRPC procedure succeeded when the response has no JSON body.
+ *
+ * @param {Response} response - Fetch response from HappyView.
+ * @returns {Promise<void>} Resolves when the response is successful.
+ */
+async function parseXrpcVoid(response) {
+  if (response.ok) {
+    return;
+  }
+
+  let body = {};
+  try {
+    body = await response.json();
+  } catch {
+    body = {};
+  }
+
+  const message = typeof body.message === "string" ? body.message : `HTTP ${response.status}`;
+  throw new Error(message);
+}
+
+/**
  * Upload a signed blob to the user's PDS via HappyView OAuth proxy.
  *
  * @param {(path: string, init?: RequestInit) => Promise<Response>} fetchHandler - DPoP fetch handler.
@@ -236,7 +258,7 @@ export async function removeFromAlbum(fetchHandler, input) {
     body: JSON.stringify(input),
   });
 
-  await parseXrpcJson(response);
+  await parseXrpcVoid(response);
 }
 
 /**
@@ -256,7 +278,7 @@ export async function deleteAlbum(fetchHandler, input) {
     body: JSON.stringify(input),
   });
 
-  await parseXrpcJson(response);
+  await parseXrpcVoid(response);
 }
 
 /**

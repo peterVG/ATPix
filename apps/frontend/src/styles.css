@@ -822,7 +822,7 @@ body {
   font: inherit;
 }
 
-.visibility-chip--active {
+.chip--active {
   border-color: var(--atproto-blue);
   box-shadow: inset 0 0 0 1px var(--atproto-blue);
 }
@@ -909,9 +909,13 @@ body {
   font: inherit;
 }
 
-.album-tab--active {
-  border-color: var(--atproto-blue);
-  box-shadow: inset 0 0 0 1px var(--atproto-blue);
+.album-invite-unavailable {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px dashed var(--outline-variant);
+  border-radius: var(--radius-sm);
+  color: var(--on-surface-variant);
+  font-size: 0.875rem;
 }
 
 .album-sidebar {

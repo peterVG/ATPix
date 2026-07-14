@@ -4,22 +4,21 @@
 
 /** @typedef {"public" | "unlisted" | "permissioned"} Visibility */
 
+/** @type {Record<Visibility, { label: string, modifier: string }>} */
+const VISIBILITY_META = {
+  public: { label: "Public", modifier: "public" },
+  unlisted: { label: "Unlisted", modifier: "unlisted" },
+  permissioned: { label: "Permissioned", modifier: "permissioned" },
+};
+
 /**
  * Map visibility to a human-readable badge label.
  *
  * @param {Visibility} visibility - Album or photo visibility.
- * @returns {string} Uppercase badge label.
+ * @returns {string} Title-case badge label.
  */
 export function visibilityLabel(visibility) {
-  if (visibility === "permissioned") {
-    return "Permissioned";
-  }
-
-  if (visibility === "unlisted") {
-    return "Unlisted";
-  }
-
-  return "Public";
+  return VISIBILITY_META[visibility]?.label ?? VISIBILITY_META.public.label;
 }
 
 /**
@@ -29,15 +28,7 @@ export function visibilityLabel(visibility) {
  * @returns {string} Modifier class suffix (e.g. `public`).
  */
 export function visibilityChipModifier(visibility) {
-  if (visibility === "permissioned") {
-    return "permissioned";
-  }
-
-  if (visibility === "unlisted") {
-    return "unlisted";
-  }
-
-  return "public";
+  return VISIBILITY_META[visibility]?.modifier ?? VISIBILITY_META.public.modifier;
 }
 
 /**
@@ -48,7 +39,6 @@ export function visibilityChipModifier(visibility) {
  * @returns {string} HTML for the chip.
  */
 export function renderVisibilityChip(visibility, testId = "album-visibility-badge") {
-  const label = visibilityLabel(visibility);
-  const modifier = visibilityChipModifier(visibility);
+  const { label, modifier } = VISIBILITY_META[visibility] ?? VISIBILITY_META.public;
   return `<span class="status-chip status-chip--${modifier}" data-testid="${testId}">${label}</span>`;
 }

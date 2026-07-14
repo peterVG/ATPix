@@ -26,6 +26,10 @@ describe("router", () => {
     expect(routeHref("albums")).toBe("#/albums");
   });
 
+  it("falls back to raw segments when hash decoding fails", () => {
+    expect(parseAlbumUriFromHash("#/albums/%E0%A4%A")).toBe("%E0%A4%A");
+  });
+
   it("parses album detail URIs from hash segments", () => {
     const uri = "at://did:plc:abc/net.atpix.gallery.album/1";
     const hash = albumDetailHref(uri);

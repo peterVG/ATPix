@@ -1,12 +1,11 @@
 import { listPhotos } from "../api/galleryApi.js";
-import { getHappyViewUrl } from "../api/happyview.js";
 import { getHappyViewFetchHandler } from "../auth/happyViewFetch.js";
+import { applyCardBackgrounds } from "../gallery/applyCardBackgrounds.js";
 import {
   getPendingGalleryUploads,
   onGalleryRefresh,
   onPendingUploadsChange,
 } from "../gallery/galleryEvents.js";
-import { resolveImageUrl } from "../gallery/resolveImageUrl.js";
 import { renderMediaCard } from "../gallery/renderMediaCard.js";
 import { renderPhotoCaptionEditor } from "./PhotoCaptionEditor.js";
 import { GALLERY_PAGE_SIZE } from "../gallery/constants.js";
@@ -30,41 +29,6 @@ function filterPhotos(photos, query) {
     const record = photo.record ?? {};
     const fields = [record.title, record.caption, ...(record.keywords ?? [])];
     return fields.some((value) => typeof value === "string" && value.toLowerCase().includes(needle));
-  });
-}
-
-/**
- * Apply gallery card background images through DOM APIs to avoid style-attribute injection.
- *
- * @param {HTMLElement} grid - Gallery grid element.
- * @param {object[]} filteredPhotos - Photos currently visible in the grid.
- * @param {string} fallbackDid - Signed-in author DID for blob resolution.
- * @returns {void}
- */
-function applyCardBackgrounds(grid, filteredPhotos, fallbackDid) {
-  grid.querySelectorAll('[data-testid="gallery-card"]').forEach((card) => {
-    if (!(card instanceof HTMLElement)) {
-      return;
-    }
-
-    const indexValue = card.getAttribute("data-card-index");
-    if (indexValue === null) {
-      return;
-    }
-
-    const index = Number(indexValue);
-    const photo = filteredPhotos[index];
-    const media = card.querySelector(".gallery-card__media");
-    if (!photo || !(media instanceof HTMLElement)) {
-      return;
-    }
-
-    const record = photo.record ?? {};
-    const authorDid = typeof photo.author === "string" ? photo.author : fallbackDid;
-    const imageUrl = resolveImageUrl(record.image, getHappyViewUrl(), authorDid);
-    if (imageUrl) {
-      media.style.backgroundImage = `url("${imageUrl}")`;
-    }
   });
 }
 
@@ -277,18 +241,43 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
         return;
       }
 
-      const card = target.closest('[data-testid="gallery-card"]');
-      if (card instanceof HTMLElement) {
-        const indexValue = card.getAttribute("data-card-index");
-        if (indexValue === null) {
-          return;
-        }
-        const photo = filterPhotos(photos, searchQuery)[Number(indexValue)];
-        if (photo) {
-          openCaptionEditor(photo);
-        }
-      }
+      openEditorFromCard(target);
     });
+
+    mount.addEventListener("keydown", (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+      if (event.key !== "Enter" && event.key !== " ") {
+        return;
+      }
+
+      const card = target.closest('[data-testid="gallery-card"]');
+      if (!(card instanceof HTMLElement) || target !== card) {
+        return;
+      }
+
+      event.preventDefault();
+      openEditorFromCard(card);
+    });
+  };
+
+  const openEditorFromCard = (target) => {
+    const card = target instanceof Element ? target.closest('[data-testid="gallery-card"]') : null;
+    if (!(card instanceof HTMLElement)) {
+      return;
+    }
+
+    const indexValue = card.getAttribute("data-card-index");
+    if (indexValue === null) {
+      return;
+    }
+
+    const photo = filterPhotos(photos, searchQuery)[Number(indexValue)];
+    if (photo) {
+      openCaptionEditor(photo);
+    }
   };
 
   const loadPage = async (requestedCursor) => {

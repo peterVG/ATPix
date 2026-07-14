@@ -38,7 +38,7 @@ export function renderAlbumsPanel({ mount, identity }) {
         return `
           <button
             type="button"
-            class="visibility-chip${active ? " visibility-chip--active" : ""}"
+            class="visibility-chip${active ? " chip--active" : ""}"
             data-visibility="${option.value}"
             data-testid="album-visibility-${option.value}"
             aria-pressed="${active ? "true" : "false"}"
@@ -131,8 +131,18 @@ export function renderAlbumsPanel({ mount, identity }) {
 
     try {
       const fetchHandler = await getHappyViewFetchHandler();
-      const page = await listAlbums(fetchHandler, { did: identity.did, limit: 50 });
-      albums = page.albums ?? [];
+      let collected = [];
+      let pendingCursor = undefined;
+      do {
+        const page = await listAlbums(fetchHandler, {
+          did: identity.did,
+          limit: 50,
+          cursor: pendingCursor,
+        });
+        collected = [...collected, ...(page.albums ?? [])];
+        pendingCursor = page.cursor;
+      } while (pendingCursor);
+      albums = collected;
       loading = false;
       syncView();
     } catch (error) {

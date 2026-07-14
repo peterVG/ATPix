@@ -60,12 +60,28 @@ describe("Caption and tag editing UI (SRS-F-005)", () => {
     const saveDeadline = Date.now() + 3000;
     while (Date.now() < saveDeadline) {
       if (!document.querySelector('[data-testid="caption-editor"]')) {
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+
+    expect(document.querySelector('[data-testid="caption-editor"]')).toBeNull();
+
+    const card = document.querySelector('[data-testid="gallery-card"]');
+    expect(card).not.toBeNull();
+    card?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    const reopenDeadline = Date.now() + 2000;
+    while (Date.now() < reopenDeadline) {
+      const reopened = document.querySelector('[data-testid="caption-editor-input"]');
+      if (reopened instanceof HTMLTextAreaElement && reopened.value === "Sunset at the lake") {
+        expect(document.querySelectorAll('[data-testid="caption-tag-pill"]').length).toBe(1);
         return;
       }
       await new Promise((resolve) => setTimeout(resolve, 25));
     }
 
-    throw new Error("Caption editor did not close after save");
+    throw new Error("Saved caption did not persist in the editor");
   });
 
   it("shows validation error when caption exceeds 2000 characters", async () => {

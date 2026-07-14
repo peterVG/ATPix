@@ -169,8 +169,9 @@ function seedPublicAlbumFixture() {
  */
 function seedPermissionedAlbumFixture() {
   const trusted = createStubPhoto("Trusted Member", { c2paValidationState: "trusted" });
+  photos.push(trusted);
   const invalid = createStubPhoto("Invalid Member", { c2paValidationState: "invalid" });
-  photos.push(trusted, invalid);
+  photos.push(invalid);
 
   const album = createStubAlbum("Permissioned Vault", "permissioned", {
     spaceUri: "ats://did:plc:space/net.atpix.gallery.albumSpace/album1",
