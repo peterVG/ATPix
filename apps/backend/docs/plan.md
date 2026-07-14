@@ -72,7 +72,7 @@ Granular checklist for the FastAPI auxiliary service (C2PA, health, integration 
 
 ## Phase BE-4: Permissioned Spaces Integration
 
-- [ ] **Task BE-4.1: Permissioned spaces end-to-end integration**
+- [x] **Task BE-4.1: Permissioned spaces end-to-end integration**
   - **Description:** Behave suite against HappyView `com.atproto.simplespace.*` and `com.atproto.space.*`: createSpace with `appAccess`/`config`, invite/acceptInvite, space record writes, `getBlob`, credential flow, index isolation, FeatureDisabled when flag off. Validates RC-007, SRS-F-008.1–008.4.
   - **Estimated Time:** 10 hours
   - **Dependencies:** Task BE-2.1; global Task 1.2

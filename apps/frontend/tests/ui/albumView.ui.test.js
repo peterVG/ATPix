@@ -31,7 +31,9 @@ describe("Album view UI (UI-SCR-004)", () => {
         expect(document.querySelector('[data-testid="album-at-uri"]')?.textContent).toBe(
           PERMISSIONED_ALBUM_URI,
         );
-        expect(document.querySelector('[data-testid="album-invite-members"]')).not.toBeNull();
+        expect(document.querySelector('[data-testid="album-invite-members"]')?.textContent).toContain(
+          "Invite Members",
+        );
         expect(document.querySelector('[data-testid="album-space-uri"]')).not.toBeNull();
         expect(document.querySelector('[data-testid="album-share-link"]')).toBeNull();
         expect(document.querySelector('[data-testid="album-tab-all"]')).not.toBeNull();

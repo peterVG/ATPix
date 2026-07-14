@@ -1,8 +1,9 @@
-import { parseAlbumUriFromHash, routeHref } from "../router/router.js";
+import { parseAlbumRouteFromHash, routeHref } from "../router/router.js";
 import { escapeHtml } from "../utils/html.js";
 
 import { renderAlbumDetailPanel } from "./AlbumDetailPanel.js";
 import { renderAlbumsPanel } from "./AlbumsPanel.js";
+import { renderSpaceAdminPanel } from "./SpaceAdminPanel.js";
 import { renderGalleryPanel } from "./GalleryPanel.js";
 import { bindAppearanceControls, renderRouteContent } from "./GalleryPlaceholder.js";
 import { renderUploadPanel } from "./UploadPanel.js";
@@ -188,12 +189,19 @@ export function renderAppShell({
       });
       registerPanelDestroy?.(panel.destroy);
     } else if (route === "albums") {
-      const albumUri = parseAlbumUriFromHash();
-      if (albumUri) {
+      const albumRoute = parseAlbumRouteFromHash();
+      if (albumRoute.albumUri && albumRoute.spaceAdmin) {
+        const panel = renderSpaceAdminPanel({
+          mount: main,
+          identity,
+          albumUri: albumRoute.albumUri,
+        });
+        registerPanelDestroy?.(panel.destroy);
+      } else if (albumRoute.albumUri) {
         const panel = renderAlbumDetailPanel({
           mount: main,
           identity,
-          albumUri,
+          albumUri: albumRoute.albumUri,
         });
         registerPanelDestroy?.(panel.destroy);
       } else {

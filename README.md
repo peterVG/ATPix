@@ -57,9 +57,9 @@ Browser (ATPix) → HappyView (OAuth + XRPC proxy) → user's PDS
 
 **Permissioned albums** ([ADR-010](docs/architecture/010-permissioned-spaces-storage.md)): the `net.atpix.gallery.album` container record stays in the owner's **PDS** and links `spaceUri`. The HappyView **space repo** holds permissioned `net.atpix.gallery.photo` and `net.atpix.gallery.albumItem` records. **Image blobs remain on the author's PDS** and are served via `com.atproto.space.getBlob` with membership checks.
 
-**Local Docker persistence:** HappyView stores its own SQLite index, OAuth sessions, and provisioned lexicons under `./data/happyview_data/` (bind-mounted in `docker-compose.happyview.yml`). Stopping the container does **not** delete user PDS data. Wiping `./data/happyview_data/` loses local index and sessions only — records on users' PDSes remain; re-run [provisioning](#run-the-application) and backfill to rebuild the index.
+**Local Docker persistence:** HappyView stores its own SQLite index, OAuth sessions, and provisioned lexicons under `./data/happyview_data/` (bind-mounted in `docker-compose.happyview.yml`). Stopping the container does **not** delete user PDS data. Wiping `./data/happyview_data/` loses local index and sessions only — records on users' PDSes remain; re-run [Step 4 provisioning](#step-4--provision-lexicons-and-enable-permissioned-spaces) and backfill to rebuild the index.
 
-**New test accounts:** use Bluesky accounts for quick smoke tests, or the [self-hosted `atpix.net` layout](#atpixnet-infrastructure) below for multi-account permissioned-album testing.
+**New test accounts:** use Bluesky accounts for quick smoke tests, or the [dedicated OVH PDS path](#phase-b--dedicated-pds-at-ovh) below for multi-account permissioned-album testing.
 
 ## Requirements and verification
 
@@ -82,55 +82,91 @@ Install runtimes using a version manager ([mise](https://mise.jdx.dev/), [asdf](
 | Python | 3.11+ | [python.org/downloads](https://www.python.org/downloads/) |
 | Node.js | 22+ | [nodejs.org](https://nodejs.org/) |
 | Docker | latest | [docs.docker.com](https://docs.docker.com/get-docker/) |
+| [`goat`](https://github.com/bluesky-social/goat#install) | latest | Handle/DID checks and network lexicon publish (OVH PDS path) |
+| Git | 2.x | Clone this repository |
+
+## First-time install and test
+
+Use this order after merging Task 5.1. Each phase depends on the ones above it.
+
+| Phase | What you set up | Depends on | Go to |
+|-------|-----------------|------------|-------|
+| **A** | Developer tools (Docker, Python, Node, Git) | — | [Prerequisites](#prerequisites) |
+| **B** | Domain DNS + OVH PDS + test handles (`alice.atpix.net`, `bob.atpix.net`) | Registrar + VPS | [Phase B — Dedicated PDS at OVH](#phase-b--dedicated-pds-at-ovh) |
+| **C** | Clone repo, `.env`, backend Python venv | A | [Phase C — Step 1](#step-1--clone-repository-and-environment) |
+| **D** | HappyView App View (Docker, port 3001) | A, C | [Phase D — Step 2](#step-2--start-happyview-and-verify-health) |
+| **E** | HappyView admin login, `hv_*` key, lexicon provisioning | D | [Phase E — Steps 3–4](#step-3--happyview-admin-login-and-admin-api-key) |
+| **F** | Frontend dev server, OAuth metadata, `hvc_*` API client | C, E | [Phase F — Steps 5–6](#step-5--start-frontend-and-verify-oauth-client-metadata) |
+| **G** | Sign in to ATPix (OAuth against your PDS) | B (OVH handles) or any PDS (Bluesky shortcut), F | [Phase G — Step 7](#step-7--sign-in-and-verify-application-shell-task-21) |
+| **H** | Backend API for C2PA signing (port 8000) | C (venv), G for upload tests | [Phase H — Step 8](#step-8--c2pa-pre-upload-signing-task-31) |
+| **I** | Manual feature walkthrough (gallery, albums, permissioned spaces) | G, H | [Phase I — Steps 9–11](#step-9--photo-upload-and-my-gallery-task-32) |
+| **J** | Network lexicon authority (`goat lex publish`) — optional for local dev | B (PDS + `lexicon.atpix.net`); [Phase E](#step-4--provision-lexicons-and-enable-permissioned-spaces) for App View | [Phase J — Lexicon authority](#phase-j--network-lexicon-authority-optional-before-production) |
+| **K** | Automated tests (optional) | D–I as applicable | [Step 12](#step-12--run-automated-tests-optional) |
+
+```mermaid
+flowchart TD
+  tools[Phase A: Tools]
+  pds[Phase B: OVH PDS + handles]
+  repo[Phase C: Clone + .env + venv]
+  hv[Phase D–E: HappyView + provision]
+  fe[Phase F: Frontend + hvc_* client]
+  oauth[Phase G: OAuth sign-in]
+  be[Phase H: Backend C2PA API]
+  test[Phase I: Manual tests]
+
+  tools --> repo
+  tools --> pds
+  pds --> oauth
+  repo --> hv
+  hv --> fe
+  fe --> oauth
+  repo --> be
+  oauth --> test
+  be --> test
+  pds -.-> lex[Phase J: goat lex publish]
+  lex -.-> test
+```
+
+While DNS propagates during Phase B, you may run Phases C–D in parallel. For the OVH path, finish Phase B before [Step 3](#step-3--happyview-admin-login-and-admin-api-key) (HappyView admin login as `alice.atpix.net`) and before [Phase G](#step-7--sign-in-and-verify-application-shell-task-21).
+
+**Two sign-in paths**
+
+| Path | When to use | Sign-in handle | Phase B required? |
+|------|-------------|----------------|-------------------|
+| **Dedicated OVH PDS (recommended)** | First real install; permissioned-album multi-account tests | `alice.atpix.net` / `bob.atpix.net` on `https://pds.atpix.net` | **Yes** — complete Phase B before Phase G |
+| **Bluesky shortcut** | Fast UI smoke test only | `you.bsky.social` (or any hosted PDS) | No — skip Phase B |
+
+ATPix does **not** host user accounts. HappyView proxies writes to whichever PDS your handle resolves to ([Where user data lives](#where-user-data-lives-pds-vs-app-view)). For permissioned-space BDD and two-account album tests, you need Phase B.
+
+**Ports (local dev):** HappyView **3001**, Grafana **3000**, frontend **5173**, backend **8000**. HappyView must reach your PDS over HTTPS (e.g. `curl https://pds.atpix.net/xrpc/_health` from the host running Docker).
+
+### What works today (Task 5.1)
+
+HappyView provisioning (lexicons + spaces flag), OAuth client metadata at `/oauth-client-metadata.json`, **atproto OAuth sign-in** with application shell, **C2PA pre-upload signing**, **public-path upload** (`uploadBlob` → `createPhoto`), **My Gallery** (UI-SCR-001), **albums** (UI-SCR-004), **caption/tag editing** (SRS-F-005), **permissioned albums** + **space admin** (UI-SCR-006), **permissioned upload** (`space.createRecord` + authenticated `space.getBlob` thumbnails), and backend **multi-account spaces BDD**. **Not yet:** discovery feed, unified photo detail/deletion (Task 5.x).
 
 # Setup Development Environment
 
-## Run the application
+Follow [First-time install and test](#first-time-install-and-test) for the full ordered walkthrough. The subsections below are the same steps with verification commands.
 
-**HappyView** (separate process, [ADR-007](docs/architecture/007-happyview-app-view-integration.md)): runs on port **3001** (Grafana uses **3000** in compose).
+## Quick reference (after `.env` is configured)
 
 ```bash
-# Start HappyView (SQLite, port 3001)
+# HappyView (ADR-007, port 3001)
 docker compose -f docker-compose.happyview.yml up -d
-curl http://127.0.0.1:3001/health
+python3 scripts/provision_happyview.py && python3 scripts/provision_happyview.py --verify-only
 
-# Log in at http://127.0.0.1:3001/ with your atproto handle (first user = super user).
-# Create an admin API key (Settings → API Keys) with lexicons:create, lexicons:read,
-# and settings:manage (read is required for --verify-only and post-upload checks).
-
-pip install python-dotenv   # or use apps/backend venv after pip install -r requirements-dev.txt
-cp .env.example .env   # set HAPPYVIEW_ADMIN_KEY=hv_... — the provision script loads .env automatically
-python3 scripts/provision_happyview.py          # upload lexicons + enable feature.spaces_enabled
-python3 scripts/provision_happyview.py --verify-only   # confirm provisioning
-# Or export inline: HAPPYVIEW_ADMIN_KEY=hv_... python3 scripts/provision_happyview.py
-```
-
-See [docs/lexicon/net.atpix.gallery.md](docs/lexicon/net.atpix.gallery.md) for lexicon upload order and [happyview.dev](https://happyview.dev) for full App View docs.
-
-**Backend** (from `apps/backend/`):
-
-```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements-dev.txt
+# Backend (from apps/backend/, venv activated)
 uvicorn app.main:app --reload --port 8000
-```
 
-**Frontend** (from `apps/frontend/`):
-
-```bash
-npm install
+# Frontend (from apps/frontend/)
 npm run dev
 ```
 
-Open [http://127.0.0.1:5173](http://127.0.0.1:5173). API health: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health).
+Open [http://127.0.0.1:5173](http://127.0.0.1:5173). API health: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health). See [docs/lexicon/net.atpix.gallery.md](docs/lexicon/net.atpix.gallery.md) for lexicon upload order.
 
-### Test current functionality (Tasks 1.2 + 1.3 + 2.1 + 3.1 + 3.2 + 3.3)
+### Manual walkthrough (Phases C–I)
 
-**What works today:** HappyView provisioning (lexicons + spaces flag), OAuth client metadata at `/oauth-client-metadata.json`, **atproto OAuth sign-in** with application shell (header, sidebar, theme toggle), **C2PA manifest embedding before upload** (backend `POST /c2pa/manifest/embed` + upload workspace UI), **public-path photo upload** (`uploadBlob` → `createPhoto` via HappyView OAuth proxy), **My Gallery grid** with cursor pagination and empty state (UI-SCR-001), **albums list/create**, **album detail view** (UI-SCR-004) with visibility-gated controls, **caption/tag editing** via `updatePhoto` (SRS-F-005), and backend health. **Not yet:** permissioned space provisioning and member admin (Task 5.1+).
-
-**Prerequisites:** Docker running, Python 3.11+, Node.js 22+, an atproto account (Bluesky handle works for HappyView admin login).
-
-#### Step 1 — Clone and configure environment
+#### Step 1 — Clone repository and environment
 
 ```bash
 git clone https://github.com/peterVG/ATPix.git
@@ -148,6 +184,24 @@ Open `.env` in an editor. You will fill in keys in later steps; for now confirm 
 | `HAPPYVIEW_ADMIN_KEY` | *(empty until Step 3)* | `hv_*` admin key for provisioning |
 | `VITE_HAPPYVIEW_CLIENT_KEY` | *(empty until Step 6)* | `hvc_*` client key for XRPC |
 | `VITE_BACKEND_URL` | `http://127.0.0.1:8000` | FastAPI C2PA + health API |
+| `TEST_OWNER_PDS_URL` / `TEST_MEMBER_PDS_URL` | `https://pds.atpix.net` | BDD only — after Phase B |
+
+#### Step 1b — Backend Python virtual environment (do this before provisioning)
+
+The provision script needs `python-dotenv`; upload tests need the full backend. Create the venv once after Step 1:
+
+```bash
+cd apps/backend
+python3 -m venv .venv
+# macOS/Linux:
+source .venv/bin/activate
+# Windows:
+# .venv\Scripts\activate
+pip install -r requirements-dev.txt
+cd ../..
+```
+
+You will start `uvicorn` in [Step 8](#step-8--c2pa-pre-upload-signing-task-31). Until then, the venv is only required for `scripts/provision_happyview.py` (via `pip install python-dotenv` in Step 4 if you skipped 1b).
 
 #### Step 2 — Start HappyView and verify health
 
@@ -161,7 +215,10 @@ curl -sS http://127.0.0.1:3001/health
 #### Step 3 — HappyView admin login and admin API key
 
 1. Open **http://127.0.0.1:3001/** in a browser.
-2. Sign in with your atproto handle (e.g. a Bluesky account). The **first** user becomes super-user.
+2. Sign in with an atproto handle on a PDS HappyView can reach:
+   - **OVH path (recommended):** `alice.atpix.net` after [Phase B](#phase-b--dedicated-pds-at-ovh) — confirms your PDS works end-to-end.
+   - **Shortcut:** any Bluesky or other hosted handle.
+   The **first** HappyView login becomes super-user.
 3. Go to **Settings → API Keys → Create**.
 4. Name it e.g. `atpix-provision`; enable permissions: `lexicons:create`, `lexicons:read`, `settings:manage`.
 5. Copy the key (starts with `hv_`). Paste into `.env`:
@@ -172,8 +229,9 @@ HAPPYVIEW_ADMIN_KEY=hv_paste_your_key_here
 
 #### Step 4 — Provision lexicons and enable permissioned spaces
 
+From the **repository root** (with `apps/backend` venv activated, or after `pip install python-dotenv`):
+
 ```bash
-pip install python-dotenv
 python3 scripts/provision_happyview.py
 python3 scripts/provision_happyview.py --verify-only
 ```
@@ -254,11 +312,11 @@ Vite is configured with `envDir` pointing at the repo root, so `npm run dev` fro
 
 #### Step 7 — Sign in and verify application shell (Task 2.1)
 
-Prerequisites: Steps 2–6 complete (`hvc_*` key in `.env`, `npm run dev` restarted).
+Prerequisites: Steps 2–6 complete (`hvc_*` key in `.env`, `npm run dev` restarted). **OVH path:** [Phase B](#phase-b--dedicated-pds-at-ovh) complete so `alice.atpix.net` resolves and `https://pds.atpix.net/xrpc/_health` returns JSON.
 
-1. Open **http://127.0.0.1:5173/** — confirm the sign-in panel shows **Sign in with atproto**.
-2. Enter your atproto handle (e.g. `you.bsky.social`) and submit.
-3. Complete OAuth on your PDS; you should return to ATPix at `/oauth/callback` then land on **My Gallery** inside the shell.
+1. Open **http://127.0.0.1:5173/** — confirm the sign-in panel shows **Sign in with atproto** and **HappyView endpoint: `http://127.0.0.1:3001`**.
+2. Enter your handle (`alice.atpix.net` on the OVH path, or `you.bsky.social` for the Bluesky shortcut) and submit.
+3. Complete OAuth on your PDS (`https://pds.atpix.net` for OVH accounts); you should return to ATPix at `/oauth/callback` then land on **My Gallery** inside the shell.
 4. Verify shell chrome:
    - Header tabs: **Gallery**, **Discovery**, **Albums**
    - Sidebar: your **@handle** or **DID**, **Upload Media**, **Sign Out**
@@ -272,9 +330,9 @@ Prerequisites: Steps 2–6 complete (`hvc_*` key in `.env`, `npm run dev` restar
 
 #### Step 8 — C2PA pre-upload signing (Task 3.1)
 
-Prerequisites: Steps 2–7 complete; **backend API running** on port 8000.
+Prerequisites: [Step 1b](#step-1b--backend-python-virtual-environment-do-this-before-provisioning) venv ready; Steps 2–7 complete (signed in).
 
-1. In a second terminal, start the backend API on port 8000:
+1. In a **new terminal**, start the backend API (leave `npm run dev` running):
    - macOS/Linux: `cd apps/backend && source .venv/bin/activate && uvicorn app.main:app --reload --port 8000`
    - Windows: `cd apps/backend && .venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000`
 2. Confirm C2PA status: `curl -sS http://127.0.0.1:8000/c2pa/status`
@@ -318,12 +376,32 @@ Prerequisites: Step 9 complete (at least one photo in My Gallery).
    - **Manage Photos** — add photos from your Path A uploads
    - **Destroy Album** — confirmation dialog; underlying photos remain in My Gallery
 4. **Public / unlisted albums:** share link visible; **Invite Members** and **Space URI** hidden.
-5. **Permissioned albums:** **Invite Members** and **Space URI** visible (space provisioning UI ships in Task 5.1); share link hidden.
+5. **Permissioned albums:** **Invite Members** opens space admin (`#/albums/:uri/space`); **Space URI** visible; share link hidden. Create a permissioned album first (Step 10) to obtain a linked `spaceUri`.
 6. Return to **My Gallery**, click a photo card, and edit caption/tags in the editor (max 2000 characters). Save and confirm the editor closes without error.
 
 Caption/tag edits persist via `net.atpix.gallery.updatePhoto`.
 
-#### Step 11 — Run automated tests (optional)
+#### Step 11 — Permissioned albums and space admin (Task 5.1)
+
+Prerequisites: Steps 2–10 complete; `feature.spaces_enabled=true` (Step 4). **Multi-account tests:** Phase B handles (`alice.atpix.net` owner, `bob.atpix.net` member).
+
+1. Create a **Permissioned** album (Albums → visibility chip → Create album). Confirm the album detail shows **Invite Members** and a **Space URI** (`ats://…/net.atpix.gallery.albumSpace/…`).
+2. Click **Invite Members** (or **Manage space** on the Collaborators tab) to open **Permissioned Space** admin (UI-SCR-006):
+   - Space DID, record type `net.atpix.gallery.albumSpace`, **Gated** badge
+   - Member directory (ADMIN / MEMBER / VIEWER roles)
+   - Invite by handle or direct **Add member**
+   - Export Logs / Share Access actions
+3. **Permissioned upload:** Upload Media → select **Permissioned Space** destination → pick the permissioned album → publish. Photos are written to the linked space via `space.createRecord` (blobs remain on your PDS; thumbnails are fetched through authenticated `space.getBlob` calls and rendered as object URLs in the gallery UI).
+4. **Multi-account BDD (optional):** export OAuth session env vars for two accounts (see `.env.example` `TEST_OWNER_*` / `TEST_MEMBER_*`) after signing in via ATPix. Behave loads the repository root `.env` automatically; ensure `HAPPYVIEW_CLIENT_KEY` and test-account variables are set there, then:
+
+```bash
+cd apps/backend
+behave tests/features/permissioned_spaces_integration_SRS-F-008.feature
+```
+
+Requires live HappyView, `HAPPYVIEW_ADMIN_KEY`, `HAPPYVIEW_CLIENT_KEY`, and both test-account token sets.
+
+#### Step 12 — Run automated tests (optional)
 
 ```bash
 cd apps/frontend && npm run lint && npm run test:unit && npm run test:ui
@@ -331,8 +409,9 @@ cd ../backend
 # macOS/Linux: source .venv/bin/activate
 # Windows: .venv\Scripts\activate
 ruff check . --fix && ruff format .
-pytest tests/unit/test_c2pa_service.py tests/integration/test_c2pa_api.py -v --alluredir=tests/allure-results --clean-alluredir
+./test
 behave tests/features/c2pa_manifest_generation_SRS-F-012.feature
+behave tests/features/permissioned_spaces_integration_SRS-F-008.feature  # requires HappyView + TEST_* accounts
 cd ../..
 # With HappyView up and HAPPYVIEW_ADMIN_KEY set:
 cd apps/backend && pytest tests/integration/test_happyview_provision.py -v
@@ -344,13 +423,12 @@ Behave writes Allure results to `apps/backend/tests/allure-results/` via `apps/b
 
 #### What you cannot test yet
 
-- **Permissioned space provisioning and member admin** — Task 5.1+ (`createSpace`, invites, `space.getBlob`, UI-SCR-006).
 - **Discovery feed and collection rules** — Task 5.x (deferred post–spaces validation).
 - **Unified photo detail and deletion** — Task 5.x (UI-SCR-003).
 
-#### Permissioned albums and `appAccess` (preview for Task 5.1)
+#### Permissioned albums and `appAccess`
 
-When permissioned albums are implemented, creating a private album will call HappyView's `com.atproto.simplespace.createSpace` with an `appAccess` field built by `buildSpaceAppAccess(origin)` in `apps/frontend/src/config/oauthClientMetadata.js`. That object looks like:
+Creating a permissioned album calls HappyView's `com.atproto.simplespace.createSpace` (via `net.atpix.gallery.createAlbum`) with an `appAccess` field built by `buildSpaceAppAccess(origin)` in `apps/frontend/src/config/oauthClientMetadata.js`. That object looks like:
 
 ```json
 {
@@ -418,106 +496,58 @@ Application containers (`backend`, `frontend`) log to stdout; Promtail ships Doc
 
 See [docs/](docs/) for the PRD, SRS, architecture ADRs, and Lexicon artifacts.
 
-## Setup Production Environment
+## Phase B — Dedicated PDS at OVH
 
-ATPix application code (frontend, backend, HappyView) can run on your laptop or any host. **User accounts and lexicon authority** for `atpix.net` are deployed separately as below. This repo does not provision DNS or VPS resources automatically.
+ATPix application code (frontend, backend, HappyView) runs on your laptop or any host. **User accounts** for `atpix.net` live on a **separate** self-hosted PDS on OVH. This repo does not provision DNS or VPS resources automatically.
 
-Follow the steps in order. DNS can take up to 24 hours to propagate; use `dig` (or your registrar's DNS checker) after each change.
+Complete these steps **in order** before [Phase G](#step-7--sign-in-and-verify-application-shell-task-21) when using the OVH path. DNS can take up to 24 hours to propagate; use `dig` (or your registrar's DNS checker) after each change. While waiting on DNS, start [Phases C–D](#step-1--clone-repository-and-environment).
 
-### Step 0 — Domain map (registrar DNS)
+HappyView and ATPix still run locally (Docker + dev servers). Users sign in with `alice.atpix.net` or `bob.atpix.net`; OAuth and writes proxy to `https://pds.atpix.net` per [ADR-007](docs/architecture/007-happyview-app-view-integration.md).
+
+### B.0 — Domain roles (reference)
 
 The PDS hostname, user handles, marketing site, and lexicon authority are **separate DNS roles**. Handles do not need a `.pds` segment (use `alice.atpix.net`, not `alice.pds.atpix.net`).
 
-| Host / record | Role | Hosted on |
-|---------------|------|-----------|
-| `atpix.net` | Project homepage (marketing) | [atpix-homepage repo](#step-1--github-pages-atpixnet-homepage) |
-| `docs.atpix.net` | Project documentation | [ATPix `docs/`](#step-1b--github-pages-docsatpixnet) |
-| `pds.atpix.net` | Self-hosted PDS (one instance, many accounts) | [OVHcloud VPS (EU)](#step-2--ovhcloud-vps-eu--pdsatpixnet) |
-| `alice.atpix.net`, `bob.atpix.net` | Test handles → DIDs on your PDS | [Handle DNS](#step-3--handle-dns-aliceatpixnet--bobatpixnet) |
-| `_lexicon.gallery.atpix.net` | Lexicon authority for `net.atpix.gallery.*` | [Lexicon authority](#step-4--lexicon-authority-_lexicongalleryatpixnet) |
-
-At your domain registrar, create these records. Registrar UIs usually show only the **host label** (left column); the full FQDN is shown for clarity.
-
-| Registrar host label | Type | Value | When to add |
-|----------------------|------|-------|-------------|
-| `@` | `A` | `185.199.108.153` | Step 1 (GitHub Pages apex for `atpix.net`) |
-| `@` | `A` | `185.199.109.153` | Step 1 |
-| `@` | `A` | `185.199.110.153` | Step 1 |
-| `@` | `A` | `185.199.111.153` | Step 1 |
-| `www` | `CNAME` | `peterVG.github.io` | Step 1 (optional; GitHub redirects `www` ↔ apex) |
-| `docs` | `CNAME` | `peterVG.github.io` | Step 1b (`docs.atpix.net` documentation) |
-| `pds` | `A` | `<vps-public-ipv4>` | Step 2 (before PDS install) |
-| `*.pds` | `A` | `<vps-public-ipv4>` | Step 2 (wildcard for `*.pds.atpix.net` handles) |
-| `_atproto.alice` | `TXT` | `did=<alice-did>` | Step 3 (after account creation) |
-| `_atproto.bob` | `TXT` | `did=<bob-did>` | Step 3 |
-| `_lexicon.gallery` | `TXT` | `did=<authority-did>` | Step 4 (after authority account exists) |
+| Host / record | Role | Required for first ATPix test? | Section |
+|---------------|------|-------------------------------|---------|
+| `pds.atpix.net` | Self-hosted PDS (one instance, many accounts) | **Yes** | [B.1–B.4](#b1--order-ovh-vps-eu) |
+| `alice.atpix.net`, `bob.atpix.net` | Test handles → DIDs on your PDS | **Yes** (multi-account / permissioned tests) | [B.5–B.7](#b5--create-test-accounts) |
+| `_lexicon.gallery.atpix.net` | Network lexicon authority for `net.atpix.gallery.*` | No — local dev uses HappyView provisioning | [Phase J](#phase-j--network-lexicon-authority-optional-before-production) |
+| `atpix.net` | Marketing homepage | No | [Optional web presence](#optional--atpixnet-web-presence) |
+| `docs.atpix.net` | Project documentation | No | [Optional web presence](#optional--atpixnet-web-presence) |
 
 **Do not** add a registrar wildcard `*.atpix.net` — GitHub [discourages apex wildcards](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site) (takeover risk), and it would conflict with TXT-based handles. The PDS installer wildcard is **`*.pds.atpix.net` only**, not the apex zone.
 
-HappyView and ATPix still run wherever you deploy them (local Docker, a cloud VM, etc.). Users sign in with `alice.atpix.net` or `bob.atpix.net`; OAuth and writes proxy to `https://pds.atpix.net` per [ADR-007](docs/architecture/007-happyview-app-view-integration.md).
+**Execution order:** B.0 (reference) → B.1 (order VPS) → B.2 (PDS DNS) → B.3 (install PDS) → B.4 (verify health) → B.5 (create accounts) → B.6 (handle TXT) → B.7 (verify handles).
 
-### Step 1 — GitHub Pages (`atpix.net` homepage)
-
-The marketing homepage lives in the separate **[atpix-homepage](https://github.com/peterVG/atpix-homepage)** repository (`index.html`, self-hosted CSS/fonts/images). It is **not** in this monorepo. The apex domain serves HTML only; it must not run the PDS.
-
-1. Open **[peterVG/atpix-homepage](https://github.com/peterVG/atpix-homepage) → Settings → Pages**.
-2. **Source:** deploy from branch `main`, folder `/ (root)`.
-3. **Custom domain:** `atpix.net` (repo includes `CNAME`).
-4. **GoDaddy DNS:** add four `A` records on `@` from the [Step 0](#step-0--domain-map-registrar-dns) table. Optional `www` → `peterVG.github.io` CNAME.
-5. **Verify DNS:**
-
-```bash
-dig atpix.net +noall +answer -t A
-# Expect four A records → 185.199.108.153 … 185.199.111.153
-```
-
-6. Enable **Enforce HTTPS** after the custom domain verifies.
-
-Local clone for homepage work: `git clone git@github.com:peterVG/atpix-homepage.git`. Design reference: `docs/000-UX-guide.md` in that repo (synced from [docs/references/000-UX-guide.md](docs/references/000-UX-guide.md)).
-
-### Step 1b — GitHub Pages (`docs.atpix.net` documentation)
-
-Project documentation is served from the **`docs/`** folder in **this** repository via GitHub Pages (`docs/index.md` portal with client-side markdown rendering). Requires the docs portal on `main` ([PR #12](https://github.com/peterVG/ATPix/pull/12)).
-
-1. Open **[peterVG/ATPix](https://github.com/peterVG/ATPix) → Settings → Pages**.
-2. **Source:** deploy from branch `main`, folder **`/docs`**.
-3. **Custom domain:** `docs.atpix.net` (`docs/CNAME` in the docs portal).
-4. **GoDaddy DNS:** add CNAME `docs` → `peterVG.github.io`.
-5. **Verify DNS:**
-
-```bash
-dig docs.atpix.net +short -t CNAME
-# peterVG.github.io.
-```
-
-6. Enable **Enforce HTTPS** after verification.
-
-References: [Managing a custom domain for GitHub Pages](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site), [About custom domains and GitHub Pages](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/about-custom-domains-and-github-pages).
-
-### Step 2 — OVHcloud VPS (EU) + `pds.atpix.net`
+### B.1 — Order OVH VPS (EU)
 
 Run one [reference PDS](https://github.com/bluesky-social/pds) on an **EU-region** [OVHcloud VPS](https://www.ovhcloud.com/en-ie/vps/). Use hostname **`pds.atpix.net`** (not the apex `atpix.net`).
-
-#### 2a. Order the VPS (EU datacenter)
 
 1. Sign in to the [OVHcloud Control Panel](https://www.ovh.com/manager/) and order a **VPS** ([getting started guide](https://help.ovhcloud.com/csm/en-ie-vps-getting-started?id=kb_article_view&sysparm_article=KB0047625)).
 2. **Location:** choose an **EU datacenter** (for example Gravelines, Roubaix, Frankfurt, or Warsaw) so PDS data stays in the EU.
 3. **Image:** Ubuntu 24.04 LTS. **Size:** at least 1 GB RAM / 1 vCPU / 20 GB SSD ([PDS recommendations](https://github.com/bluesky-social/pds#deploying-a-pds-onto-a-vps)).
 4. **Authentication:** SSH key (recommended). Note the **public IPv4** address after provisioning ([find your VPS IP](https://help.ovhcloud.com/csm/en-ie-vps-getting-started?id=kb_article_view&sysparm_article=KB0047625)).
 5. **Firewall:** enable the [OVH Network Firewall](https://help.ovhcloud.com/csm/en-ie-vps-network-firewall?id=kb_article_view&sysparm_article=KB0047548) (or equivalent host rules) allowing **inbound TCP 80 and 443** from anywhere. Restrict **SSH (22)** to your IP where possible.
-6. SSH in: `ssh ubuntu@<vps-public-ipv4>` (or `root@…` if your image uses root).
+6. SSH in: `ssh ubuntu@<vps-public-ipv4>` (or `root@…` if your image uses root). Continue to [B.2](#b2--pds-dns-before-install).
 
-#### 2b. DNS before install
+### B.2 — PDS DNS (before install)
 
-Add the Step 0 records `pds` and `*.pds` → `<vps-public-ipv4>`. Confirm:
+At your registrar, add these records **before** running the PDS installer. Registrar UIs usually show only the **host label**; the full FQDN is shown for clarity.
+
+| Registrar host label | Type | Value |
+|----------------------|------|-------|
+| `pds` | `A` | `<vps-public-ipv4>` from B.1 |
+| `*.pds` | `A` | `<vps-public-ipv4>` — wildcard for `*.pds.atpix.net` handles |
+
+Confirm propagation (retry until both return the VPS IP):
 
 ```bash
 dig pds.atpix.net +short -t A
 dig test123.pds.atpix.net +short -t A
-# Both should return the VPS public IPv4
 ```
 
-#### 2c. Run the PDS installer
+### B.3 — Install PDS on the VPS
 
 On the VPS ([PDS install guide](https://github.com/bluesky-social/pds#installing-on-ubuntu-200422042404-and-debian-111213)):
 
@@ -532,11 +562,15 @@ When prompted:
 |--------|-------|
 | Public DNS name | `pds.atpix.net` |
 | Admin email | Your email (for Let's Encrypt; need not be `@atpix.net`) |
-| First account | Skip or create a throwaway `admin.pds.atpix.net` for testing — you will create `alice` / `bob` handles in Step 3 |
+| First account | Skip or create a throwaway `admin.pds.atpix.net` for testing — you will create `alice` / `bob` handles in [B.5](#b5--create-test-accounts) |
 
 On success, the installer prints service status commands and required DNS entries.
 
-#### 2d. Verify PDS is live
+Useful admin commands on the VPS: `sudo systemctl status pds`, `sudo docker logs -f pds`, `sudo pdsadmin help`. Admin password: `/pds/pds.env` → `PDS_ADMIN_PASSWORD`.
+
+References: [Self-hosting AT Protocol](https://atproto.com/guides/self-hosting), [PDS README](https://github.com/bluesky-social/pds).
+
+### B.4 — Verify PDS is live
 
 ```bash
 curl -sS https://pds.atpix.net/xrpc/_health
@@ -546,15 +580,11 @@ curl -sS https://pds.atpix.net/xrpc/_health
 # wsdump "wss://pds.atpix.net/xrpc/com.atproto.sync.subscribeRepos?cursor=0"
 ```
 
-Useful admin commands on the VPS: `sudo systemctl status pds`, `sudo docker logs -f pds`, `sudo pdsadmin help`. Admin password: `/pds/pds.env` → `PDS_ADMIN_PASSWORD`.
+HappyView (running locally on port 3001) must be able to reach this URL over HTTPS when you sign in and upload.
 
-References: [Self-hosting AT Protocol](https://atproto.com/guides/self-hosting), [PDS README](https://github.com/bluesky-social/pds).
+### B.5 — Create test accounts (`alice.atpix.net` / `bob.atpix.net`)
 
-### Step 3 — Handle DNS (`alice.atpix.net` / `bob.atpix.net`)
-
-Create two accounts on the **same** PDS with custom apex handles, then publish `_atproto` TXT records ([handle specification](https://atproto.com/specs/handle)).
-
-#### 3a. Create accounts
+Create two accounts on the **same** PDS with custom apex handles ([handle specification](https://atproto.com/specs/handle)).
 
 **Option A — PDS web UI:** open `https://pds.atpix.net/account` and register two accounts. If invites are required, create codes on the VPS:
 
@@ -576,20 +606,22 @@ sudo docker exec pds goat pds admin account create \
   --password '<choose-a-password>'
 ```
 
-Save each account's **DID** and password from the command output.
+Save each account's **DID** and password from the command output. Set `TEST_OWNER_PDS_URL` and `TEST_MEMBER_PDS_URL` to `https://pds.atpix.net` in `.env` when running [Step 11 BDD](#step-11--permissioned-albums-and-space-admin-task-51).
 
-#### 3b. Publish handle TXT records
+### B.6 — Publish handle TXT records
 
-At your registrar, add (replace placeholders with the DIDs from account creation):
+At your registrar, add (replace placeholders with the DIDs from B.5):
 
-| Full record name | Type | Value |
-|------------------|------|-------|
-| `_atproto.alice.atpix.net` | `TXT` | `did=<alice-did>` |
-| `_atproto.bob.atpix.net` | `TXT` | `did=<bob-did>` |
+| Registrar host label | Type | Value |
+|----------------------|------|-------|
+| `_atproto.alice` | `TXT` | `did=<alice-did>` |
+| `_atproto.bob` | `TXT` | `did=<bob-did>` |
 
 No `A`/`CNAME` records are required on `alice` or `bob` for DNS-based handle verification.
 
-#### 3c. Verify handles resolve
+### B.7 — Verify handles resolve
+
+Install [`goat`](https://github.com/bluesky-social/goat#install) on your workstation if you have not already ([Prerequisites](#prerequisites)).
 
 ```bash
 dig _atproto.alice.atpix.net +short -t TXT
@@ -599,17 +631,61 @@ goat resolve alice.atpix.net
 goat resolve bob.atpix.net
 ```
 
-Use these handles when logging into HappyView and when running permissioned-album BDD scenarios that require multiple identities.
+Use these handles when logging into HappyView ([Step 3](#step-3--happyview-admin-login-and-admin-api-key)) and ATPix ([Phase G](#step-7--sign-in-and-verify-application-shell-task-21)).
 
-### Step 4 — Lexicon authority (`_lexicon.gallery.atpix.net`)
+## Optional — atpix.net web presence
+
+GitHub Pages for the marketing site and documentation portal are **not** required to run or test ATPix locally. Configure them when you want public `atpix.net` / `docs.atpix.net` URLs.
+
+### GitHub Pages (`atpix.net` homepage)
+
+The marketing homepage lives in the separate **[atpix-homepage](https://github.com/peterVG/atpix-homepage)** repository (`index.html`, self-hosted CSS/fonts/images). It is **not** in this monorepo. The apex domain serves HTML only; it must not run the PDS.
+
+1. Open **[peterVG/atpix-homepage](https://github.com/peterVG/atpix-homepage) → Settings → Pages**.
+2. **Source:** deploy from branch `main`, folder `/ (root)`.
+3. **Custom domain:** `atpix.net` (repo includes `CNAME`).
+4. **Registrar DNS:** add four `A` records on `@` pointing to GitHub Pages (`185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`). Optional `www` → `peterVG.github.io` CNAME.
+5. **Verify DNS:**
+
+```bash
+dig atpix.net +noall +answer -t A
+# Expect four A records → 185.199.108.153 … 185.199.111.153
+```
+
+6. Enable **Enforce HTTPS** after the custom domain verifies.
+
+Local clone for homepage work: `git clone git@github.com:peterVG/atpix-homepage.git`. Design reference: `docs/000-UX-guide.md` in that repo (synced from [docs/references/000-UX-guide.md](docs/references/000-UX-guide.md)).
+
+### GitHub Pages (`docs.atpix.net` documentation)
+
+Project documentation is served from the **`docs/`** folder in **this** repository via GitHub Pages (`docs/index.md` portal with client-side markdown rendering). Requires the docs portal on `main` ([PR #12](https://github.com/peterVG/ATPix/pull/12)).
+
+1. Open **[peterVG/ATPix](https://github.com/peterVG/ATPix) → Settings → Pages**.
+2. **Source:** deploy from branch `main`, folder **`/docs`**.
+3. **Custom domain:** `docs.atpix.net` (`docs/CNAME` in the docs portal).
+4. **GoDaddy DNS:** add CNAME `docs` → `peterVG.github.io`.
+5. **Verify DNS:**
+
+```bash
+dig docs.atpix.net +short -t CNAME
+# peterVG.github.io.
+```
+
+6. Enable **Enforce HTTPS** after verification.
+
+References: [Managing a custom domain for GitHub Pages](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site), [About custom domains and GitHub Pages](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/about-custom-domains-and-github-pages).
+
+## Phase J — Network lexicon authority (optional before production)
 
 Network resolution for `net.atpix.gallery.*` links the authority domain **`gallery.atpix.net`** (reverse of `net.atpix.gallery`) to a DID that publishes `com.atproto.lexicon.schema` records ([Lexicons guide](https://atproto.com/guides/lexicons), [ADR-009](docs/architecture/009-lexicon-namespace-authority.md)).
 
-This step is **distinct** from HappyView provisioning: `scripts/provision_happyview.py` indexes lexicons in your App View only; `goat lex publish` makes schemas resolvable network-wide.
+**Skip Phase J for your first local test.** [Step 4](#step-4--provision-lexicons-and-enable-permissioned-spaces) (`scripts/provision_happyview.py`) registers lexicons in your HappyView App View, which is enough for ATPix UI and upload flows. Run Phase J when you want NSIDs resolvable network-wide (other App Views, federation tooling).
 
-#### 4a. Create the authority account
+Prerequisites: [Phase B](#phase-b--dedicated-pds-at-ovh) complete (live PDS at `https://pds.atpix.net`).
 
-Create a dedicated account on your PDS (example handle `lexicon.atpix.net`):
+### J.1 — Create the authority account
+
+On the VPS, create a dedicated account (example handle `lexicon.atpix.net`):
 
 ```bash
 sudo docker exec pds goat pds admin account create \
@@ -618,13 +694,13 @@ sudo docker exec pds goat pds admin account create \
   --password '<choose-a-password>'
 ```
 
-Note the authority **DID** (`<authority-did>`). If this handle uses DNS verification, also add `_atproto.lexicon` TXT — only the `_lexicon.gallery` record is required for NSID authority.
+Note the authority **DID** (`<authority-did>`). If this handle uses DNS verification, also add `_atproto.lexicon` TXT at your registrar — only the `_lexicon.gallery` record is required for NSID authority.
 
-#### 4b. Publish authority DNS
+### J.2 — Publish authority DNS
 
-| Full record name | Type | Value |
-|------------------|------|-------|
-| `_lexicon.gallery.atpix.net` | `TXT` | `did=<authority-did>` |
+| Registrar host label | Type | Value |
+|----------------------|------|-------|
+| `_lexicon.gallery` | `TXT` | `did=<authority-did>` |
 
 Verify:
 
@@ -633,12 +709,11 @@ dig _lexicon.gallery.atpix.net +short -t TXT
 # "did=did:plc:..."
 ```
 
-#### 4c. Publish lexicons from this repo with `goat lex`
+### J.3 — Publish lexicons with `goat lex`
 
-On your workstation (or the VPS via `docker exec pds goat`):
+From your workstation ([`goat` installed](#prerequisites)) or the VPS via `docker exec pds goat`:
 
-1. Install [`goat`](https://github.com/bluesky-social/goat#install) if not already available.
-2. Prepare a project directory with `goat`'s expected layout (`lexicons/net/atpix/gallery/*.json`):
+1. Prepare a project directory with `goat`'s expected layout (`lexicons/net/atpix/gallery/*.json`):
 
 ```bash
 mkdir -p /tmp/atpix-lexicons/lexicons/net/atpix/gallery
@@ -650,13 +725,13 @@ done
 cd /tmp/atpix-lexicons
 ```
 
-3. Log in as the authority account:
+2. Log in as the authority account:
 
 ```bash
 goat account login -u lexicon.atpix.net -p '<password>' --pds-host https://pds.atpix.net
 ```
 
-4. Lint, verify DNS, and publish:
+3. Lint, verify DNS, and publish:
 
 ```bash
 goat lex lint
@@ -666,21 +741,11 @@ goat lex publish
 
 `goat lex check-dns` should report no missing `_lexicon` entries for `net.atpix.gallery.*`. After publish, network clients can resolve NSIDs like `net.atpix.gallery.photo` via DNS → DID → PDS repo.
 
-#### 4d. HappyView App View (required for ATPix indexing)
-
-Regardless of network publication, upload lexicons to your HappyView instance:
-
-```bash
-docker compose -f docker-compose.happyview.yml up -d
-python3 scripts/provision_happyview.py
-python3 scripts/provision_happyview.py --verify-only
-```
-
-See [docs/lexicon/net.atpix.gallery.md](docs/lexicon/net.atpix.gallery.md) for upload order and [system architecture](docs/overview/000-architecture.md) for how PDS, HappyView, and DNS roles fit together.
+Re-run [Step 4](#step-4--provision-lexicons-and-enable-permissioned-spaces) whenever lexicon JSON changes in this repo so your local HappyView index stays current. See [docs/lexicon/net.atpix.gallery.md](docs/lexicon/net.atpix.gallery.md) for upload order and [system architecture](docs/overview/000-architecture.md) for how PDS, HappyView, and DNS roles fit together.
 
 ## Deploy to Production
 
-Deploy ATPix apps per [Run the application](#run-the-application): HappyView (`docker-compose.happyview.yml`), backend, and frontend. Point `VITE_HAPPYVIEW_URL` / `HAPPYVIEW_URL` at your production HappyView instance. Register an OAuth client in HappyView and set `VITE_HAPPYVIEW_CLIENT_KEY` in the frontend build environment.
+Deploy ATPix apps per the [first-time walkthrough](#first-time-install-and-test) and [quick reference](#quick-reference-after-env-is-configured): HappyView (`docker-compose.happyview.yml`), backend, and frontend. Point `VITE_HAPPYVIEW_URL` / `HAPPYVIEW_URL` at your production HappyView instance. Register an OAuth client in HappyView ([Step 6](#step-6--register-atpix-api-client-in-happyview-required-for-sign-in)) and set `VITE_HAPPYVIEW_CLIENT_KEY` in the frontend build environment. Complete [Phase B](#phase-b--dedicated-pds-at-ovh) and [Phase J](#phase-j--network-lexicon-authority-optional-before-production) for production `atpix.net` identity and lexicon authority.
 
 ## Monitor and Update
 

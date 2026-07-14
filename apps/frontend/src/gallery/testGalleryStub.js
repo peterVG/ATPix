@@ -14,6 +14,12 @@ export const TEST_ALBUM_PUBLIC_KEY = "atpix-test-album-public";
 /** @constant {string} localStorage gate to seed a permissioned album detail fixture. */
 export const TEST_ALBUM_PERMISSIONED_KEY = "atpix-test-album-permissioned";
 
+/** @constant {string} localStorage gate to open space admin as owner. */
+export const TEST_ALBUM_SPACE_ADMIN_KEY = "atpix-test-album-space-admin";
+
+/** @constant {string} localStorage gate to simulate non-member space admin access. */
+export const TEST_ALBUM_SPACE_DENIED_KEY = "atpix-test-album-space-denied";
+
 /** @type {{ uri: string, cid: string, author: string, record: object }[]} */
 let photos = [];
 
@@ -23,8 +29,18 @@ let albums = [];
 /** @type {{ uri: string, albumUri: string, photoUri: string, photo: object }[]} */
 let albumItems = [];
 
+/** @type {object[]} */
+let spaceMembers = [];
+
+/** @type {boolean} */
+let spaceAdminDenied = false;
+
 let blobCounter = 0;
 let albumCounter = 0;
+let spaceRecordCounter = 0;
+
+/** @type {{ uri: string, cid: string, collection: string, space: string, value: object }[]} */
+let spaceRecords = [];
 
 /** @type {((path: string, init?: RequestInit) => Promise<Response>) | null} */
 let cachedHandler = null;
@@ -47,8 +63,12 @@ export function resetTestGalleryStub() {
   photos = [];
   albums = [];
   albumItems = [];
+  spaceMembers = [];
+  spaceAdminDenied = false;
   blobCounter = 0;
   albumCounter = 0;
+  spaceRecordCounter = 0;
+  spaceRecords = [];
   cachedHandler = null;
 
   if (typeof localStorage !== "undefined" && localStorage.getItem(TEST_GALLERY_MANY_KEY) === "true") {
@@ -59,11 +79,24 @@ export function resetTestGalleryStub() {
     seedPublicAlbumFixture();
   }
 
-  if (
-    typeof localStorage !== "undefined" &&
-    localStorage.getItem(TEST_ALBUM_PERMISSIONED_KEY) === "true"
-  ) {
+  const wantsPermissionedFixture =
+    (typeof localStorage !== "undefined" &&
+      localStorage.getItem(TEST_ALBUM_PERMISSIONED_KEY) === "true") ||
+    (typeof localStorage !== "undefined" &&
+      localStorage.getItem(TEST_ALBUM_SPACE_ADMIN_KEY) === "true") ||
+    (typeof localStorage !== "undefined" &&
+      localStorage.getItem(TEST_ALBUM_SPACE_DENIED_KEY) === "true");
+
+  if (wantsPermissionedFixture) {
     seedPermissionedAlbumFixture();
+  }
+
+  if (typeof localStorage !== "undefined" && localStorage.getItem(TEST_ALBUM_SPACE_ADMIN_KEY) === "true") {
+    seedSpaceAdminFixture();
+  }
+
+  if (typeof localStorage !== "undefined" && localStorage.getItem(TEST_ALBUM_SPACE_DENIED_KEY) === "true") {
+    spaceAdminDenied = true;
   }
 }
 
@@ -163,6 +196,28 @@ function seedPublicAlbumFixture() {
 }
 
 /**
+ * Seed space member directory data for UI-SCR-006 admin tests.
+ *
+ * @returns {void}
+ */
+function seedSpaceAdminFixture() {
+  spaceMembers = [
+    {
+      did: "did:plc:atpixuitest",
+      handle: "owner.atpix.test",
+      access: "write",
+      isOwner: true,
+    },
+    {
+      did: "did:plc:member1",
+      handle: "member.atpix.test",
+      access: "write",
+      isOwner: false,
+    },
+  ];
+}
+
+/**
  * Seed a permissioned album with space URI for UI-SCR-004 permissioned tests.
  *
  * @returns {void}
@@ -182,13 +237,56 @@ function seedPermissionedAlbumFixture() {
 }
 
 /**
+ * Normalize AT/ATS record URIs for stub lookups.
+ *
+ * @param {string} uri - Record URI.
+ * @returns {string} Normalized ATS URI.
+ */
+function normalizeRecordUri(uri) {
+  return uri.replace(/^at:\/\//, "ats://");
+}
+
+/**
  * Find a photo by AT URI in the stub store.
  *
  * @param {string} uri - Photo AT URI.
  * @returns {object | undefined} Matching photo view.
  */
 function findPhoto(uri) {
-  return photos.find((photo) => photo.uri === uri);
+  const normalized = normalizeRecordUri(uri);
+  return photos.find((photo) => normalizeRecordUri(photo.uri) === normalized);
+}
+
+/**
+ * Remove stub gallery state for deleted space records.
+ *
+ * @param {object} body - deleteRecord procedure input.
+ * @returns {void}
+ */
+function removeDeletedSpaceRecords(body) {
+  const removed = spaceRecords.filter(
+    (record) =>
+      record.space === body.space &&
+      record.collection === body.collection &&
+      record.uri.endsWith(`/${body.rkey}`),
+  );
+
+  spaceRecords = spaceRecords.filter((record) => !removed.includes(record));
+
+  for (const record of removed) {
+    const normalizedUri = normalizeRecordUri(record.uri);
+
+    if (record.collection === "net.atpix.gallery.photo") {
+      photos = photos.filter((photo) => normalizeRecordUri(photo.uri) !== normalizedUri);
+      albumItems = albumItems.filter(
+        (item) => normalizeRecordUri(item.photoUri) !== normalizedUri,
+      );
+    }
+
+    if (record.collection === "net.atpix.gallery.albumItem") {
+      albumItems = albumItems.filter((item) => normalizeRecordUri(item.uri) !== normalizedUri);
+    }
+  }
 }
 
 /**
@@ -284,7 +382,146 @@ export function createTestFetchHandler() {
     }
 
     if (path.includes("/xrpc/net.atpix.gallery.listAlbums")) {
-      return jsonResponse({ albums });
+      const url = new URL(path, "http://stub.test");
+      const visibility = url.searchParams.get("visibility");
+      const cursor = url.searchParams.get("cursor");
+      const limit = Number(url.searchParams.get("limit") ?? 50);
+      const filtered = visibility
+        ? albums.filter((album) => album.record?.visibility === visibility)
+        : albums;
+      const start = cursor ? Number(cursor) : 0;
+      const slice = filtered.slice(start, start + limit);
+      const next = start + limit < filtered.length ? String(start + limit) : undefined;
+      return jsonResponse({ albums: slice, cursor: next });
+    }
+
+    if (path.includes("/xrpc/com.atproto.identity.resolveHandle")) {
+      const url = new URL(path, "http://stub.test");
+      const handle = url.searchParams.get("handle");
+      if (handle === "invalid") {
+        return jsonResponse({ message: "Unable to resolve handle" }, 400);
+      }
+      return jsonResponse({ did: `did:plc:${handle?.replace(/\./g, "") ?? "resolved"}` });
+    }
+
+    if (path.includes("/xrpc/com.atproto.space.getSpace")) {
+      if (spaceAdminDenied) {
+        return jsonResponse({ message: "Not found" }, 404);
+      }
+      const url = new URL(path, "http://stub.test");
+      return jsonResponse({
+        uri: url.searchParams.get("space"),
+        space: { displayName: "Permissioned Vault" },
+        config: { membershipPublic: false, recordsPublic: false },
+      });
+    }
+
+    if (path.includes("/xrpc/com.atproto.simplespace.listMembers")) {
+      if (spaceAdminDenied) {
+        return jsonResponse({ message: "Forbidden" }, 403);
+      }
+      return jsonResponse({ members: spaceMembers });
+    }
+
+    if (path.includes("/xrpc/dev.happyview.space.createInvite")) {
+      return jsonResponse({ token: "stub-invite-token", inviteId: "invite-1", access: "write" });
+    }
+
+    if (path.includes("/xrpc/com.atproto.simplespace.addMember")) {
+      const body = init.body ? JSON.parse(String(init.body)) : {};
+      spaceMembers.push({
+        did: body.did,
+        handle: `${body.did?.slice(-8) ?? "member"}.atpix.test`,
+        access: body.access ?? "write",
+        isOwner: false,
+      });
+      return jsonResponse({ success: true });
+    }
+
+    if (path.includes("/xrpc/com.atproto.space.createRecord")) {
+      if (spaceAdminDenied) {
+        return jsonResponse({ message: "Forbidden" }, 403);
+      }
+
+      const body = init.body ? JSON.parse(String(init.body)) : {};
+      spaceRecordCounter += 1;
+      const rkey = `stub${spaceRecordCounter}`;
+      const uri = `ats://did:plc:space/${body.collection}/${rkey}`;
+      const cid = `bafyspace${spaceRecordCounter}`;
+      spaceRecords.push({
+        uri,
+        cid,
+        collection: body.collection,
+        space: body.space,
+        value: body.record ?? {},
+      });
+
+      if (body.collection === "net.atpix.gallery.photo") {
+        const submitted = body.record ?? {};
+        photos.unshift({
+          uri,
+          cid,
+          author: "did:plc:atpixuitest",
+          record: {
+            $type: "net.atpix.gallery.photo",
+            title: submitted.title ?? "Space Photo",
+            caption: submitted.caption,
+            keywords: submitted.keywords,
+            createdAt: submitted.createdAt ?? nowRfc3339Utc(),
+            visibility: "permissioned",
+            spaceUri: body.space,
+            image: submitted.image,
+            c2paValidationState: "trusted",
+          },
+        });
+      }
+
+      if (body.collection === "net.atpix.gallery.albumItem") {
+        const photo = findPhoto(body.record?.photoUri);
+        const album = findAlbum(body.record?.albumUri);
+        if (
+          album &&
+          photo &&
+          !albumItems.some(
+            (item) => item.albumUri === album.uri && normalizeRecordUri(item.photoUri) === normalizeRecordUri(photo.uri),
+          )
+        ) {
+          linkPhotoToAlbum(album, photo);
+        }
+      }
+
+      return jsonResponse({ uri, cid });
+    }
+
+    if (path.includes("/xrpc/com.atproto.space.deleteRecord")) {
+      const body = init.body ? JSON.parse(String(init.body)) : {};
+      removeDeletedSpaceRecords(body);
+      return jsonResponse({});
+    }
+
+    if (path.includes("/xrpc/com.atproto.space.getBlob")) {
+      if (spaceAdminDenied) {
+        return jsonResponse({ message: "Forbidden" }, 403);
+      }
+
+      const bytes = new Uint8Array([0xff, 0xd8, 0xff, 0xd9]);
+      return new Response(bytes, {
+        status: 200,
+        headers: { "Content-Type": "image/jpeg" },
+      });
+    }
+
+    if (path.includes("/xrpc/com.atproto.space.listRecords")) {
+      if (spaceAdminDenied) {
+        return jsonResponse({ message: "Forbidden" }, 403);
+      }
+      const url = new URL(path, "http://stub.test");
+      const collection = url.searchParams.get("collection");
+      const space = url.searchParams.get("space");
+      const records = spaceRecords.filter(
+        (record) => record.collection === collection && record.space === space,
+      );
+      return jsonResponse({ records });
     }
 
     if (path.includes("/xrpc/net.atpix.gallery.getAlbum")) {

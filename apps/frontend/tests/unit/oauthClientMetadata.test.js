@@ -8,6 +8,7 @@ import {
   OAUTH_CLIENT_SCOPE_LIST,
   buildOAuthClientMetadata,
   buildSpaceAppAccess,
+  buildSpaceConfig,
   getOAuthClientId,
   getOAuthRedirectUri,
   isLoopbackOrigin,
@@ -88,5 +89,9 @@ describe("oauthClientMetadata", () => {
       type: "allowList",
       allowed: [getOAuthClientId(origin)],
     });
+  });
+
+  it("builds space config with membership and records gated (ADR-010)", () => {
+    expect(buildSpaceConfig()).toEqual({ membershipPublic: false, recordsPublic: false });
   });
 });

@@ -2,7 +2,16 @@
  * HappyView gallery XRPC helpers for Path A uploads and My Gallery queries.
  */
 
+import { buildSpaceConfig } from "../config/oauthClientMetadata.js";
 import { buildXrpcHeaders } from "./happyview.js";
+import { parseXrpcJson, parseXrpcVoid } from "./xrpcResponse.js";
+
+/**
+ * Canonical ADR-010 space config applied by HappyView when `visibility` is permissioned.
+ *
+ * @type {{ membershipPublic: boolean, recordsPublic: boolean }}
+ */
+export const PERMISSIONED_ALBUM_SPACE_CONFIG = buildSpaceConfig();
 
 /**
  * @typedef {object} BlobRef
@@ -11,53 +20,6 @@ import { buildXrpcHeaders } from "./happyview.js";
  * @property {string} mimeType
  * @property {number} size
  */
-
-/**
- * Parse an XRPC JSON response or throw a descriptive error.
- *
- * @param {Response} response - Fetch response from HappyView.
- * @returns {Promise<object>} Parsed JSON body.
- */
-async function parseXrpcJson(response) {
-  let body;
-  try {
-    body = await response.json();
-  } catch {
-    if (response.ok) {
-      throw new Error(`Invalid JSON in XRPC response (HTTP ${response.status})`);
-    }
-    body = {};
-  }
-
-  if (!response.ok) {
-    const message = typeof body.message === "string" ? body.message : `HTTP ${response.status}`;
-    throw new Error(message);
-  }
-
-  return body;
-}
-
-/**
- * Confirm an XRPC procedure succeeded when the response has no JSON body.
- *
- * @param {Response} response - Fetch response from HappyView.
- * @returns {Promise<void>} Resolves when the response is successful.
- */
-async function parseXrpcVoid(response) {
-  if (response.ok) {
-    return;
-  }
-
-  let body = {};
-  try {
-    body = await response.json();
-  } catch {
-    body = {};
-  }
-
-  const message = typeof body.message === "string" ? body.message : `HTTP ${response.status}`;
-  throw new Error(message);
-}
 
 /**
  * Upload a signed blob to the user's PDS via HappyView OAuth proxy.
@@ -129,6 +91,9 @@ export async function listPhotos(fetchHandler, params) {
 
 /**
  * Create an album via `net.atpix.gallery.createAlbum`.
+ *
+ * When `input.visibility` is `permissioned`, HappyView provisions the linked space using
+ * {@link PERMISSIONED_ALBUM_SPACE_CONFIG} (ADR-010).
  *
  * @param {(path: string, init?: RequestInit) => Promise<Response>} fetchHandler - DPoP fetch handler.
  * @param {object} input - createAlbum procedure input.

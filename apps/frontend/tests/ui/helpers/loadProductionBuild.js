@@ -69,6 +69,11 @@ export async function loadProductionBuild(options = {}) {
   const scriptUrl = `${pathToFileURL(scriptPath).href}?t=${Date.now()}`;
   await import(scriptUrl);
 
+  if (typeof globalThis.__ATPIX_RESET_GALLERY_STUB__ === "function") {
+    globalThis.__ATPIX_RESET_GALLERY_STUB__();
+    globalThis.__ATPIX_RESET_GALLERY_STUB__ = undefined;
+  }
+
   if (typeof globalThis.__ATPIX_TEARDOWN__ === "function") {
     globalThis.__ATPIX_TEARDOWN__();
     globalThis.__ATPIX_TEARDOWN__ = undefined;

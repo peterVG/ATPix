@@ -5,7 +5,7 @@ import { normalizeAlbumPhotoItem } from "../gallery/normalizeAlbumItem.js";
 import { isVerifiedPhotoRecord, renderMediaCard } from "../gallery/renderMediaCard.js";
 import { renderVisibilityChip } from "../gallery/visibilityChip.js";
 import { GRID_COLUMNS, breakpointFromWidth } from "../layout/breakpoint.js";
-import { albumDetailHref, navigateToRoute } from "../router/router.js";
+import { albumDetailHref, navigateToRoute, navigateToSpaceAdmin } from "../router/router.js";
 import { escapeHtml } from "../utils/html.js";
 
 /** @typedef {"all" | "verified" | "collaborators"} AlbumTab */
@@ -113,9 +113,9 @@ export function renderAlbumDetailPanel({ mount, identity, albumUri }) {
     }
 
     return `
-      <p class="album-invite-unavailable" data-testid="album-invite-members">
-        Invite Members — available after permissioned spaces ship (FE-5.1).
-      </p>
+      <button type="button" class="btn btn-primary" data-testid="album-invite-members">
+        Invite Members
+      </button>
     `;
   };
 
@@ -151,12 +151,22 @@ export function renderAlbumDetailPanel({ mount, identity, albumUri }) {
     `;
   };
 
-  const renderCollaboratorsPanel = () => `
-    <div class="album-collaborators" data-testid="album-collaborators-panel">
-      <p data-testid="album-collaborator-empty">No collaborator directory yet.</p>
-      <p class="album-collaborators__note">Member lists ship with permissioned spaces (FE-5.1).</p>
-    </div>
-  `;
+  const renderCollaboratorsPanel = () => {
+    if (!isPermissioned()) {
+      return `
+        <div class="album-collaborators" data-testid="album-collaborators-panel">
+          <p data-testid="album-collaborator-empty">Public and unlisted albums do not use permissioned space collaborators.</p>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="album-collaborators" data-testid="album-collaborators-panel">
+        <p data-testid="album-collaborator-empty">Open space administration to manage collaborators.</p>
+        <button type="button" class="btn btn-ghost btn-sm" data-testid="album-open-space-admin">Manage space</button>
+      </div>
+    `;
+  };
 
   const renderManagePhotosModal = () => {
     if (!showManagePhotos) {
@@ -280,7 +290,7 @@ export function renderAlbumDetailPanel({ mount, identity, albumUri }) {
 
     const grid = mount.querySelector('[data-testid="album-media-grid"]');
     if (grid instanceof HTMLElement) {
-      applyCardBackgrounds(grid, photosForGrid, identity.did);
+      void applyCardBackgrounds(grid, photosForGrid, identity.did);
     }
   };
 
@@ -443,6 +453,16 @@ export function renderAlbumDetailPanel({ mount, identity, albumUri }) {
       if (spaceUri && navigator.clipboard?.writeText) {
         void navigator.clipboard.writeText(spaceUri);
       }
+      return;
+    }
+
+    if (target.closest('[data-testid="album-invite-members"]')) {
+      navigateToSpaceAdmin(albumUri);
+      return;
+    }
+
+    if (target.closest('[data-testid="album-open-space-admin"]')) {
+      navigateToSpaceAdmin(albumUri);
     }
   };
 

@@ -34,18 +34,38 @@ export function parseRouteFromHash(hash = window.location.hash) {
 }
 
 /**
+ * Parse album route segments when the hash targets album views (`#/albums/...`).
+ *
+ * @param {string} [hash] - Location hash (defaults to `window.location.hash`).
+ * @returns {{ albumUri: string | null, spaceAdmin: boolean }} Parsed album route.
+ */
+export function parseAlbumRouteFromHash(hash = window.location.hash) {
+  const segments = parseHashSegments(hash);
+  if (segments[0] !== "albums" || segments.length < 2) {
+    return { albumUri: null, spaceAdmin: false };
+  }
+
+  if (segments[segments.length - 1] === "space") {
+    return {
+      albumUri: segments.slice(1, -1).join("/"),
+      spaceAdmin: true,
+    };
+  }
+
+  return {
+    albumUri: segments.slice(1).join("/"),
+    spaceAdmin: false,
+  };
+}
+
+/**
  * Parse an album AT URI when the hash targets album detail (`#/albums/:uri`).
  *
  * @param {string} [hash] - Location hash (defaults to `window.location.hash`).
  * @returns {string | null} Album AT URI or null on the albums list route.
  */
 export function parseAlbumUriFromHash(hash = window.location.hash) {
-  const segments = parseHashSegments(hash);
-  if (segments[0] !== "albums" || segments.length < 2) {
-    return null;
-  }
-
-  return segments.slice(1).join("/");
+  return parseAlbumRouteFromHash(hash).albumUri;
 }
 
 /**
@@ -66,6 +86,26 @@ export function routeHref(route) {
  */
 export function albumDetailHref(albumUri) {
   return `#/albums/${encodeURIComponent(albumUri)}`;
+}
+
+/**
+ * Build a hash href for a permissioned space admin screen (UI-SCR-006).
+ *
+ * @param {string} albumUri - Album AT URI linked to the space.
+ * @returns {string} Hash URL (e.g. `#/albums/at%3A%2F%2F.../space`).
+ */
+export function spaceAdminHref(albumUri) {
+  return `#/albums/${encodeURIComponent(albumUri)}/space`;
+}
+
+/**
+ * Navigate to the permissioned space admin route for an album.
+ *
+ * @param {string} albumUri - Album AT URI.
+ * @returns {void}
+ */
+export function navigateToSpaceAdmin(albumUri) {
+  window.location.hash = `/albums/${encodeURIComponent(albumUri)}/space`;
 }
 
 /**

@@ -1,5 +1,7 @@
 import { getHappyViewUrl } from "./api/happyview.js";
+import { clearHappyViewFetchHandlerCache } from "./auth/happyViewFetch.js";
 import { bootstrapApp } from "./components/App.js";
+import { resetTestGalleryStub } from "./gallery/testGalleryStub.js";
 import { updateLayoutBreakpoint } from "./layout/breakpoint.js";
 
 /**
@@ -19,6 +21,12 @@ export async function mountAtpixApp() {
 if (import.meta.env.VITE_TEST_AUTH_STUB === "true") {
   globalThis.__ATPIX_MOUNT__ = mountAtpixApp;
   globalThis.__ATPIX_UPDATE_BREAKPOINT__ = updateLayoutBreakpoint;
+  if (import.meta.env.VITE_TEST_GALLERY_STUB === "true") {
+    globalThis.__ATPIX_RESET_GALLERY_STUB__ = () => {
+      clearHappyViewFetchHandlerCache();
+      resetTestGalleryStub();
+    };
+  }
 } else {
   mountAtpixApp().catch((error) => {
     console.error("ATPix bootstrap failed", error);

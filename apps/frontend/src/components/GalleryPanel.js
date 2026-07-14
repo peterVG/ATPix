@@ -186,7 +186,7 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
 
     const grid = dynamic.querySelector('[data-testid="gallery-grid"]');
     if (grid instanceof HTMLElement) {
-      applyCardBackgrounds(grid, filtered, identity.did);
+      void applyCardBackgrounds(grid, filtered, identity.did);
     }
   };
 
