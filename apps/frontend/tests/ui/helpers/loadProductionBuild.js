@@ -71,6 +71,7 @@ export async function loadProductionBuild(options = {}) {
 
   if (typeof globalThis.__ATPIX_RESET_GALLERY_STUB__ === "function") {
     globalThis.__ATPIX_RESET_GALLERY_STUB__();
+    globalThis.__ATPIX_RESET_GALLERY_STUB__ = undefined;
   }
 
   if (typeof globalThis.__ATPIX_TEARDOWN__ === "function") {

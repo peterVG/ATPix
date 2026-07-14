@@ -10,7 +10,7 @@ import time
 import uuid
 from dataclasses import dataclass
 from typing import Any
-from urllib.error import HTTPError, URLError
+from urllib.error import HTTPError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
@@ -96,7 +96,9 @@ def load_test_account(prefix: str) -> TestAccountSession | None:
 
 def test_accounts_configured() -> bool:
     """Return True when owner and member test sessions are available."""
-    return load_test_account("TEST_OWNER") is not None and load_test_account("TEST_MEMBER") is not None
+    owner = load_test_account("TEST_OWNER") is not None
+    member = load_test_account("TEST_MEMBER") is not None
+    return owner and member
 
 
 def _public_jwk(private_jwk: dict[str, Any]) -> dict[str, Any]:

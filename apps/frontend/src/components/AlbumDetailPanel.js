@@ -151,12 +151,22 @@ export function renderAlbumDetailPanel({ mount, identity, albumUri }) {
     `;
   };
 
-  const renderCollaboratorsPanel = () => `
-    <div class="album-collaborators" data-testid="album-collaborators-panel">
-      <p data-testid="album-collaborator-empty">Open space administration to manage collaborators.</p>
-      <button type="button" class="btn btn-ghost btn-sm" data-testid="album-open-space-admin">Manage space</button>
-    </div>
-  `;
+  const renderCollaboratorsPanel = () => {
+    if (!isPermissioned()) {
+      return `
+        <div class="album-collaborators" data-testid="album-collaborators-panel">
+          <p data-testid="album-collaborator-empty">Public and unlisted albums do not use permissioned space collaborators.</p>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="album-collaborators" data-testid="album-collaborators-panel">
+        <p data-testid="album-collaborator-empty">Open space administration to manage collaborators.</p>
+        <button type="button" class="btn btn-ghost btn-sm" data-testid="album-open-space-admin">Manage space</button>
+      </div>
+    `;
+  };
 
   const renderManagePhotosModal = () => {
     if (!showManagePhotos) {

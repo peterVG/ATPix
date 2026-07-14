@@ -45,5 +45,5 @@ No dummy credentials were inserted into the repository. Integration steps call `
 When HappyView is running, confirm `feature.spaces_enabled=true` via:
 
 ```bash
-python3 scripts/provision_happyview.py --verify-only
+python3 ../../scripts/provision_happyview.py --verify-only
 ```

@@ -154,6 +154,40 @@ export async function createSpaceRecord(fetchHandler, input) {
 }
 
 /**
+ * Delete a record from a permissioned space (rollback helper for upload flows).
+ *
+ * @param {(path: string, init?: RequestInit) => Promise<Response>} fetchHandler - DPoP fetch handler.
+ * @param {object} input - deleteRecord procedure input.
+ * @returns {Promise<void>} Resolves when deletion succeeds.
+ */
+export async function deleteSpaceRecord(fetchHandler, input) {
+  const response = await fetchHandler("/xrpc/com.atproto.space.deleteRecord", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...buildXrpcHeaders(),
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (response.ok) {
+    return;
+  }
+
+  let body = {};
+  try {
+    body = await response.json();
+  } catch {
+    body = {};
+  }
+
+  const message = typeof body.message === "string" ? body.message : `HTTP ${response.status}`;
+  const error = new Error(message);
+  error.status = response.status;
+  throw error;
+}
+
+/**
  * Build a gated blob URL for permissioned space thumbnails (Bearer credential path documented in README).
  *
  * @param {string} happyViewUrl - HappyView base URL.

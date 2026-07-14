@@ -5,6 +5,7 @@ import {
   createAlbum,
   createPhoto,
   deleteAlbum,
+  getAlbum,
   listAlbums,
   listPhotos,
   removeFromAlbum,
@@ -64,6 +65,19 @@ describe("galleryApi", () => {
       }),
     );
     expect(result.uri).toContain("net.atpix.gallery.photo");
+  });
+
+  it("preserves HTTP status on gallery XRPC errors", async () => {
+    const fetchHandler = vi.fn(async () => ({
+      ok: false,
+      status: 404,
+      json: async () => ({ message: "Album not found" }),
+    }));
+
+    await expect(getAlbum(fetchHandler, { uri: "at://missing" })).rejects.toMatchObject({
+      message: "Album not found",
+      status: 404,
+    });
   });
 
   it("rejects malformed JSON on successful XRPC responses", async () => {

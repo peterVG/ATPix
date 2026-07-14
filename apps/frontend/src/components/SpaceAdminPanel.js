@@ -66,6 +66,9 @@ export function renderSpaceAdminPanel({ mount, identity, albumUri }) {
   let inviteBusy = false;
   let inviteToken = null;
   let mintPolicy = "member-list";
+  let inviteResolveGeneration = 0;
+  /** @type {ReturnType<typeof setTimeout> | null} */
+  let inviteDebounceTimer = null;
 
   const pushAudit = (action, detail) => {
     auditEntries = [
@@ -110,7 +113,9 @@ export function renderSpaceAdminPanel({ mount, identity, albumUri }) {
     <section class="space-access-denied" data-testid="space-access-denied">
       <h2 class="headline-md">Access denied</h2>
       <p>This permissioned space is membership-gated. You are not a member and cannot view photos or metadata.</p>
-      <button type="button" class="btn btn-primary" data-testid="space-request-access">Request Access</button>
+      <p class="space-access-denied__note" data-testid="space-request-access-note">
+        Request access via PDS messaging is planned for a future release.
+      </p>
       <a class="btn btn-ghost" href="${albumDetailHref(albumUri)}" data-testid="space-sign-in-cta">Return to album</a>
     </section>
   `;
@@ -203,7 +208,7 @@ export function renderSpaceAdminPanel({ mount, identity, albumUri }) {
                 class="btn btn-primary"
                 data-testid="space-invite-submit"
                 ${inviteReady && !inviteBusy ? "" : "disabled"}
-              >${inviteBusy ? "Inviting…" : "Send invite"}</button>
+              >${inviteBusy ? "Creating…" : "Create invite link"}</button>
               <button
                 type="button"
                 class="btn btn-ghost"
@@ -228,11 +233,12 @@ export function renderSpaceAdminPanel({ mount, identity, albumUri }) {
           <section class="space-settings" data-testid="space-settings">
             <h3 class="headline-md">Space settings</h3>
             <label class="sign-in-label" for="space-mint-policy">Mint Policy</label>
-            <select id="space-mint-policy" class="sign-in-input" data-testid="space-mint-policy">
+            <select id="space-mint-policy" class="sign-in-input" data-testid="space-mint-policy" disabled>
               <option value="member-list" ${mintPolicy === "member-list" ? "selected" : ""}>member-list</option>
               <option value="public" ${mintPolicy === "public" ? "selected" : ""}>public</option>
               <option value="managing-app" ${mintPolicy === "managing-app" ? "selected" : ""}>managing-app</option>
             </select>
+            <p class="label-caps">Mint policy is provisioned at space creation and is read-only in v1.</p>
             <p class="label-caps">App Access</p>
             <p class="metadata-code" data-testid="space-app-access">${escapeHtml(JSON.stringify(appAccess))}</p>
             <p class="metadata-code" data-testid="space-oauth-client-id">${escapeHtml(clientId)}</p>
@@ -251,7 +257,7 @@ export function renderSpaceAdminPanel({ mount, identity, albumUri }) {
     }
   };
 
-  const resolveInviteHandle = async () => {
+  const resolveInviteHandle = async (generation) => {
     if (!isValidInviteHandle(inviteHandle)) {
       inviteResolvedDid = null;
       syncView();
@@ -260,11 +266,38 @@ export function renderSpaceAdminPanel({ mount, identity, albumUri }) {
 
     try {
       const fetchHandler = await getHappyViewFetchHandler();
-      inviteResolvedDid = await resolveHandleToDid(fetchHandler, inviteHandle);
+      const resolvedDid = await resolveHandleToDid(fetchHandler, inviteHandle);
+      if (generation !== inviteResolveGeneration) {
+        return;
+      }
+
+      inviteResolvedDid = resolvedDid;
       errorMessage = null;
-    } catch {
+    } catch (error) {
+      if (generation !== inviteResolveGeneration) {
+        return;
+      }
+
       inviteResolvedDid = null;
+      errorMessage =
+        error instanceof Error ? `Could not resolve handle: ${error.message}` : "Could not resolve handle";
     }
+
+    syncView();
+  };
+
+  const scheduleInviteResolve = () => {
+    inviteResolvedDid = null;
+    inviteResolveGeneration += 1;
+    const generation = inviteResolveGeneration;
+
+    if (inviteDebounceTimer) {
+      clearTimeout(inviteDebounceTimer);
+    }
+
+    inviteDebounceTimer = setTimeout(() => {
+      void resolveInviteHandle(generation);
+    }, 300);
 
     syncView();
   };
@@ -285,19 +318,22 @@ export function renderSpaceAdminPanel({ mount, identity, albumUri }) {
         throw new Error("Album is missing a linked space URI");
       }
 
-      if (albumRecord.author !== identity.did) {
-        try {
-          await getSpace(fetchHandler, { space: spaceUri });
-        } catch (error) {
-          const status = error && typeof error === "object" && "status" in error ? error.status : 0;
-          if (status === 401 || status === 403 || status === 404) {
-            accessDenied = true;
-            loading = false;
-            syncView();
-            return;
-          }
-          throw error;
+      let spacePayload;
+      try {
+        spacePayload = await getSpace(fetchHandler, { space: spaceUri });
+      } catch (error) {
+        const status = error && typeof error === "object" && "status" in error ? error.status : 0;
+        if (albumRecord.author !== identity.did && (status === 401 || status === 403 || status === 404)) {
+          accessDenied = true;
+          loading = false;
+          syncView();
+          return;
         }
+        throw error;
+      }
+
+      if (typeof spacePayload.mintPolicy === "string") {
+        mintPolicy = spacePayload.mintPolicy;
       }
 
       const memberPayload = await listSpaceMembers(fetchHandler, { space: spaceUri });
@@ -335,7 +371,7 @@ export function renderSpaceAdminPanel({ mount, identity, albumUri }) {
         maxUses: 10,
       });
       inviteToken = invite.token ?? null;
-      pushAudit("ADD", `Invite created for ${inviteHandle}`);
+      pushAudit("ADD", `Invite link created (share manually with ${inviteHandle})`);
       inviteBusy = false;
       syncView();
     } catch (error) {
@@ -402,16 +438,7 @@ export function renderSpaceAdminPanel({ mount, identity, albumUri }) {
 
     if (target.dataset.testid === "space-invite-handle") {
       inviteHandle = target.value;
-      void resolveInviteHandle();
-    }
-  };
-
-  const onChange = (event) => {
-    const target = event.target;
-    if (target instanceof HTMLSelectElement && target.dataset.testid === "space-mint-policy") {
-      mintPolicy = target.value;
-      pushAudit("MOD", `Mint policy set to ${mintPolicy}`);
-      syncView();
+      scheduleInviteResolve();
     }
   };
 
@@ -442,22 +469,19 @@ export function renderSpaceAdminPanel({ mount, identity, albumUri }) {
       return;
     }
 
-    if (target.closest('[data-testid="space-request-access"]')) {
-      errorMessage = "Request access is not yet wired to a PDS messaging flow in v1.";
-      syncView();
-    }
   };
 
   mount.addEventListener("input", onInput);
-  mount.addEventListener("change", onChange);
   mount.addEventListener("click", onClick);
   void loadSpaceAdmin();
 
   return {
     refresh: loadSpaceAdmin,
     destroy: () => {
+      if (inviteDebounceTimer) {
+        clearTimeout(inviteDebounceTimer);
+      }
       mount.removeEventListener("input", onInput);
-      mount.removeEventListener("change", onChange);
       mount.removeEventListener("click", onClick);
     },
   };

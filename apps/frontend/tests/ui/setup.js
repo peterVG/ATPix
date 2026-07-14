@@ -1,4 +1,4 @@
-import { afterEach, beforeEach } from "vitest";
+import { beforeEach } from "vitest";
 
 import { clearHappyViewFetchHandlerCache } from "../../src/auth/happyViewFetch.js";
 import { TEST_SIGNED_IN_KEY } from "../../src/auth/testAuthStub.js";

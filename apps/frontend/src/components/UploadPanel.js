@@ -360,19 +360,42 @@ export function renderUploadPanel({ mount, identity }) {
     }
   };
 
+  const publishReadyQueue = async () => {
+    const readyItems = queue.filter((entry) => entry.state === "ready");
+    for (const entry of readyItems) {
+      await publishItem(entry.id);
+    }
+  };
+
   const loadPermissionedAlbums = async () => {
     try {
       const fetchHandler = await getHappyViewFetchHandler();
-      const page = await listAlbums(fetchHandler, {
-        did: identity.did,
-        visibility: "permissioned",
-        limit: 50,
-      });
-      permissionedAlbums = (page.albums ?? []).filter((album) => album.record?.spaceUri);
+      let collected = [];
+      let cursor;
+
+      do {
+        const page = await listAlbums(fetchHandler, {
+          did: identity.did,
+          visibility: "permissioned",
+          limit: 50,
+          cursor,
+        });
+        collected = [
+          ...collected,
+          ...(page.albums ?? []).filter((album) => album.record?.spaceUri),
+        ];
+        cursor = page.cursor;
+      } while (cursor);
+
+      permissionedAlbums = collected;
       if (!selectedPermissionedAlbumUri && permissionedAlbums[0]) {
         selectedPermissionedAlbumUri = permissionedAlbums[0].uri;
       }
       render();
+
+      if (destination === "permissioned" && selectedPermissionedAlbumUri) {
+        await publishReadyQueue();
+      }
     } catch {
       permissionedAlbums = [];
       render();
@@ -481,15 +504,11 @@ export function renderUploadPanel({ mount, identity }) {
 
         if (destination === "permissioned") {
           void loadPermissionedAlbums();
+          return;
         }
 
         if (canAutoPublish() && previousDestination !== destination) {
-          const readyItems = queue.filter((entry) => entry.state === "ready");
-          void (async () => {
-            for (const entry of readyItems) {
-              await publishItem(entry.id);
-            }
-          })();
+          void publishReadyQueue();
         }
       });
     });
@@ -499,12 +518,10 @@ export function renderUploadPanel({ mount, identity }) {
       permissionedSelect.addEventListener("change", () => {
         selectedPermissionedAlbumUri = permissionedSelect.value;
         render();
-        const readyItems = queue.filter((entry) => entry.state === "ready");
-        void (async () => {
-          for (const entry of readyItems) {
-            await publishItem(entry.id);
-          }
-        })();
+        if (!selectedPermissionedAlbumUri) {
+          return;
+        }
+        void publishReadyQueue();
       });
     }
 

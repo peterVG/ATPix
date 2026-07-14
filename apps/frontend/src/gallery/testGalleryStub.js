@@ -37,6 +37,10 @@ let spaceAdminDenied = false;
 
 let blobCounter = 0;
 let albumCounter = 0;
+let spaceRecordCounter = 0;
+
+/** @type {{ uri: string, cid: string, collection: string, value: object }[]} */
+let spaceRecords = [];
 
 /** @type {((path: string, init?: RequestInit) => Promise<Response>) | null} */
 let cachedHandler = null;
@@ -63,6 +67,8 @@ export function resetTestGalleryStub() {
   spaceAdminDenied = false;
   blobCounter = 0;
   albumCounter = 0;
+  spaceRecordCounter = 0;
+  spaceRecords = [];
   cachedHandler = null;
 
   if (typeof localStorage !== "undefined" && localStorage.getItem(TEST_GALLERY_MANY_KEY) === "true") {
@@ -327,10 +333,15 @@ export function createTestFetchHandler() {
     if (path.includes("/xrpc/net.atpix.gallery.listAlbums")) {
       const url = new URL(path, "http://stub.test");
       const visibility = url.searchParams.get("visibility");
+      const cursor = url.searchParams.get("cursor");
+      const limit = Number(url.searchParams.get("limit") ?? 50);
       const filtered = visibility
         ? albums.filter((album) => album.record?.visibility === visibility)
         : albums;
-      return jsonResponse({ albums: filtered });
+      const start = cursor ? Number(cursor) : 0;
+      const slice = filtered.slice(start, start + limit);
+      const next = start + limit < filtered.length ? String(start + limit) : undefined;
+      return jsonResponse({ albums: slice, cursor: next });
     }
 
     if (path.includes("/xrpc/com.atproto.identity.resolveHandle")) {
@@ -377,18 +388,64 @@ export function createTestFetchHandler() {
     }
 
     if (path.includes("/xrpc/com.atproto.space.createRecord")) {
+      if (spaceAdminDenied) {
+        return jsonResponse({ message: "Forbidden" }, 403);
+      }
+
       const body = init.body ? JSON.parse(String(init.body)) : {};
-      return jsonResponse({
-        uri: `ats://did:plc:space/${body.collection}/stub${photos.length + 1}`,
-        cid: `bafyspace${photos.length + 1}`,
+      spaceRecordCounter += 1;
+      const rkey = `stub${spaceRecordCounter}`;
+      const uri = `ats://did:plc:space/${body.collection}/${rkey}`;
+      const cid = `bafyspace${spaceRecordCounter}`;
+      spaceRecords.push({
+        uri,
+        cid,
+        collection: body.collection,
+        value: body.record ?? {},
       });
+
+      if (body.collection === "net.atpix.gallery.photo") {
+        const photo = createStubPhoto(body.record?.title ?? "Space Photo", {
+          visibility: "permissioned",
+          spaceUri: body.space,
+          image: body.record?.image,
+        });
+        photo.uri = uri.replace(/^ats:/, "at:");
+        photo.cid = cid;
+        photos.unshift(photo);
+      }
+
+      if (body.collection === "net.atpix.gallery.albumItem") {
+        const photo = findPhoto(body.record?.photoUri) ?? createStubPhoto("Space Photo");
+        const album = findAlbum(body.record?.albumUri);
+        if (album && !albumItems.some((item) => item.albumUri === album.uri && item.photoUri === photo.uri)) {
+          linkPhotoToAlbum(album, photo);
+        }
+      }
+
+      return jsonResponse({ uri, cid });
+    }
+
+    if (path.includes("/xrpc/com.atproto.space.deleteRecord")) {
+      const body = init.body ? JSON.parse(String(init.body)) : {};
+      spaceRecords = spaceRecords.filter(
+        (record) =>
+          !(
+            record.collection === body.collection &&
+            record.uri.endsWith(`/${body.rkey}`)
+          ),
+      );
+      return jsonResponse({});
     }
 
     if (path.includes("/xrpc/com.atproto.space.listRecords")) {
       if (spaceAdminDenied) {
         return jsonResponse({ message: "Forbidden" }, 403);
       }
-      return jsonResponse({ records: [] });
+      const url = new URL(path, "http://stub.test");
+      const collection = url.searchParams.get("collection");
+      const records = spaceRecords.filter((record) => record.collection === collection);
+      return jsonResponse({ records });
     }
 
     if (path.includes("/xrpc/net.atpix.gallery.getAlbum")) {

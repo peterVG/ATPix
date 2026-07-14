@@ -74,7 +74,7 @@ describe("Permissioned space admin UI (UI-SCR-006)", () => {
 
     invalidInput.value = "!!!";
     invalidInput.dispatchEvent(new Event("input", { bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 350));
     expect(document.querySelector('[data-testid="space-invite-submit"]')?.hasAttribute("disabled")).toBe(
       true,
     );
@@ -87,7 +87,7 @@ describe("Permissioned space admin UI (UI-SCR-006)", () => {
     validInput.value = "alice.bsky.social";
     validInput.dispatchEvent(new Event("input", { bubbles: true }));
 
-    const enableDeadline = Date.now() + 2000;
+    const enableDeadline = Date.now() + 2500;
     while (Date.now() < enableDeadline) {
       const submitEnabled = document
         .querySelector('[data-testid="space-invite-submit"]')
@@ -111,7 +111,9 @@ describe("Permissioned space admin UI (UI-SCR-006)", () => {
     while (Date.now() < deadline) {
       const denied = document.querySelector('[data-testid="space-access-denied"]');
       if (denied) {
-        expect(document.querySelector('[data-testid="space-request-access"]')).not.toBeNull();
+        expect(document.querySelector('[data-testid="space-request-access-note"]')?.textContent).toContain(
+          "PDS messaging",
+        );
         expect(document.querySelector('[data-testid="space-member-row"]')).toBeNull();
         expect(document.querySelector('[data-testid="album-media-grid"]')).toBeNull();
         return;

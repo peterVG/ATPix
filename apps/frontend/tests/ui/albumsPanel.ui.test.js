@@ -49,4 +49,24 @@ describe("Albums list UI (SRS-F-004)", () => {
 
     throw new Error("Created album detail view did not render");
   });
+
+  it("shows permissioned privacy disclosure without encryption claims", async () => {
+    document.querySelector('[data-testid="album-visibility-permissioned"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+
+    const deadline = Date.now() + 3000;
+    while (Date.now() < deadline) {
+      const disclosure = document.querySelector('[data-testid="album-permissioned-disclosure"]');
+      if (disclosure) {
+        expect(disclosure.textContent).toContain("membership-gated");
+        expect(disclosure.textContent).toContain("not client-side encrypted");
+        expect(disclosure.textContent?.toLowerCase()).not.toContain("encrypted vault");
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+
+    throw new Error("Permissioned disclosure did not render");
+  });
 });

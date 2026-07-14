@@ -211,7 +211,8 @@ export function buildSpaceAppAccess(origin) {
 }
 
 /**
- * Build HappyView Permissioned Space `config` for album spaces (ADR-010).
+ * Canonical ADR-010 space `config` applied by HappyView when `net.atpix.gallery.createAlbum`
+ * provisions a permissioned album space. The frontend does not send this payload directly.
  *
  * @returns {{ membershipPublic: boolean, recordsPublic: boolean }} Space config payload.
  */

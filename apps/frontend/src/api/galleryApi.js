@@ -31,7 +31,9 @@ async function parseXrpcJson(response) {
 
   if (!response.ok) {
     const message = typeof body.message === "string" ? body.message : `HTTP ${response.status}`;
-    throw new Error(message);
+    const error = new Error(message);
+    error.status = response.status;
+    throw error;
   }
 
   return body;
@@ -56,7 +58,9 @@ async function parseXrpcVoid(response) {
   }
 
   const message = typeof body.message === "string" ? body.message : `HTTP ${response.status}`;
-  throw new Error(message);
+  const error = new Error(message);
+  error.status = response.status;
+  throw error;
 }
 
 /**

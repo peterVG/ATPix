@@ -3,7 +3,7 @@
  */
 
 import { uploadBlob } from "../api/galleryApi.js";
-import { createSpaceRecord } from "../api/spaceApi.js";
+import { createSpaceRecord, deleteSpaceRecord } from "../api/spaceApi.js";
 import { getHappyViewFetchHandler } from "../auth/happyViewFetch.js";
 import { nowRfc3339Utc } from "../gallery/formatCreatedAt.js";
 
@@ -29,6 +29,19 @@ import { nowRfc3339Utc } from "../gallery/formatCreatedAt.js";
  */
 
 /**
+ * Extract the record key from a space AT URI.
+ *
+ * @param {string} uri - Space record AT URI.
+ * @returns {string | null} Record key segment when present.
+ */
+export function parseSpaceRecordRkey(uri) {
+  const normalized = uri.replace(/^ats:\/\//, "").replace(/^at:\/\//, "");
+  const segments = normalized.split("/");
+  const rkey = segments[segments.length - 1];
+  return rkey && rkey.length > 0 ? rkey : null;
+}
+
+/**
  * Publish a prepared upload into a permissioned space (uploadBlob → space.createRecord).
  *
  * @param {PublishPermissionedPhotoInput} input - Signed upload payload and space targets.
@@ -41,6 +54,8 @@ export async function publishPermissionedPhoto(input) {
     }
   };
 
+  let createdPhoto = null;
+
   try {
     report(10);
     const fetchHandler = await getHappyViewFetchHandler();
@@ -50,7 +65,7 @@ export async function publishPermissionedPhoto(input) {
     report(55);
 
     const createdAt = nowRfc3339Utc();
-    const photo = await createSpaceRecord(fetchHandler, {
+    createdPhoto = await createSpaceRecord(fetchHandler, {
       space: input.spaceUri,
       collection: "net.atpix.gallery.photo",
       record: {
@@ -72,7 +87,7 @@ export async function publishPermissionedPhoto(input) {
       record: {
         $type: "net.atpix.gallery.albumItem",
         albumUri: input.albumUri,
-        photoUri: photo.uri,
+        photoUri: createdPhoto.uri,
         createdAt,
       },
     });
@@ -80,10 +95,26 @@ export async function publishPermissionedPhoto(input) {
     report(100);
     return {
       status: "success",
-      uri: photo.uri,
+      uri: createdPhoto.uri,
       createdAt,
     };
   } catch (error) {
+    if (createdPhoto?.uri) {
+      try {
+        const fetchHandler = await getHappyViewFetchHandler();
+        const rkey = parseSpaceRecordRkey(createdPhoto.uri);
+        if (rkey) {
+          await deleteSpaceRecord(fetchHandler, {
+            space: input.spaceUri,
+            collection: "net.atpix.gallery.photo",
+            rkey,
+          });
+        }
+      } catch {
+        // Rollback is best-effort; surface the original album-item failure below.
+      }
+    }
+
     const message = error instanceof Error ? error.message : "Permissioned upload failed";
     return {
       status: "error",

@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import base64
+
+from cryptography.hazmat.primitives.asymmetric import ec
+
 from tests.support.happyview_oauth_client import (
     build_space_app_access,
     build_space_config,
@@ -32,18 +36,27 @@ def test_build_space_config_gated_defaults() -> None:
     assert build_space_config() == {"membershipPublic": False, "recordsPublic": False}
 
 
-def test_create_dpop_proof_is_jwt() -> None:
-    """DPoP proof generator returns a three-segment JWT."""
-    jwk = {
+def _int_to_b64url(value: int, length: int = 32) -> str:
+    """Encode a P-256 coordinate or scalar as unpadded base64url."""
+    return base64.urlsafe_b64encode(value.to_bytes(length, "big")).rstrip(b"=").decode("ascii")
+
+
+def _generate_p256_jwk() -> dict[str, str]:
+    """Build a valid ephemeral P-256 private JWK for DPoP signing tests."""
+    private_key = ec.generate_private_key(ec.SECP256R1())
+    numbers = private_key.private_numbers()
+    public_numbers = numbers.public_numbers
+    return {
         "kty": "EC",
         "crv": "P-256",
-        "x": "W6B1w0d9pWgW6K8Y7b8lqFZ8lqFZ8lqFZ8lqFZ8lqFZ8lq",
-        "y": "W6B1w0d9pWgW6K8Y7b8lqFZ8lqFZ8lqFZ8lqFZ8lqFZ8lqFZ8lq",
-        "d": "W6B1w0d9pWgW6K8Y7b8lqFZ8lqFZ8lqFZ8lqFZ8lqFZ8lqFZ8lq",
+        "x": _int_to_b64url(public_numbers.x),
+        "y": _int_to_b64url(public_numbers.y),
+        "d": _int_to_b64url(numbers.private_value),
     }
-    # Use a valid P-256 test key from jwt test vectors would be better; skip signing if invalid
-    try:
-        proof = create_dpop_proof(jwk, "GET", "http://127.0.0.1:3001/xrpc/example", "token")
-    except Exception:
-        return
+
+
+def test_create_dpop_proof_is_jwt() -> None:
+    """DPoP proof generator returns a three-segment JWT."""
+    jwk = _generate_p256_jwk()
+    proof = create_dpop_proof(jwk, "GET", "http://127.0.0.1:3001/xrpc/example", "token")
     assert proof.count(".") == 2

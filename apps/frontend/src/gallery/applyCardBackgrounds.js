@@ -28,7 +28,8 @@ export function applyCardBackgrounds(grid, photos, fallbackDid) {
 
     const record = photo.record ?? {};
     const authorDid = typeof photo.author === "string" ? photo.author : fallbackDid;
-    const imageUrl = resolveImageUrl(record.image, getHappyViewUrl(), authorDid);
+    const spaceUri = record.visibility === "permissioned" ? record.spaceUri : undefined;
+    const imageUrl = resolveImageUrl(record.image, getHappyViewUrl(), authorDid, spaceUri);
     if (imageUrl) {
       media.style.backgroundImage = `url("${imageUrl}")`;
     }
