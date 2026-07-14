@@ -124,7 +124,7 @@ npm run dev
 
 Open [http://127.0.0.1:5173](http://127.0.0.1:5173). API health: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health).
 
-### Test current functionality (Tasks 1.2 + 1.3 + 2.1 + 3.1)
+### Test current functionality (Tasks 1.2 + 1.3 + 2.1 + 3.1 + 3.2 + 3.3)
 
 **What works today:** HappyView provisioning (lexicons + spaces flag), OAuth client metadata at `/oauth-client-metadata.json`, **atproto OAuth sign-in** with application shell (header, sidebar, theme toggle), **C2PA manifest embedding before upload** (backend `POST /c2pa/manifest/embed` + upload workspace UI), **public-path photo upload** (`uploadBlob` → `createPhoto` via HappyView OAuth proxy), **My Gallery grid** with cursor pagination and empty state (UI-SCR-001), **albums list/create**, **album detail view** (UI-SCR-004) with visibility-gated controls, **caption/tag editing** via `updatePhoto` (SRS-F-005), and backend health. **Not yet:** permissioned space provisioning and member admin (Task 5.1+).
 
@@ -291,7 +291,39 @@ curl -sS -o /tmp/atpix-signed.jpg \
 
 The backend loads environment variables from the repository-root `.env` automatically. For local development, set `C2PA_ALLOW_DEV_SIGNING=true` to use CAI test certificates from `apps/backend/tests/fixtures/c2pa/`. Production deployments must provide `C2PA_SIGNING_CERTS_PATH` and `C2PA_SIGNING_KEY_PATH` with org-issued claim-signing credentials and keep `C2PA_ALLOW_DEV_SIGNING=false`.
 
-#### Step 9 — Run automated tests (optional)
+#### Step 9 — Photo upload and My Gallery (Task 3.2)
+
+Prerequisites: Steps 2–8 complete; signed in with `hvc_*` key; backend running for C2PA signing.
+
+1. Open **Upload Media** and select a JPEG or PNG (≤ 50 MB). Wait for C2PA signing, then **Publish** the photo (title, optional caption/tags, visibility).
+2. After publish succeeds, open **Gallery** (header tab or sidebar **Home**).
+3. Verify **My Gallery** (UI-SCR-001):
+   - Section label **Personal archive** and toolbar with vault search + **Upload**
+   - Photo grid with C2PA badges (**Trusted** / **Valid** when applicable)
+   - Cursor pagination when you have more than 20 photos
+   - Empty state with **Upload your first photo** when the gallery is empty
+4. Use vault search to filter by title, caption, or keyword.
+
+Path A upload flow: `uploadBlob` → `createPhoto` via the HappyView OAuth proxy (`net.atpix.gallery.createPhoto`).
+
+#### Step 10 — Albums and caption editing (Task 3.3)
+
+Prerequisites: Step 9 complete (at least one photo in My Gallery).
+
+1. Open the **Albums** header tab (sidebar **Collections**).
+2. Create an album: enter a name, optional description, and pick a visibility chip (**Public**, **Unlisted**, or **Permissioned**), then **Create album**. You should land on the album detail view.
+3. On album detail (UI-SCR-004), verify:
+   - Visibility badge, album AT URI (`metadata-code`), title, and description
+   - Tabs: **All Media**, **Verified Only**, **Collaborators**
+   - **Manage Photos** — add photos from your Path A uploads
+   - **Destroy Album** — confirmation dialog; underlying photos remain in My Gallery
+4. **Public / unlisted albums:** share link visible; **Invite Members** and **Space URI** hidden.
+5. **Permissioned albums:** **Invite Members** and **Space URI** visible (space provisioning UI ships in Task 5.1); share link hidden.
+6. Return to **My Gallery**, click a photo card, and edit caption/tags in the editor (max 2000 characters). Save and confirm the editor closes without error.
+
+Caption/tag edits persist via `net.atpix.gallery.updatePhoto`.
+
+#### Step 11 — Run automated tests (optional)
 
 ```bash
 cd apps/frontend && npm run lint && npm run test:unit && npm run test:ui
@@ -312,8 +344,9 @@ Behave writes Allure results to `apps/backend/tests/allure-results/` via `apps/b
 
 #### What you cannot test yet
 
-- **Permissioned space provisioning and member admin** — Task 5.1+ (album CRUD, album detail UI-SCR-004, and caption/tag edit ship in Task 3.3).
-- **Permissioned spaces UI** — Task 5.1.
+- **Permissioned space provisioning and member admin** — Task 5.1+ (`createSpace`, invites, `space.getBlob`, UI-SCR-006).
+- **Discovery feed and collection rules** — Task 5.x (deferred post–spaces validation).
+- **Unified photo detail and deletion** — Task 5.x (UI-SCR-003).
 
 #### Permissioned albums and `appAccess` (preview for Task 5.1)
 
