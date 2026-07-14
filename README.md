@@ -8,7 +8,7 @@ This product is a proof-of-concept to evaluate HappyView's permissioned spaces i
 
 ## What it does
 
-Users sign in with **atproto OAuth** (DPoP-bound sessions, no app passwords), upload images with **C2PA 2.2 Content Credentials**, organize **albums**, and browse **My Gallery** or a **Following / Hashtags** discovery feed. 
+Users sign in with **atproto OAuth** (DPoP-bound sessions, no app passwords) — including new visitors who register a **`*.pds.atpix.net`** handle on the operator-hosted PDS ([F-017](docs/overview/002-prd.md#f-017-hosted-pds-account-onboarding)) — upload images with **C2PA 2.2 Content Credentials**, organize **albums**, and browse **My Gallery** or a **Following / Hashtags** discovery feed. 
 
 Galleries populate two ways: 
 **(a)** direct PDS upload and 
@@ -38,7 +38,7 @@ Observability (Promtail → Redpanda → Loki, Prometheus, Grafana) runs via roo
 
 ## Where user data lives (PDS vs App View)
 
-ATPix follows the standard [AT Protocol](https://atproto.com) split: a **Personal Data Server (PDS)** hosts each user's signed repository; an **App View** indexes and serves that data for apps. **ATPix does not run or host user PDSes** — neither the monorepo Docker stack nor HappyView replaces account storage.
+ATPix follows the standard [AT Protocol](https://atproto.com) split: a **Personal Data Server (PDS)** hosts each user's signed repository; an **App View** indexes and serves that data for apps. **The ATPix monorepo does not run a PDS** — neither the local Docker stack nor HappyView replaces account storage. Production deployments MAY point visitors to an **operator-hosted PDS** (e.g. `pds.atpix.net` on OVH) for `*.pds.atpix.net` account creation; see [Phase B](#phase-b--dedicated-pds-at-ovh).
 
 | Layer | Role in ATPix | Canonical user photos & records? |
 |-------|---------------|----------------------------------|
@@ -47,7 +47,7 @@ ATPix follows the standard [AT Protocol](https://atproto.com) split: a **Persona
 | **`apps/backend/`** | C2PA claim generation/validation, health | No |
 | **`apps/frontend/`** | Gallery UI, OAuth client | No — browser session state only |
 
-**Users bring their own PDS.** Sign-in uses atproto OAuth against an identity that already exists on a PDS (e.g. a Bluesky account, another hoster, or a self-hosted PDS you run separately). HappyView proxies `uploadBlob` and record writes to that user's PDS; it does not provision new atproto accounts. See [ADR-006](docs/architecture/006-oauth-dpop-authentication.md) and [ADR-007](docs/architecture/007-happyview-app-view-integration.md).
+**Users need a PDS-backed atproto account** (TC-003). Sign-in uses OAuth against an existing identity (Bluesky, another hoster, or `*.pds.atpix.net` on the hosted PDS). ATPix does not create accounts in-app in v1 — it links to PDS registration when `VITE_PDS_SIGNUP_URL` is set ([F-017](docs/overview/002-prd.md#f-017-hosted-pds-account-onboarding)). HappyView proxies `uploadBlob` and record writes to the user's PDS. See [ADR-006](docs/architecture/006-oauth-dpop-authentication.md) and [ADR-007](docs/architecture/007-happyview-app-view-integration.md).
 
 Typical write path once the gallery UI is implemented:
 
@@ -64,10 +64,10 @@ Browser (ATPix) → HappyView (OAuth + XRPC proxy) → user's PDS
 ## Requirements and verification
 
 - **[Product vision](docs/overview/001-product-vision.md)** — problem, users, value proposition
-- **[PRD v1.5](docs/overview/002-prd.md)** — F-001–F-016 functional requirements, NFRs, technical constraints
-- **[SRS v1.0](docs/overview/003-srs.md)** — technical specs with 100% PRD traceability
+- **[PRD v1.6](docs/overview/002-prd.md)** — F-001–F-021 functional requirements (F-018–F-021 post-v1 identity platform), NFRs, technical constraints
+- **[SRS v1.1](docs/overview/003-srs.md)** — technical specs with 100% PRD traceability
 - **[Implementation plan](docs/overview/005-plan.md)** — global roadmap; module checklists in [apps/frontend/docs/plan.md](apps/frontend/docs/plan.md) and [apps/backend/docs/plan.md](apps/backend/docs/plan.md)
-- **[UI requirements v1.0](docs/overview/004-ui-requirements.md)** — screens, components, and mockups ([UX guide](docs/references/000-UX-guide.md))
+- **[UI requirements v1.1](docs/overview/004-ui-requirements.md)** — screens, components, and mockups ([UX guide](docs/references/000-UX-guide.md))
 - **BDD features** — Gherkin scenarios under `apps/frontend/tests/features/` (UI/auth/gallery) and `apps/backend/tests/features/` (C2PA, lexicon, spaces, performance)
 - **Architecture** — [ADRs 001–011](docs/architecture/) including OAuth ([006](docs/architecture/006-oauth-dpop-authentication.md)), HappyView integration ([007](docs/architecture/007-happyview-app-view-integration.md)), C2PA ([008](docs/architecture/008-c2pa-sdk-and-signing.md)), lexicon authority ([009](docs/architecture/009-lexicon-namespace-authority.md)), permissioned spaces ([010](docs/architecture/010-permissioned-spaces-storage.md)), SQLite index ([011](docs/architecture/011-sqlite-index-database.md))
 

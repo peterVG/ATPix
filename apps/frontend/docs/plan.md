@@ -90,6 +90,14 @@ Granular checklist for the Vite vanilla JS client. Global sequencing: [docs/over
   - **Related Tests:** [`permissioned_albums_SRS-F-008.feature`](../tests/features/permissioned_albums_SRS-F-008.feature), [`ui_permissioned_space_UI-SCR-006.feature`](../tests/features/ui_permissioned_space_UI-SCR-006.feature)
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task FE-5.1. Holistic permissioned album + space admin. DPoP for member reads; document Bearer credential path for thumbnails. Invoke @feature-writer. Walkthrough, check off, commit, push.`
 
+- [x] **Task FE-5.2: Hosted PDS signup discovery link (F-017)**
+  - **Description:** `VITE_PDS_SIGNUP_URL` on UI-SCR-009 sign-in panel; `pdsSignup.js` config helper; unit/UI tests. Coordinated with global Task 5.2 and README Phase B `*.pds.atpix.net` default.
+  - **Estimated Time:** 2 hours
+  - **Dependencies:** Task FE-5.1
+  - **Related Requirements:** [F-017](../../../docs/overview/002-prd.md#f-017-hosted-pds-account-onboarding), [SRS-F-001.4](../../../docs/overview/003-srs.md#srs-f-0014-hosted-pds-signup-discovery-link), [UI-SCR-009](../../../docs/overview/004-ui-requirements.md#ui-scr-009-sign-in-and-pds-onboarding), [ADR-006](../../../docs/architecture/006-oauth-dpop-authentication.md)
+  - **Related Tests:** [`signInPanel.test.js`](../tests/unit/signInPanel.test.js), [`signIn.ui.test.js`](../tests/ui/signIn.ui.test.js)
+  - **Agent Prompt:** `@AGENTS.md On task/5.1, implement F-017 signup link. Walkthrough, check off apps/frontend/docs/plan.md and docs/overview/005-plan.md Task 5.2, commit, push.`
+
 ---
 
 ## Phase FE-5: Discovery & Sharing _(deferred post–spaces validation)_
@@ -144,7 +152,18 @@ Granular checklist for the Vite vanilla JS client. Global sequencing: [docs/over
 
 ---
 
+## Phase FE-9: Identity Platform *(post-v1)*
+
+Maps to [docs/overview/005-plan.md](../../../docs/overview/005-plan.md) Phase 9 (Tasks 9.1–9.4). Depends on hosted PDS at `pds.atpix.net`.
+
+- [ ] **Task FE-9.1: Embedded signup on atpix.net (F-018)** — UI-SCR-009 embedded mode; handle picker; invite code field when required.
+- [ ] **Task FE-9.2: ATPix-managed PDS invites UI (F-019)** — operator invite admin surface wired to registration flows.
+- [ ] **Task FE-9.3: Apex handle request UX (F-020)** — user-facing apex handle opt-in behind operator approval.
+- [ ] **Task FE-9.4: Multi-PDS sign-in issuer resolution (F-021)** — OAuth against correct PDS host per handle/DID.
+
+---
+
 ## Summary Timeline
 
-- **Total Estimated Time:** ~77 hours
+- **Total Estimated Time:** ~79 hours (Phase FE-9 post-v1 additional)
 - **Critical Path:** FE-1 → FE-2 (holistic shell) → FE-3 (upload/gallery/albums) → **FE-5.1 (permissioned / RC-007)** → FE-4 (discovery & sharing) → FE-6 (C2PA UI) → FE-7
