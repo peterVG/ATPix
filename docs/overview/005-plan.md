@@ -84,7 +84,7 @@ This document is the **global execution roadmap** for ATPix v1. It sequences wor
 
 ## Phase 4: Permissioned Albums (HappyView Spaces)
 
-- [ ] **Task 5.1: Permissioned album lifecycle and space admin**
+- [x] **Task 5.1: Permissioned album lifecycle and space admin**
   - **Description:** Deliver mandatory F-008 end-to-end: `createSpace`, permissioned upload path, `getBlob`, invites (`createInvite`/`acceptInvite`), membership, UI-SCR-006. Validate RC-007.
   - **Estimated Time:** 16 hours
   - **Dependencies:** Task 3.3

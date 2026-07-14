@@ -82,7 +82,7 @@ Granular checklist for the Vite vanilla JS client. Global sequencing: [docs/over
 
 ## Phase FE-4: Permissioned Albums
 
-- [ ] **Task FE-5.1: Permissioned album creation and space admin UI**
+- [x] **Task FE-5.1: Permissioned album creation and space admin UI**
   - **Description:** `visibility: permissioned` album flow; space URI display; UI-SCR-006 member directory (Authority/Contributor/Viewer → `read`/`write`), token invite + direct addMember, mint policy dropdown (`member-list`/`public`/`managing-app`), access-denied state without metadata leak. Permissioned upload uses `space.createRecord` + `space.getBlob`. Include minimal permissioned photo viewing until FE-4.3 unifies detail UX.
   - **Estimated Time:** 14 hours
   - **Dependencies:** Task FE-3.3

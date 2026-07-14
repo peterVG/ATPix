@@ -14,6 +14,12 @@ export const TEST_ALBUM_PUBLIC_KEY = "atpix-test-album-public";
 /** @constant {string} localStorage gate to seed a permissioned album detail fixture. */
 export const TEST_ALBUM_PERMISSIONED_KEY = "atpix-test-album-permissioned";
 
+/** @constant {string} localStorage gate to open space admin as owner. */
+export const TEST_ALBUM_SPACE_ADMIN_KEY = "atpix-test-album-space-admin";
+
+/** @constant {string} localStorage gate to simulate non-member space admin access. */
+export const TEST_ALBUM_SPACE_DENIED_KEY = "atpix-test-album-space-denied";
+
 /** @type {{ uri: string, cid: string, author: string, record: object }[]} */
 let photos = [];
 
@@ -22,6 +28,12 @@ let albums = [];
 
 /** @type {{ uri: string, albumUri: string, photoUri: string, photo: object }[]} */
 let albumItems = [];
+
+/** @type {object[]} */
+let spaceMembers = [];
+
+/** @type {boolean} */
+let spaceAdminDenied = false;
 
 let blobCounter = 0;
 let albumCounter = 0;
@@ -47,6 +59,8 @@ export function resetTestGalleryStub() {
   photos = [];
   albums = [];
   albumItems = [];
+  spaceMembers = [];
+  spaceAdminDenied = false;
   blobCounter = 0;
   albumCounter = 0;
   cachedHandler = null;
@@ -64,6 +78,16 @@ export function resetTestGalleryStub() {
     localStorage.getItem(TEST_ALBUM_PERMISSIONED_KEY) === "true"
   ) {
     seedPermissionedAlbumFixture();
+  }
+
+  if (typeof localStorage !== "undefined" && localStorage.getItem(TEST_ALBUM_SPACE_ADMIN_KEY) === "true") {
+    seedPermissionedAlbumFixture();
+    seedSpaceAdminFixture();
+  }
+
+  if (typeof localStorage !== "undefined" && localStorage.getItem(TEST_ALBUM_SPACE_DENIED_KEY) === "true") {
+    seedPermissionedAlbumFixture();
+    spaceAdminDenied = true;
   }
 }
 
@@ -167,6 +191,23 @@ function seedPublicAlbumFixture() {
  *
  * @returns {void}
  */
+function seedSpaceAdminFixture() {
+  spaceMembers = [
+    {
+      did: "did:plc:atpixuitest",
+      handle: "owner.atpix.test",
+      access: "write",
+      isOwner: true,
+    },
+    {
+      did: "did:plc:member1",
+      handle: "member.atpix.test",
+      access: "write",
+      isOwner: false,
+    },
+  ];
+}
+
 function seedPermissionedAlbumFixture() {
   const trusted = createStubPhoto("Trusted Member", { c2paValidationState: "trusted" });
   photos.push(trusted);
@@ -284,7 +325,70 @@ export function createTestFetchHandler() {
     }
 
     if (path.includes("/xrpc/net.atpix.gallery.listAlbums")) {
-      return jsonResponse({ albums });
+      const url = new URL(path, "http://stub.test");
+      const visibility = url.searchParams.get("visibility");
+      const filtered = visibility
+        ? albums.filter((album) => album.record?.visibility === visibility)
+        : albums;
+      return jsonResponse({ albums: filtered });
+    }
+
+    if (path.includes("/xrpc/com.atproto.identity.resolveHandle")) {
+      const url = new URL(path, "http://stub.test");
+      const handle = url.searchParams.get("handle");
+      if (handle === "invalid") {
+        return jsonResponse({ message: "Unable to resolve handle" }, 400);
+      }
+      return jsonResponse({ did: `did:plc:${handle?.replace(/\./g, "") ?? "resolved"}` });
+    }
+
+    if (path.includes("/xrpc/com.atproto.space.getSpace")) {
+      if (spaceAdminDenied) {
+        return jsonResponse({ message: "Not found" }, 404);
+      }
+      const url = new URL(path, "http://stub.test");
+      return jsonResponse({
+        uri: url.searchParams.get("space"),
+        space: { displayName: "Permissioned Vault" },
+        config: { membershipPublic: false, recordsPublic: false },
+      });
+    }
+
+    if (path.includes("/xrpc/com.atproto.simplespace.listMembers")) {
+      if (spaceAdminDenied) {
+        return jsonResponse({ message: "Forbidden" }, 403);
+      }
+      return jsonResponse({ members: spaceMembers });
+    }
+
+    if (path.includes("/xrpc/dev.happyview.space.createInvite")) {
+      return jsonResponse({ token: "stub-invite-token", inviteId: "invite-1", access: "write" });
+    }
+
+    if (path.includes("/xrpc/com.atproto.simplespace.addMember")) {
+      const body = init.body ? JSON.parse(String(init.body)) : {};
+      spaceMembers.push({
+        did: body.did,
+        handle: `${body.did?.slice(-8) ?? "member"}.atpix.test`,
+        access: body.access ?? "write",
+        isOwner: false,
+      });
+      return jsonResponse({ success: true });
+    }
+
+    if (path.includes("/xrpc/com.atproto.space.createRecord")) {
+      const body = init.body ? JSON.parse(String(init.body)) : {};
+      return jsonResponse({
+        uri: `ats://did:plc:space/${body.collection}/stub${photos.length + 1}`,
+        cid: `bafyspace${photos.length + 1}`,
+      });
+    }
+
+    if (path.includes("/xrpc/com.atproto.space.listRecords")) {
+      if (spaceAdminDenied) {
+        return jsonResponse({ message: "Forbidden" }, 403);
+      }
+      return jsonResponse({ records: [] });
     }
 
     if (path.includes("/xrpc/net.atpix.gallery.getAlbum")) {

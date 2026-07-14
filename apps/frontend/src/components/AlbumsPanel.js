@@ -108,6 +108,13 @@ export function renderAlbumsPanel({ mount, identity }) {
           >${escapeHtml(createDescription)}</textarea>
           <p class="label-caps">Visibility</p>
           <div class="visibility-chip-row" data-testid="album-visibility-chips">${renderVisibilityChips()}</div>
+          ${
+            createVisibility === "permissioned"
+              ? `<p class="album-create__disclosure" data-testid="album-permissioned-disclosure">
+                  Access is membership-gated via HappyView spaces — not client-side encrypted.
+                </p>`
+              : ""
+          }
           <button type="submit" class="btn btn-primary" data-testid="album-create-submit" ${creating ? "disabled" : ""}>
             ${creating ? "Creating…" : "Create album"}
           </button>

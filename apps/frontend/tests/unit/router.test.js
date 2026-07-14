@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   albumDetailHref,
+  parseAlbumRouteFromHash,
   parseAlbumUriFromHash,
   parseRouteFromHash,
   routeHref,
+  spaceAdminHref,
 } from "../../src/router/router.js";
 
 describe("router", () => {
@@ -36,5 +38,12 @@ describe("router", () => {
     expect(parseRouteFromHash(hash)).toBe("albums");
     expect(parseAlbumUriFromHash(hash)).toBe(uri);
     expect(parseAlbumUriFromHash("#/albums")).toBeNull();
+  });
+
+  it("parses space admin routes under albums", () => {
+    const uri = "at://did:plc:abc/net.atpix.gallery.album/1";
+    const hash = spaceAdminHref(uri);
+    expect(parseRouteFromHash(hash)).toBe("albums");
+    expect(parseAlbumRouteFromHash(hash)).toEqual({ albumUri: uri, spaceAdmin: true });
   });
 });

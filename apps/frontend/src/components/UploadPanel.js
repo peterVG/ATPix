@@ -8,7 +8,10 @@ import {
   UPLOAD_FORMAT_LABELS,
 } from "../upload/constants.js";
 import { prepareUploadFile } from "../upload/prepareUploadFile.js";
+import { listAlbums } from "../api/galleryApi.js";
+import { publishPermissionedPhoto } from "../upload/publishPermissionedPhoto.js";
 import { publishPreparedPhoto } from "../upload/publishPreparedPhoto.js";
+import { getHappyViewFetchHandler } from "../auth/happyViewFetch.js";
 import { escapeHtml } from "../utils/html.js";
 
 /**
@@ -65,6 +68,9 @@ export function renderUploadPanel({ mount, identity }) {
   let includeGps = false;
   let includeDevice = false;
   let destination = "public";
+  /** @type {object[]} */
+  let permissionedAlbums = [];
+  let selectedPermissionedAlbumUri = "";
   let publishTitle = "";
   let publishCaption = "";
   /** @type {string[]} */
@@ -188,7 +194,22 @@ export function renderUploadPanel({ mount, identity }) {
             <p class="upload-step" data-testid="upload-c2pa-step">C2PA signing runs before blob upload to your PDS.</p>
             ${
               destination === "permissioned"
-                ? `<p class="upload-step upload-step--note" data-testid="upload-permissioned-note">Permissioned uploads ship in a later release. Choose My Public Repository for Path A uploads.</p>`
+                ? `
+                  <label class="sign-in-label" for="upload-permissioned-album">Permissioned album</label>
+                  <select id="upload-permissioned-album" class="sign-in-input" data-testid="upload-permissioned-album">
+                    <option value="">Select an album with a linked space</option>
+                    ${permissionedAlbums
+                      .map((album) => {
+                        const name = escapeHtml(album.record?.name ?? "Untitled");
+                        const selected = selectedPermissionedAlbumUri === album.uri ? "selected" : "";
+                        return `<option value="${escapeHtml(album.uri)}" ${selected}>${name}</option>`;
+                      })
+                      .join("")}
+                  </select>
+                  <p class="upload-step upload-step--note" data-testid="upload-permissioned-note">
+                    Uploads are membership-gated via HappyView spaces — not client-side encrypted.
+                  </p>
+                `
                 : ""
             }
           </aside>
@@ -197,6 +218,37 @@ export function renderUploadPanel({ mount, identity }) {
     `;
 
     bindUploadPanelEvents();
+  };
+
+  const publishPermissionedForItem = async (item, metadata, onProgress) => {
+    const album = permissionedAlbums.find((entry) => entry.uri === selectedPermissionedAlbumUri);
+    const spaceUri = album?.record?.spaceUri;
+    if (!album || !spaceUri) {
+      return {
+        status: "error",
+        errorMessage: "Select a permissioned album with a linked space before publishing.",
+      };
+    }
+
+    return publishPermissionedPhoto({
+      signedBlob: item.prepared.signedBlob,
+      mimeType: item.sourceFile.type,
+      fileName: item.name,
+      spaceUri,
+      albumUri: album.uri,
+      title: metadata.title || undefined,
+      caption: metadata.caption || undefined,
+      keywords: metadata.keywords.length > 0 ? metadata.keywords : undefined,
+      onProgress,
+    });
+  };
+
+  const canAutoPublish = () => {
+    if (destination === "public") {
+      return true;
+    }
+
+    return destination === "permissioned" && Boolean(selectedPermissionedAlbumUri);
   };
 
   const readPublishMetadata = () => ({
@@ -218,22 +270,27 @@ export function renderUploadPanel({ mount, identity }) {
     );
     upsertPendingGalleryUpload({ id: itemId, label: item.name, progress: 0 });
     render();
-    const result = await publishPreparedPhoto({
-      signedBlob: item.prepared.signedBlob,
-      mimeType: item.sourceFile.type,
-      fileName: item.name,
-      visibility: "public",
-      title: metadata.title || undefined,
-      caption: metadata.caption || undefined,
-      keywords: metadata.keywords.length > 0 ? metadata.keywords : undefined,
-      onProgress: (progress) => {
-        queue = queue.map((entry) =>
-          entry.id === itemId ? { ...entry, uploadProgress: progress } : entry,
-        );
-        upsertPendingGalleryUpload({ id: itemId, label: item.name, progress });
-        render();
-      },
-    });
+    const onProgress = (progress) => {
+      queue = queue.map((entry) =>
+        entry.id === itemId ? { ...entry, uploadProgress: progress } : entry,
+      );
+      upsertPendingGalleryUpload({ id: itemId, label: item.name, progress });
+      render();
+    };
+
+    const result =
+      destination === "permissioned"
+        ? await publishPermissionedForItem(item, metadata, onProgress)
+        : await publishPreparedPhoto({
+            signedBlob: item.prepared.signedBlob,
+            mimeType: item.sourceFile.type,
+            fileName: item.name,
+            visibility: "public",
+            title: metadata.title || undefined,
+            caption: metadata.caption || undefined,
+            keywords: metadata.keywords.length > 0 ? metadata.keywords : undefined,
+            onProgress,
+          });
 
     removePendingGalleryUpload(itemId);
 
@@ -298,8 +355,27 @@ export function renderUploadPanel({ mount, identity }) {
     render();
 
     const signedItem = queue.find((entry) => entry.id === itemId);
-    if (destination === "public" && signedItem?.state === "ready") {
+    if (canAutoPublish() && signedItem?.state === "ready") {
       await publishItem(itemId);
+    }
+  };
+
+  const loadPermissionedAlbums = async () => {
+    try {
+      const fetchHandler = await getHappyViewFetchHandler();
+      const page = await listAlbums(fetchHandler, {
+        did: identity.did,
+        visibility: "permissioned",
+        limit: 50,
+      });
+      permissionedAlbums = (page.albums ?? []).filter((album) => album.record?.spaceUri);
+      if (!selectedPermissionedAlbumUri && permissionedAlbums[0]) {
+        selectedPermissionedAlbumUri = permissionedAlbums[0].uri;
+      }
+      render();
+    } catch {
+      permissionedAlbums = [];
+      render();
     }
   };
 
@@ -403,7 +479,11 @@ export function renderUploadPanel({ mount, identity }) {
         destination = radio.value;
         render();
 
-        if (destination === "public" && previousDestination !== "public") {
+        if (destination === "permissioned") {
+          void loadPermissionedAlbums();
+        }
+
+        if (canAutoPublish() && previousDestination !== destination) {
           const readyItems = queue.filter((entry) => entry.state === "ready");
           void (async () => {
             for (const entry of readyItems) {
@@ -413,6 +493,20 @@ export function renderUploadPanel({ mount, identity }) {
         }
       });
     });
+
+    const permissionedSelect = mount.querySelector('[data-testid="upload-permissioned-album"]');
+    if (permissionedSelect instanceof HTMLSelectElement) {
+      permissionedSelect.addEventListener("change", () => {
+        selectedPermissionedAlbumUri = permissionedSelect.value;
+        render();
+        const readyItems = queue.filter((entry) => entry.state === "ready");
+        void (async () => {
+          for (const entry of readyItems) {
+            await publishItem(entry.id);
+          }
+        })();
+      });
+    }
 
     bindTagPillEvents();
 

@@ -1046,3 +1046,129 @@ body {
 [data-breakpoint="mobile"] .album-detail__body {
   grid-template-columns: 1fr;
 }
+
+.space-admin__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.space-admin__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--status-permissioned);
+  font-weight: 600;
+}
+
+.space-admin__description {
+  color: var(--on-surface-variant);
+  max-width: 42rem;
+}
+
+.space-admin__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.space-admin__grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.space-metadata-card,
+.space-members,
+.space-invite,
+.space-audit,
+.space-settings {
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface-container);
+  border: 1px solid var(--outline-variant);
+}
+
+.space-metadata-card__list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.space-metadata-card__list dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--on-surface-variant);
+}
+
+.space-metadata-card__list dd {
+  margin: 0.25rem 0 0;
+}
+
+.space-members__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.space-members__table th,
+.space-members__table td {
+  text-align: left;
+  padding: 0.5rem 0.375rem;
+  border-bottom: 1px solid var(--outline-variant);
+}
+
+.space-audit__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.audit-entry {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-container-high);
+}
+
+.audit-entry--add {
+  border-left: 3px solid #22c55e;
+}
+
+.audit-entry--mod {
+  border-left: 3px solid #3b82f6;
+}
+
+.audit-entry--del {
+  border-left: 3px solid #ef4444;
+}
+
+.audit-entry--inf {
+  border-left: 3px solid #94a3b8;
+}
+
+.space-access-denied {
+  max-width: 32rem;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface-container);
+  border: 1px solid var(--outline-variant);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.album-create__disclosure {
+  font-size: 0.875rem;
+  color: var(--on-surface-variant);
+}
+
+[data-breakpoint="mobile"] .space-admin__grid {
+  grid-template-columns: 1fr;
+}

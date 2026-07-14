@@ -124,9 +124,9 @@ npm run dev
 
 Open [http://127.0.0.1:5173](http://127.0.0.1:5173). API health: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health).
 
-### Test current functionality (Tasks 1.2 + 1.3 + 2.1 + 3.1 + 3.2 + 3.3)
+### Test current functionality (Tasks 1.2 + 1.3 + 2.1 + 3.1 + 3.2 + 3.3 + 5.1)
 
-**What works today:** HappyView provisioning (lexicons + spaces flag), OAuth client metadata at `/oauth-client-metadata.json`, **atproto OAuth sign-in** with application shell (header, sidebar, theme toggle), **C2PA manifest embedding before upload** (backend `POST /c2pa/manifest/embed` + upload workspace UI), **public-path photo upload** (`uploadBlob` → `createPhoto` via HappyView OAuth proxy), **My Gallery grid** with cursor pagination and empty state (UI-SCR-001), **albums list/create**, **album detail view** (UI-SCR-004) with visibility-gated controls, **caption/tag editing** via `updatePhoto` (SRS-F-005), and backend health. **Not yet:** permissioned space provisioning and member admin (Task 5.1+).
+**What works today:** HappyView provisioning (lexicons + spaces flag), OAuth client metadata at `/oauth-client-metadata.json`, **atproto OAuth sign-in** with application shell (header, sidebar, theme toggle), **C2PA manifest embedding before upload** (backend `POST /c2pa/manifest/embed` + upload workspace UI), **public-path photo upload** (`uploadBlob` → `createPhoto` via HappyView OAuth proxy), **My Gallery grid** with cursor pagination and empty state (UI-SCR-001), **albums list/create**, **album detail view** (UI-SCR-004) with visibility-gated controls, **caption/tag editing** via `updatePhoto` (SRS-F-005), **permissioned album creation** (`createAlbum` with `visibility: permissioned` → linked `spaceUri`), **space administration UI** (UI-SCR-006 at `#/albums/:uri/space`: member directory, invites, audit trail, access-denied), **permissioned upload path** (`uploadBlob` → `space.createRecord` + gated `space.getBlob` thumbnails), and backend **multi-account spaces BDD** (`permissioned_spaces_integration_SRS-F-008.feature`). **Not yet:** discovery feed, unified photo detail/deletion (Task 5.x post–spaces).
 
 **Prerequisites:** Docker running, Python 3.11+, Node.js 22+, an atproto account (Bluesky handle works for HappyView admin login).
 
@@ -318,12 +318,32 @@ Prerequisites: Step 9 complete (at least one photo in My Gallery).
    - **Manage Photos** — add photos from your Path A uploads
    - **Destroy Album** — confirmation dialog; underlying photos remain in My Gallery
 4. **Public / unlisted albums:** share link visible; **Invite Members** and **Space URI** hidden.
-5. **Permissioned albums:** **Invite Members** and **Space URI** visible (space provisioning UI ships in Task 5.1); share link hidden.
+5. **Permissioned albums:** **Invite Members** opens space admin (`#/albums/:uri/space`); **Space URI** visible; share link hidden. Create a permissioned album first (Step 10) to obtain a linked `spaceUri`.
 6. Return to **My Gallery**, click a photo card, and edit caption/tags in the editor (max 2000 characters). Save and confirm the editor closes without error.
 
 Caption/tag edits persist via `net.atpix.gallery.updatePhoto`.
 
-#### Step 11 — Run automated tests (optional)
+#### Step 11 — Permissioned albums and space admin (Task 5.1)
+
+Prerequisites: Steps 2–10 complete; `feature.spaces_enabled=true` (Step 4).
+
+1. Create a **Permissioned** album (Albums → visibility chip → Create album). Confirm the album detail shows **Invite Members** and a **Space URI** (`ats://…/net.atpix.gallery.albumSpace/…`).
+2. Click **Invite Members** (or **Manage space** on the Collaborators tab) to open **Permissioned Space** admin (UI-SCR-006):
+   - Space DID, record type `net.atpix.gallery.albumSpace`, **Gated** badge
+   - Member directory (ADMIN / MEMBER / VIEWER roles)
+   - Invite by handle or direct **Add member**
+   - Export Logs / Share Access actions
+3. **Permissioned upload:** Upload Media → select **Permissioned Space** destination → pick the permissioned album → publish. Photos are written to the linked space via `space.createRecord` (blobs remain on your PDS; thumbnails use `space.getBlob` with membership).
+4. **Multi-account BDD (optional):** export OAuth session env vars for two accounts (see `.env.example` `TEST_OWNER_*` / `TEST_MEMBER_*`) after signing in via ATPix, then:
+
+```bash
+cd apps/backend
+behave tests/features/permissioned_spaces_integration_SRS-F-008.feature
+```
+
+Requires live HappyView, `HAPPYVIEW_ADMIN_KEY`, `HAPPYVIEW_CLIENT_KEY`, and both test-account token sets.
+
+#### Step 12 — Run automated tests (optional)
 
 ```bash
 cd apps/frontend && npm run lint && npm run test:unit && npm run test:ui
@@ -331,8 +351,9 @@ cd ../backend
 # macOS/Linux: source .venv/bin/activate
 # Windows: .venv\Scripts\activate
 ruff check . --fix && ruff format .
-pytest tests/unit/test_c2pa_service.py tests/integration/test_c2pa_api.py -v --alluredir=tests/allure-results --clean-alluredir
+./test
 behave tests/features/c2pa_manifest_generation_SRS-F-012.feature
+behave tests/features/permissioned_spaces_integration_SRS-F-008.feature  # requires HappyView + TEST_* accounts
 cd ../..
 # With HappyView up and HAPPYVIEW_ADMIN_KEY set:
 cd apps/backend && pytest tests/integration/test_happyview_provision.py -v
@@ -344,13 +365,12 @@ Behave writes Allure results to `apps/backend/tests/allure-results/` via `apps/b
 
 #### What you cannot test yet
 
-- **Permissioned space provisioning and member admin** — Task 5.1+ (`createSpace`, invites, `space.getBlob`, UI-SCR-006).
 - **Discovery feed and collection rules** — Task 5.x (deferred post–spaces validation).
 - **Unified photo detail and deletion** — Task 5.x (UI-SCR-003).
 
-#### Permissioned albums and `appAccess` (preview for Task 5.1)
+#### Permissioned albums and `appAccess`
 
-When permissioned albums are implemented, creating a private album will call HappyView's `com.atproto.simplespace.createSpace` with an `appAccess` field built by `buildSpaceAppAccess(origin)` in `apps/frontend/src/config/oauthClientMetadata.js`. That object looks like:
+Creating a permissioned album calls HappyView's `com.atproto.simplespace.createSpace` (via `net.atpix.gallery.createAlbum`) with an `appAccess` field built by `buildSpaceAppAccess(origin)` in `apps/frontend/src/config/oauthClientMetadata.js`. That object looks like:
 
 ```json
 {

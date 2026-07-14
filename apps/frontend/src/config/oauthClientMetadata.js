@@ -209,3 +209,15 @@ export function buildSpaceAppAccess(origin) {
     allowed: [getOAuthClientId(origin)],
   };
 }
+
+/**
+ * Build HappyView Permissioned Space `config` for album spaces (ADR-010).
+ *
+ * @returns {{ membershipPublic: boolean, recordsPublic: boolean }} Space config payload.
+ */
+export function buildSpaceConfig() {
+  return {
+    membershipPublic: false,
+    recordsPublic: false,
+  };
+}
