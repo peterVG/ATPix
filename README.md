@@ -8,7 +8,7 @@ This product is a proof-of-concept to evaluate HappyView's permissioned spaces i
 
 ## What it does
 
-Users sign in with **atproto OAuth** (DPoP-bound sessions, no app passwords), upload images with **C2PA 2.2 Content Credentials**, organize **albums**, and browse **My Gallery** or a **Following / Hashtags** discovery feed. 
+Users sign in with **atproto OAuth** (DPoP-bound sessions, no app passwords) — including new visitors who register a **`*.pds.atpix.net`** handle on the operator-hosted PDS ([F-017](docs/overview/002-prd.md#f-017-hosted-pds-account-onboarding)) — upload images with **C2PA 2.2 Content Credentials**, organize **albums**, and browse **My Gallery** or a **Following / Hashtags** discovery feed. 
 
 Galleries populate two ways: 
 **(a)** direct PDS upload and 
@@ -38,7 +38,7 @@ Observability (Promtail → Redpanda → Loki, Prometheus, Grafana) runs via roo
 
 ## Where user data lives (PDS vs App View)
 
-ATPix follows the standard [AT Protocol](https://atproto.com) split: a **Personal Data Server (PDS)** hosts each user's signed repository; an **App View** indexes and serves that data for apps. **ATPix does not run or host user PDSes** — neither the monorepo Docker stack nor HappyView replaces account storage.
+ATPix follows the standard [AT Protocol](https://atproto.com) split: a **Personal Data Server (PDS)** hosts each user's signed repository; an **App View** indexes and serves that data for apps. **The ATPix monorepo does not run a PDS** — neither the local Docker stack nor HappyView replaces account storage. Production deployments MAY point visitors to an **operator-hosted PDS** (e.g. `pds.atpix.net` on OVH) for `*.pds.atpix.net` account creation; see [Phase B](#phase-b--dedicated-pds-at-ovh).
 
 | Layer | Role in ATPix | Canonical user photos & records? |
 |-------|---------------|----------------------------------|
@@ -47,7 +47,7 @@ ATPix follows the standard [AT Protocol](https://atproto.com) split: a **Persona
 | **`apps/backend/`** | C2PA claim generation/validation, health | No |
 | **`apps/frontend/`** | Gallery UI, OAuth client | No — browser session state only |
 
-**Users bring their own PDS.** Sign-in uses atproto OAuth against an identity that already exists on a PDS (e.g. a Bluesky account, another hoster, or a self-hosted PDS you run separately). HappyView proxies `uploadBlob` and record writes to that user's PDS; it does not provision new atproto accounts. See [ADR-006](docs/architecture/006-oauth-dpop-authentication.md) and [ADR-007](docs/architecture/007-happyview-app-view-integration.md).
+**Users need a PDS-backed atproto account** (TC-003). Sign-in uses OAuth against an existing identity (Bluesky, another hoster, or `*.pds.atpix.net` on the hosted PDS). ATPix does not create accounts in-app in v1 — it links to PDS registration when `VITE_PDS_SIGNUP_URL` is set ([F-017](docs/overview/002-prd.md#f-017-hosted-pds-account-onboarding)). HappyView proxies `uploadBlob` and record writes to the user's PDS. See [ADR-006](docs/architecture/006-oauth-dpop-authentication.md) and [ADR-007](docs/architecture/007-happyview-app-view-integration.md).
 
 Typical write path once the gallery UI is implemented:
 
@@ -64,10 +64,10 @@ Browser (ATPix) → HappyView (OAuth + XRPC proxy) → user's PDS
 ## Requirements and verification
 
 - **[Product vision](docs/overview/001-product-vision.md)** — problem, users, value proposition
-- **[PRD v1.5](docs/overview/002-prd.md)** — F-001–F-016 functional requirements, NFRs, technical constraints
-- **[SRS v1.0](docs/overview/003-srs.md)** — technical specs with 100% PRD traceability
+- **[PRD v1.6](docs/overview/002-prd.md)** — F-001–F-021 functional requirements (F-018–F-021 post-v1 identity platform), NFRs, technical constraints
+- **[SRS v1.1](docs/overview/003-srs.md)** — technical specs with 100% PRD traceability
 - **[Implementation plan](docs/overview/005-plan.md)** — global roadmap; module checklists in [apps/frontend/docs/plan.md](apps/frontend/docs/plan.md) and [apps/backend/docs/plan.md](apps/backend/docs/plan.md)
-- **[UI requirements v1.0](docs/overview/004-ui-requirements.md)** — screens, components, and mockups ([UX guide](docs/references/000-UX-guide.md))
+- **[UI requirements v1.1](docs/overview/004-ui-requirements.md)** — screens, components, and mockups ([UX guide](docs/references/000-UX-guide.md))
 - **BDD features** — Gherkin scenarios under `apps/frontend/tests/features/` (UI/auth/gallery) and `apps/backend/tests/features/` (C2PA, lexicon, spaces, performance)
 - **Architecture** — [ADRs 001–011](docs/architecture/) including OAuth ([006](docs/architecture/006-oauth-dpop-authentication.md)), HappyView integration ([007](docs/architecture/007-happyview-app-view-integration.md)), C2PA ([008](docs/architecture/008-c2pa-sdk-and-signing.md)), lexicon authority ([009](docs/architecture/009-lexicon-namespace-authority.md)), permissioned spaces ([010](docs/architecture/010-permissioned-spaces-storage.md)), SQLite index ([011](docs/architecture/011-sqlite-index-database.md))
 
@@ -92,7 +92,7 @@ Use this order after merging Task 5.1. Each phase depends on the ones above it.
 | Phase | What you set up | Depends on | Go to |
 |-------|-----------------|------------|-------|
 | **A** | Developer tools (Docker, Python, Node, Git) | — | [Prerequisites](#prerequisites) |
-| **B** | Domain DNS + OVH PDS + test handles (`alice.atpix.net`, `bob.atpix.net`) | Registrar + VPS | [Phase B — Dedicated PDS at OVH](#phase-b--dedicated-pds-at-ovh) |
+| **B** | Domain DNS + OVH PDS + test handles (`alice.pds.atpix.net`, `bob.pds.atpix.net`) | Registrar + VPS | [Phase B — Dedicated PDS at OVH](#phase-b--dedicated-pds-at-ovh) |
 | **C** | Clone repo, `.env`, backend Python venv | A | [Phase C — Step 1](#step-1--clone-repository-and-environment) |
 | **D** | HappyView App View (Docker, port 3001) | A, C | [Phase D — Step 2](#step-2--start-happyview-and-verify-health) |
 | **E** | HappyView admin login, `hv_*` key, lexicon provisioning | D | [Phase E — Steps 3–4](#step-3--happyview-admin-login-and-admin-api-key) |
@@ -127,13 +127,13 @@ flowchart TD
   lex -.-> test
 ```
 
-While DNS propagates during Phase B, you may run Phases C–D in parallel. For the OVH path, finish Phase B before [Step 3](#step-3--happyview-admin-login-and-admin-api-key) (HappyView admin login as `alice.atpix.net`) and before [Phase G](#step-7--sign-in-and-verify-application-shell-task-21).
+While DNS propagates during Phase B, you may run Phases C–D in parallel. For the OVH path, finish Phase B before [Step 3](#step-3--happyview-admin-login-and-admin-api-key) (HappyView admin login as `alice.pds.atpix.net`) and before [Phase G](#step-7--sign-in-and-verify-application-shell-task-21).
 
 **Two sign-in paths**
 
 | Path | When to use | Sign-in handle | Phase B required? |
 |------|-------------|----------------|-------------------|
-| **Dedicated OVH PDS (recommended)** | First real install; permissioned-album multi-account tests | `alice.atpix.net` / `bob.atpix.net` on `https://pds.atpix.net` | **Yes** — complete Phase B before Phase G |
+| **Dedicated OVH PDS (recommended)** | First real install; permissioned-album multi-account tests; end-user `*.pds.atpix.net` signup | `alice.pds.atpix.net` / `bob.pds.atpix.net` on `https://pds.atpix.net` | **Yes** — complete Phase B before Phase G |
 | **Bluesky shortcut** | Fast UI smoke test only | `you.bsky.social` (or any hosted PDS) | No — skip Phase B |
 
 ATPix does **not** host user accounts. HappyView proxies writes to whichever PDS your handle resolves to ([Where user data lives](#where-user-data-lives-pds-vs-app-view)). For permissioned-space BDD and two-account album tests, you need Phase B.
@@ -142,7 +142,7 @@ ATPix does **not** host user accounts. HappyView proxies writes to whichever PDS
 
 ### What works today (Task 5.1)
 
-HappyView provisioning (lexicons + spaces flag), OAuth client metadata at `/oauth-client-metadata.json`, **atproto OAuth sign-in** with application shell, **C2PA pre-upload signing**, **public-path upload** (`uploadBlob` → `createPhoto`), **My Gallery** (UI-SCR-001), **albums** (UI-SCR-004), **caption/tag editing** (SRS-F-005), **permissioned albums** + **space admin** (UI-SCR-006), **permissioned upload** (`space.createRecord` + authenticated `space.getBlob` thumbnails), and backend **multi-account spaces BDD**. **Not yet:** discovery feed, unified photo detail/deletion (Task 5.x).
+HappyView provisioning (lexicons + spaces flag), OAuth client metadata at `/oauth-client-metadata.json`, **atproto OAuth sign-in** with application shell and optional **hosted PDS signup link** (`VITE_PDS_SIGNUP_URL`, F-017), **C2PA pre-upload signing**, **public-path upload** (`uploadBlob` → `createPhoto`), **My Gallery** (UI-SCR-001), **albums** (UI-SCR-004), **caption/tag editing** (SRS-F-005), **permissioned albums** + **space admin** (UI-SCR-006), **permissioned upload** (`space.createRecord` + authenticated `space.getBlob` thumbnails), and backend **multi-account spaces BDD**. **Not yet:** discovery feed, unified photo detail/deletion (Task 5.x).
 
 # Setup Development Environment
 
@@ -184,6 +184,7 @@ Open `.env` in an editor. You will fill in keys in later steps; for now confirm 
 | `HAPPYVIEW_ADMIN_KEY` | *(empty until Step 3)* | `hv_*` admin key for provisioning |
 | `VITE_HAPPYVIEW_CLIENT_KEY` | *(empty until Step 6)* | `hvc_*` client key for XRPC |
 | `VITE_BACKEND_URL` | `http://127.0.0.1:8000` | FastAPI C2PA + health API |
+| `VITE_PDS_SIGNUP_URL` | `https://pds.atpix.net/account` | Optional — sign-in panel “Create account” link ([F-017](docs/overview/002-prd.md#f-017-hosted-pds-account-onboarding)) |
 | `TEST_OWNER_PDS_URL` / `TEST_MEMBER_PDS_URL` | `https://pds.atpix.net` | BDD only — after Phase B |
 
 #### Step 1b — Backend Python virtual environment (do this before provisioning)
@@ -216,7 +217,7 @@ curl -sS http://127.0.0.1:3001/health
 
 1. Open **http://127.0.0.1:3001/** in a browser.
 2. Sign in with an atproto handle on a PDS HappyView can reach:
-   - **OVH path (recommended):** `alice.atpix.net` after [Phase B](#phase-b--dedicated-pds-at-ovh) — confirms your PDS works end-to-end.
+   - **OVH path (recommended):** `alice.pds.atpix.net` after [Phase B](#phase-b--dedicated-pds-at-ovh) — confirms your PDS works end-to-end.
    - **Shortcut:** any Bluesky or other hosted handle.
    The **first** HappyView login becomes super-user.
 3. Go to **Settings → API Keys → Create**.
@@ -312,10 +313,10 @@ Vite is configured with `envDir` pointing at the repo root, so `npm run dev` fro
 
 #### Step 7 — Sign in and verify application shell (Task 2.1)
 
-Prerequisites: Steps 2–6 complete (`hvc_*` key in `.env`, `npm run dev` restarted). **OVH path:** [Phase B](#phase-b--dedicated-pds-at-ovh) complete so `alice.atpix.net` resolves and `https://pds.atpix.net/xrpc/_health` returns JSON.
+Prerequisites: Steps 2–6 complete (`hvc_*` key in `.env`, `npm run dev` restarted). **OVH path:** [Phase B](#phase-b--dedicated-pds-at-ovh) complete so `alice.pds.atpix.net` resolves and `https://pds.atpix.net/xrpc/_health` returns JSON.
 
-1. Open **http://127.0.0.1:5173/** — confirm the sign-in panel shows **Sign in with atproto** and **HappyView endpoint: `http://127.0.0.1:3001`**.
-2. Enter your handle (`alice.atpix.net` on the OVH path, or `you.bsky.social` for the Bluesky shortcut) and submit.
+1. Open **http://127.0.0.1:5173/** — confirm the sign-in panel shows **Sign in with atproto**, optional **Create a `*.pds.atpix.net` handle** link when `VITE_PDS_SIGNUP_URL` is set, and **HappyView endpoint: `http://127.0.0.1:3001`**.
+2. Enter your handle (`alice.pds.atpix.net` on the OVH path, or `you.bsky.social` for the Bluesky shortcut) and submit.
 3. Complete OAuth on your PDS (`https://pds.atpix.net` for OVH accounts); you should return to ATPix at `/oauth/callback` then land on **My Gallery** inside the shell.
 4. Verify shell chrome:
    - Header tabs: **Gallery**, **Discovery**, **Albums**
@@ -383,7 +384,7 @@ Caption/tag edits persist via `net.atpix.gallery.updatePhoto`.
 
 #### Step 11 — Permissioned albums and space admin (Task 5.1)
 
-Prerequisites: Steps 2–10 complete; `feature.spaces_enabled=true` (Step 4). **Multi-account tests:** Phase B handles (`alice.atpix.net` owner, `bob.atpix.net` member).
+Prerequisites: Steps 2–10 complete; `feature.spaces_enabled=true` (Step 4). **Multi-account tests:** Phase B handles (`alice.pds.atpix.net` owner, `bob.pds.atpix.net` member).
 
 1. Create a **Permissioned** album (Albums → visibility chip → Create album). Confirm the album detail shows **Invite Members** and a **Space URI** (`ats://…/net.atpix.gallery.albumSpace/…`).
 2. Click **Invite Members** (or **Manage space** on the Collaborators tab) to open **Permissioned Space** admin (UI-SCR-006):
@@ -502,23 +503,23 @@ ATPix application code (frontend, backend, HappyView) runs on your laptop or any
 
 Complete these steps **in order** before [Phase G](#step-7--sign-in-and-verify-application-shell-task-21) when using the OVH path. DNS can take up to 24 hours to propagate; use `dig` (or your registrar's DNS checker) after each change. While waiting on DNS, start [Phases C–D](#step-1--clone-repository-and-environment).
 
-HappyView and ATPix still run locally (Docker + dev servers). Users sign in with `alice.atpix.net` or `bob.atpix.net`; OAuth and writes proxy to `https://pds.atpix.net` per [ADR-007](docs/architecture/007-happyview-app-view-integration.md).
+HappyView and ATPix still run locally (Docker + dev servers). Users sign in with `*.pds.atpix.net` handles (or any other atproto account); OAuth and writes proxy to `https://pds.atpix.net` per [ADR-007](docs/architecture/007-happyview-app-view-integration.md).
 
 ### B.0 — Domain roles (reference)
 
-The PDS hostname, user handles, marketing site, and lexicon authority are **separate DNS roles**. Handles do not need a `.pds` segment (use `alice.atpix.net`, not `alice.pds.atpix.net`).
+The PDS hostname, user handles, marketing site, and lexicon authority are **separate DNS roles**. **Default user handles** use the PDS subdomain pattern (`alice.pds.atpix.net`) — covered by the `*.pds` wildcard DNS record with **no per-user registrar TXT**. Optional **apex** handles (`alice.atpix.net`) require individual `_atproto` TXT records ([B.7](#b7--optional-apex-branded-handles)).
 
 | Host / record | Role | Required for first ATPix test? | Section |
 |---------------|------|-------------------------------|---------|
 | `pds.atpix.net` | Self-hosted PDS (one instance, many accounts) | **Yes** | [B.1–B.4](#b1--order-ovh-vps-eu) |
-| `alice.atpix.net`, `bob.atpix.net` | Test handles → DIDs on your PDS | **Yes** (multi-account / permissioned tests) | [B.5–B.7](#b5--create-test-accounts) |
+| `*.pds.atpix.net` | User handles (self-service or admin-created) | **Yes** | [B.5–B.6](#b5--create-test-accounts), [B.8](#b8--end-user-self-service-registration) |
 | `_lexicon.gallery.atpix.net` | Network lexicon authority for `net.atpix.gallery.*` | No — local dev uses HappyView provisioning | [Phase J](#phase-j--network-lexicon-authority-optional-before-production) |
 | `atpix.net` | Marketing homepage | No | [Optional web presence](#optional--atpixnet-web-presence) |
 | `docs.atpix.net` | Project documentation | No | [Optional web presence](#optional--atpixnet-web-presence) |
 
 **Do not** add a registrar wildcard `*.atpix.net` — GitHub [discourages apex wildcards](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site) (takeover risk), and it would conflict with TXT-based handles. The PDS installer wildcard is **`*.pds.atpix.net` only**, not the apex zone.
 
-**Execution order:** B.0 (reference) → B.1 (order VPS) → B.2 (PDS DNS) → B.3 (install PDS) → B.4 (verify health) → B.5 (create accounts) → B.6 (handle TXT) → B.7 (verify handles).
+**Execution order:** B.0 (reference) → B.1 (order VPS) → B.2 (PDS DNS) → B.3 (install PDS) → B.4 (verify health) → B.5 (create test accounts) → B.6 (verify handles) → B.8 (enable end-user signup). [B.7](#b7--optional-apex-branded-handles) is optional branding only.
 
 ### B.1 — Order OVH VPS (EU)
 
@@ -582,11 +583,11 @@ curl -sS https://pds.atpix.net/xrpc/_health
 
 HappyView (running locally on port 3001) must be able to reach this URL over HTTPS when you sign in and upload.
 
-### B.5 — Create test accounts (`alice.atpix.net` / `bob.atpix.net`)
+### B.5 — Create test accounts (`alice.pds.atpix.net` / `bob.pds.atpix.net`)
 
-Create two accounts on the **same** PDS with custom apex handles ([handle specification](https://atproto.com/specs/handle)).
+Create two accounts on the **same** PDS using **subdomain handles** under `pds.atpix.net` ([handle specification](https://atproto.com/specs/handle)). No registrar TXT records are required — the [B.2](#b2--pds-dns-before-install) `*.pds` wildcard covers handle verification.
 
-**Option A — PDS web UI:** open `https://pds.atpix.net/account` and register two accounts. If invites are required, create codes on the VPS:
+**Option A — PDS web UI:** open `https://pds.atpix.net/account` and register `alice.pds.atpix.net` and `bob.pds.atpix.net`. If invites are required, create codes on the VPS:
 
 ```bash
 sudo docker exec pds goat pds admin create-invites
@@ -596,42 +597,56 @@ sudo docker exec pds goat pds admin create-invites
 
 ```bash
 sudo docker exec pds goat pds admin account create \
-  --handle alice.atpix.net \
+  --handle alice.pds.atpix.net \
   --email alice@example.com \
   --password '<choose-a-password>'
 
 sudo docker exec pds goat pds admin account create \
-  --handle bob.atpix.net \
+  --handle bob.pds.atpix.net \
   --email bob@example.com \
   --password '<choose-a-password>'
 ```
 
 Save each account's **DID** and password from the command output. Set `TEST_OWNER_PDS_URL` and `TEST_MEMBER_PDS_URL` to `https://pds.atpix.net` in `.env` when running [Step 11 BDD](#step-11--permissioned-albums-and-space-admin-task-51).
 
-### B.6 — Publish handle TXT records
-
-At your registrar, add (replace placeholders with the DIDs from B.5):
-
-| Registrar host label | Type | Value |
-|----------------------|------|-------|
-| `_atproto.alice` | `TXT` | `did=<alice-did>` |
-| `_atproto.bob` | `TXT` | `did=<bob-did>` |
-
-No `A`/`CNAME` records are required on `alice` or `bob` for DNS-based handle verification.
-
-### B.7 — Verify handles resolve
+### B.6 — Verify handles resolve
 
 Install [`goat`](https://github.com/bluesky-social/goat#install) on your workstation if you have not already ([Prerequisites](#prerequisites)).
 
 ```bash
-dig _atproto.alice.atpix.net +short -t TXT
-# "did=did:plc:..."
-
-goat resolve alice.atpix.net
-goat resolve bob.atpix.net
+goat resolve alice.pds.atpix.net
+goat resolve bob.pds.atpix.net
 ```
 
 Use these handles when logging into HappyView ([Step 3](#step-3--happyview-admin-login-and-admin-api-key)) and ATPix ([Phase G](#step-7--sign-in-and-verify-application-shell-task-21)).
+
+### B.7 — Optional: apex branded handles
+
+Skip this section unless you specifically want apex handles like `alice.atpix.net` instead of `alice.pds.atpix.net`. Each apex handle requires a registrar `_atproto` TXT record and does **not** scale for self-service signup — see [F-020](docs/overview/002-prd.md#f-020-apex-handle-provisioning-at-scale) for a future operator workflow.
+
+| Registrar host label | Type | Value |
+|----------------------|------|-------|
+| `_atproto.alice` | `TXT` | `did=<alice-did>` |
+
+Verify with `dig _atproto.alice.atpix.net +short -t TXT` and `goat resolve alice.atpix.net`.
+
+### B.8 — End-user self-service registration
+
+New visitors without an atproto account can register **`*.pds.atpix.net`** handles on your PDS — ATPix does not create accounts ([F-001](docs/overview/002-prd.md#f-001-atproto-oauth-sign-in), [F-017](docs/overview/002-prd.md#f-017-hosted-pds-account-onboarding)).
+
+1. **PDS policy:** configure open registration or invite codes on the VPS (`sudo docker exec pds goat pds admin create-invites` when invites are enabled).
+2. **Signup URL:** users open `https://pds.atpix.net/account` and choose a handle such as `theirname.pds.atpix.net`.
+3. **ATPix discovery:** set in repository root `.env`:
+
+```bash
+VITE_PDS_SIGNUP_URL=https://pds.atpix.net/account
+```
+
+Restart `npm run dev`. The sign-in panel shows a **Create a `*.pds.atpix.net` handle** link ([UI-SCR-009](docs/overview/004-ui-requirements.md#ui-scr-009-sign-in-and-pds-onboarding)).
+
+**User journey:** create account on PDS → return to ATPix → sign in with the new handle → OAuth proceeds as for any existing account.
+
+Post-v1 enhancements (embedded signup, ATPix-managed invites, apex handles at scale, Entryway/multi-PDS) are specified in [F-018](docs/overview/002-prd.md#f-018-embedded-signup-on-atpixnet) through [F-021](docs/overview/002-prd.md#f-021-entryway-and-multi-pds-federation).
 
 ## Optional — atpix.net web presence
 

@@ -92,6 +92,14 @@ This document is the **global execution roadmap** for ATPix v1. It sequences wor
   - **Related Tests:** [`permissioned_albums_SRS-F-008.feature`](../../apps/frontend/tests/features/permissioned_albums_SRS-F-008.feature), [`permissioned_spaces_integration_SRS-F-008.feature`](../../apps/backend/tests/features/permissioned_spaces_integration_SRS-F-008.feature), [`ui_permissioned_space_UI-SCR-006.feature`](../../apps/frontend/tests/features/ui_permissioned_space_UI-SCR-006.feature)
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task 5.1. Execute FE-5.1 and BE-4.1. Multi-account integration tests against live HappyView with feature.spaces_enabled=true. Walkthrough with raw CLI, check off, commit, push.`
 
+- [x] **Task 5.2: Hosted PDS signup discovery (F-017)**
+  - **Description:** Add `VITE_PDS_SIGNUP_URL` sign-in panel link (UI-SCR-009 link mode), revise README Phase B for `*.pds.atpix.net` default handles and end-user self-service registration, and document post-v1 identity requirements F-018–F-021 in PRD/SRS/UI spec.
+  - **Estimated Time:** 3 hours
+  - **Dependencies:** Task 5.1
+  - **Related Requirements:** [F-017](./002-prd.md#f-017-hosted-pds-account-onboarding), [SRS-F-001.4](./003-srs.md#srs-f-0014-hosted-pds-signup-discovery-link), [UI-SCR-009](./004-ui-requirements.md#ui-scr-009-sign-in-and-pds-onboarding)
+  - **Related Tests:** [`signInPanel.test.js`](../../apps/frontend/tests/unit/signInPanel.test.js), [`signIn.ui.test.js`](../../apps/frontend/tests/ui/signIn.ui.test.js)
+  - **Agent Prompt:** `@AGENTS.md On branch task/5.1, implement F-017 signup link, update README Phase B for *.pds.atpix.net handles, extend PRD/SRS/UI/plan for F-018–F-021. Walkthrough, check off, commit, push.`
+
 ---
 
 ## Phase 5: Discovery, Sharing & Public Galleries *(deferred post–spaces validation)*
@@ -156,6 +164,44 @@ Discovery (Path B), public profiles, shareable links, and unified photo detail/d
 
 ---
 
+## Phase 9: Identity Platform & Hosted PDS Scale *(post-v1)*
+
+Operator and end-user identity flows beyond F-017 link-mode onboarding. Depends on production Phase B PDS at `pds.atpix.net`.
+
+- [ ] **Task 9.1: Embedded signup on atpix.net (F-018)**
+  - **Description:** In-panel PDS registration (handle picker, email, password, invite code) on UI-SCR-009 without leaving atpix.net; auto-transition to OAuth shell on success.
+  - **Estimated Time:** 12 hours
+  - **Dependencies:** Task 5.2, Phase B PDS live
+  - **Related Requirements:** [F-018](./002-prd.md#f-018-embedded-signup-on-atpixnet), [SRS-F-018](./003-srs.md#srs-f-018-embedded-signup-on-atpixnet-post-v1), [UI-SCR-009](./004-ui-requirements.md#ui-scr-009-sign-in-and-pds-onboarding)
+  - **Related Tests:** Planned `ui_embedded_signup_UI-SCR-009.feature`
+  - **Agent Prompt:** `@AGENTS.md Begin feature branch Task 9.1. Implement embedded signup per F-018/UI-SCR-009. No password persistence in ATPix storage. Walkthrough, check off, commit, push.`
+
+- [ ] **Task 9.2: ATPix-managed PDS invites (F-019)**
+  - **Description:** Operator admin surface to create/revoke PDS invite codes; wire invite field into registration flows.
+  - **Estimated Time:** 8 hours
+  - **Dependencies:** Task 9.1
+  - **Related Requirements:** [F-019](./002-prd.md#f-019-atpix-managed-pds-invites), [SRS-F-019](./003-srs.md#srs-f-019-atpix-managed-pds-invites-post-v1)
+  - **Related Tests:** Planned operator invite integration tests
+  - **Agent Prompt:** `@AGENTS.md Begin feature branch Task 9.2. Implement F-019 against PDS admin APIs. Walkthrough, check off, commit, push.`
+
+- [ ] **Task 9.3: Apex handle provisioning at scale (F-020)**
+  - **Description:** Automate `_atproto` TXT records for apex handles (`jane.atpix.net`) via DNS provider API; availability checks and rate limits.
+  - **Estimated Time:** 10 hours
+  - **Dependencies:** Task 9.2
+  - **Related Requirements:** [F-020](./002-prd.md#f-020-apex-handle-provisioning-at-scale), [SRS-F-020](./003-srs.md#srs-f-020-apex-handle-provisioning-at-scale-post-v1)
+  - **Related Tests:** Planned DNS automation integration tests
+  - **Agent Prompt:** `@AGENTS.md Begin feature branch Task 9.3. Implement F-020 with operator approval workflow. Walkthrough, check off, commit, push.`
+
+- [ ] **Task 9.4: Entryway and multi-PDS federation (F-021)**
+  - **Description:** Document and implement multi-PDS OAuth issuer resolution; migration runbook from single `pds.atpix.net` to Entryway topology.
+  - **Estimated Time:** 16 hours
+  - **Dependencies:** Task 9.3
+  - **Related Requirements:** [F-021](./002-prd.md#f-021-entryway-and-multi-pds-federation), [SRS-F-021](./003-srs.md#srs-f-021-entryway-and-multi-pds-federation-post-v1), [ADR-007](../architecture/007-happyview-app-view-integration.md)
+  - **Related Tests:** Planned multi-PDS OAuth integration tests
+  - **Agent Prompt:** `@AGENTS.md Begin feature branch Task 9.4. Implement F-021 deployment modes and HappyView multi-PDS verification. Walkthrough, check off, commit, push.`
+
+---
+
 ## Phase 8: Documentation, Docker & Architecture Synthesis
 
 - [ ] **Task 8.1: README and deployment documentation**
@@ -188,6 +234,7 @@ Discovery (Path B), public profiles, shareable links, and unified photo detail/d
 | 6 | C2PA edit/validation | 14 |
 | 7 | Verification & performance | 12 |
 | 8 | Docs & architecture | 7 |
+| 9 | Identity platform *(post-v1)* | 46 |
 
-- **Total Estimated Time:** ~119 hours
+- **Total Estimated Time:** ~168 hours (Phase 9 post-v1)
 - **Critical Path:** HappyView provision → OAuth shell → C2PA upload → gallery/albums → **permissioned spaces (RC-007)** → discovery & sharing → C2PA validation → RC verification → architecture doc

@@ -12,12 +12,13 @@ Accepted
 
 ## Context / Requirement Reference
 
-[docs/overview/002-prd.md](../overview/002-prd.md) F-001 requires atproto OAuth (not app passwords). NFR-003 mandates DPoP-bound tokens and prohibits plaintext credential storage. TC-006 requires `X-Client-Key` on all XRPC. [docs/overview/003-srs.md](../overview/003-srs.md) SRS-F-001 and SRS-NFR-003 derive verification via frontend BDD and security integration tests.
+[docs/overview/002-prd.md](../overview/002-prd.md) F-001 requires atproto OAuth (not app passwords). F-017 adds optional hosted-PDS signup discovery (`VITE_PDS_SIGNUP_URL`); F-018–F-021 defer embedded signup, operator invites, apex handles, and Entryway/multi-PDS. NFR-003 mandates DPoP-bound tokens and prohibits plaintext credential storage. TC-006 requires `X-Client-Key` on all XRPC. [docs/overview/003-srs.md](../overview/003-srs.md) SRS-F-001, SRS-F-001.4, and SRS-NFR-003 derive verification via frontend BDD and security integration tests.
 
 ## Decision
 
 - **Client library:** `@happyview/oauth-client-browser` (v1.4.x) in `apps/frontend/` handles OAuth redirect, DPoP key provisioning, and token refresh.
-- **Configuration:** `VITE_HAPPYVIEW_CLIENT_KEY` and `VITE_HAPPYVIEW_URL` in `.env` (see `.env.example`).
+- **Configuration:** `VITE_HAPPYVIEW_CLIENT_KEY` and `VITE_HAPPYVIEW_URL` in `.env` (see `.env.example`). Optional `VITE_PDS_SIGNUP_URL` links unauthenticated users to operator-hosted PDS registration (`*.pds.atpix.net` handles).
+- **Account creation boundary:** ATPix MUST NOT provision atproto accounts or collect PDS passwords in v1. Registration stays on the PDS (`https://pds.atpix.net/account` or equivalent); ATPix only surfaces discovery (F-017) until embedded signup (F-018).
 - **Write path:** All PDS mutations proxy through HappyView with DPoP + `X-Client-Key`; no custom auth server in `apps/backend/`.
 - **Sign-out:** Revoke device DPoP session via client library; do not store passwords or app passwords in `localStorage`, logs, or HappyView SQLite.
 
@@ -27,7 +28,7 @@ HappyView is the designated OAuth proxy per TC-001. Browser DPoP aligns with atp
 
 ## Assumptions
 
-Developers register an ATPix API client in HappyView admin and obtain a non-admin client key. Users have PDS-backed accounts (TC-003).
+Developers register an ATPix API client in HappyView admin and obtain a non-admin client key. Users have PDS-backed accounts (TC-003) — created on Bluesky, another hoster, or the operator-hosted PDS at `pds.atpix.net`.
 
 ## Alternatives Considered
 
@@ -36,8 +37,8 @@ Developers register an ATPix API client in HappyView admin and obtain a non-admi
 
 ## Consequences / Implications
 
-Frontend owns all authentication UX. Backend C2PA endpoints remain separate and MUST NOT accept PDS credentials. Production HappyView SHOULD set `TOKEN_ENCRYPTION_KEY`.
+Frontend owns sign-in UX and optional signup discovery (F-017). Embedded registration (F-018) and operator invite tooling (F-019) remain post-v1. Backend C2PA endpoints remain separate and MUST NOT accept PDS credentials. Production HappyView SHOULD set `TOKEN_ENCRYPTION_KEY`.
 
 ## Related Decisions / Notes
 
-[007-happyview-app-view-integration.md](./007-happyview-app-view-integration.md), [005-application-architecture.md](./005-application-architecture.md), [`oauth_sign_in_SRS-F-001.feature`](../../apps/frontend/tests/features/oauth_sign_in_SRS-F-001.feature)
+[007-happyview-app-view-integration.md](./007-happyview-app-view-integration.md), [005-application-architecture.md](./005-application-architecture.md), [002-prd.md F-017](../overview/002-prd.md#f-017-hosted-pds-account-onboarding), [`oauth_sign_in_SRS-F-001.feature`](../../apps/frontend/tests/features/oauth_sign_in_SRS-F-001.feature), [`signIn.ui.test.js`](../../apps/frontend/tests/ui/signIn.ui.test.js)

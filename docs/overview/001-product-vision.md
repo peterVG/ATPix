@@ -10,6 +10,7 @@
 
 - **Creators and photographers** who want ownership and portability of their image libraries
 - **atproto-native users** (e.g. Bluesky community) who prefer OAuth identity over new account/password systems
+- **New ATPix visitors** who register a `*.pds.atpix.net` handle on the operator-hosted PDS, then sign in via OAuth (F-017 link; embedded signup F-018 post-v1)
 - **Developers** exploring App View patterns on HappyView with a concrete media use case
 
 **Jobs:** Upload photos, group them into albums, share a public profile gallery or a curated album link, create groups of user accounts that are authorized to access permissioned data, browse others' public galleries.
@@ -20,7 +21,8 @@
 
 ## Core Features
 
-- atproto OAuth sign-in (existing PDS account)
+- atproto OAuth sign-in (existing PDS account or new `*.pds.atpix.net` account on hosted PDS)
+- Hosted PDS signup discovery link on sign-in panel when configured (F-017)
 - Photo upload with blob storage on user's PDS
 - Photo collection from followed accounts and hashtags
 - Captions, tags, and album organization
@@ -33,6 +35,7 @@
 ## User Requirements
 
 - I want to sign in with my existing atproto account without creating a new password store.
+- I want to create a new `*.pds.atpix.net` account on the ATPix PDS and sign in without operator DNS work per user.
 - I want to upload photos and see them in my gallery immediately.
 - I want to organize photos into named albums.
 - I want to share my full public gallery or a specific album via a link.
@@ -43,6 +46,7 @@
 ## Technical Stack
 
 - **Protocol:** AT Protocol (identity, repos, blobs, XRPC)
+- **Hosted PDS (operator):** [Reference PDS](https://github.com/bluesky-social/pds) on OVH at `pds.atpix.net` for `*.pds.atpix.net` handles — separate from the monorepo; ATPix links to registration via `VITE_PDS_SIGNUP_URL` (F-017)
 - **App View:** [HappyView](https://happyview.dev) — Lexicon-driven indexing, Jetstream sync, OAuth proxy
 - **Frontend (options):** Plain vanilla JS, HTML and CSS incorporating `@happyview/lex-agent` and `@happyview/oauth-client-browser`
 - **Index database:** SQLite 
@@ -68,7 +72,7 @@ ATPix eliminates the traditional photo-app tradeoff between ease of use and data
 
 - v1 is **public-by-default** for gallery and album metadata; **permissioned albums** use [HappyView Permissioned Spaces](https://happyview.dev/experimental/spaces) (ATP-0016) for membership-gated photo storage — **no client-side encryption** in v1
 - HappyView blob upload limit **50MB** per image
-- Requires users to have (or create) a PDS-backed atproto account
+- Requires users to have (or create) a PDS-backed atproto account; default hosted path uses `*.pds.atpix.net` (no per-user apex DNS in v1)
 - Lexicon authority requires DNS `_lexicon` setup for network publication
 
 ## Key Resources & Partnerships
