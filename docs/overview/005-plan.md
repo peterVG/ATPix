@@ -70,7 +70,7 @@ This document is the **global execution roadmap** for ATPix v1. It sequences wor
   - **Related Tests:** [`photo_upload_SRS-F-002.feature`](../../apps/frontend/tests/features/photo_upload_SRS-F-002.feature), [`personal_gallery_SRS-F-003.feature`](../../apps/frontend/tests/features/personal_gallery_SRS-F-003.feature), [`ui_upload_flow_UI-SCR-005.feature`](../../apps/frontend/tests/features/ui_upload_flow_UI-SCR-005.feature), [`ui_my_gallery_UI-SCR-001.feature`](../../apps/frontend/tests/features/ui_my_gallery_UI-SCR-001.feature)
   - **Agent Prompt:** `@AGENTS.md Begin by creating a new feature branch for Task 3.2. Execute FE-3.2; backend supports C2PA only. Production-build vitest with strict DOM assertions. Walkthrough, check off, commit, push.`
 
-- [ ] **Task 3.3: Album organization and captions (cross-module)**
+- [x] **Task 3.3: Album organization and captions (cross-module)**
   - **Description:** Deliver F-004 albums, F-005 captions/tags, UI-SCR-004 album view. Support seeding from Path A uploads.
   - **Estimated Time:** 10 hours
   - **Dependencies:** Task 3.2

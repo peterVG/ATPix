@@ -1,18 +1,14 @@
 import { listPhotos } from "../api/galleryApi.js";
 import { getHappyViewUrl } from "../api/happyview.js";
 import { getHappyViewFetchHandler } from "../auth/happyViewFetch.js";
-import { formatCreatedAtUtc } from "../gallery/formatCreatedAt.js";
 import {
   getPendingGalleryUploads,
   onGalleryRefresh,
   onPendingUploadsChange,
 } from "../gallery/galleryEvents.js";
 import { resolveImageUrl } from "../gallery/resolveImageUrl.js";
-import {
-  badgeClassForLabel,
-  mapC2paValidationState,
-  selectPhotoBadges,
-} from "../gallery/selectPhotoBadge.js";
+import { renderMediaCard } from "../gallery/renderMediaCard.js";
+import { renderPhotoCaptionEditor } from "./PhotoCaptionEditor.js";
 import { GALLERY_PAGE_SIZE } from "../gallery/constants.js";
 import { GRID_COLUMNS, breakpointFromWidth } from "../layout/breakpoint.js";
 import { escapeHtml } from "../utils/html.js";
@@ -35,34 +31,6 @@ function filterPhotos(photos, query) {
     const fields = [record.title, record.caption, ...(record.keywords ?? [])];
     return fields.some((value) => typeof value === "string" && value.toLowerCase().includes(needle));
   });
-}
-
-/**
- * Render badge chips for a gallery card.
- *
- * @param {object} record - Photo record payload.
- * @returns {string} HTML string for badge chips.
- */
-function renderBadges(record) {
-  const labels = selectPhotoBadges({
-    visibility: record.visibility ?? "public",
-    c2paState: mapC2paValidationState(record.c2paValidationState),
-  });
-
-  return labels
-    .map((label) => {
-      const modifier = badgeClassForLabel(label);
-      const testId =
-        label === "Trusted"
-          ? "badge-trusted"
-          : label === "Valid"
-            ? "badge-valid"
-            : label === "Invalid"
-              ? "badge-invalid"
-              : "badge-private";
-      return `<span class="status-chip status-chip--${modifier}" data-testid="${testId}">${label}</span>`;
-    })
-    .join("");
 }
 
 /**
@@ -120,21 +88,29 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
   let errorMessage = null;
   let pageNumber = 1;
   let eventsBound = false;
+  /** @type {{ destroy: () => void } | null} */
+  let activeCaptionEditor = null;
 
-  const renderCard = (photo, index) => {
-    const record = photo.record ?? {};
-    const title = record.title ? escapeHtml(record.title) : "Untitled";
-    const timestamp = record.createdAt
-      ? escapeHtml(formatCreatedAtUtc(record.createdAt))
-      : "";
+  const closeCaptionEditor = () => {
+    activeCaptionEditor?.destroy();
+    activeCaptionEditor = null;
+    const overlay = mount.querySelector('[data-testid="gallery-caption-overlay"]');
+    overlay?.remove();
+  };
 
-    return `
-      <article class="gallery-card gallery-card--loaded" data-testid="gallery-card" data-card-index="${index}">
-        <div class="gallery-card__media" role="img" aria-label="${title}"></div>
-        <div class="gallery-card__badges">${renderBadges(record)}</div>
-        <p class="gallery-card__meta">${timestamp}</p>
-      </article>
-    `;
+  const openCaptionEditor = (photo) => {
+    closeCaptionEditor();
+    const overlay = document.createElement("div");
+    overlay.setAttribute("data-testid", "gallery-caption-overlay");
+    mount.appendChild(overlay);
+    activeCaptionEditor = renderPhotoCaptionEditor({
+      mount: overlay,
+      photo,
+      onClose: closeCaptionEditor,
+      onSaved: () => {
+        void refresh();
+      },
+    });
   };
 
   const renderPendingCard = (pending) => `
@@ -152,7 +128,7 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
     const pending = getPendingGalleryUploads();
     return [
       ...pending.map((entry) => renderPendingCard(entry)),
-      ...filtered.map((photo, index) => renderCard(photo, index)),
+      ...filtered.map((photo, index) => renderMediaCard({ photo, index })),
     ].join("");
   };
 
@@ -298,6 +274,19 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
         }
         pageNumber = Math.max(1, pageNumber - 1);
         void loadPage(previous || undefined);
+        return;
+      }
+
+      const card = target.closest('[data-testid="gallery-card"]');
+      if (card instanceof HTMLElement) {
+        const indexValue = card.getAttribute("data-card-index");
+        if (indexValue === null) {
+          return;
+        }
+        const photo = filterPhotos(photos, searchQuery)[Number(indexValue)];
+        if (photo) {
+          openCaptionEditor(photo);
+        }
       }
     });
   };
@@ -375,6 +364,7 @@ export function renderGalleryPanel({ mount, identity, onUpload }) {
   return {
     refresh,
     destroy: () => {
+      closeCaptionEditor();
       unsubscribeRefresh();
       unsubscribePending();
       eventsBound = false;

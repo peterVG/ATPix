@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { parseRouteFromHash, routeHref } from "../../src/router/router.js";
+import {
+  albumDetailHref,
+  parseAlbumUriFromHash,
+  parseRouteFromHash,
+  routeHref,
+} from "../../src/router/router.js";
 
 describe("router", () => {
   it("parses gallery as default route", () => {
@@ -19,5 +24,13 @@ describe("router", () => {
 
   it("builds hash hrefs", () => {
     expect(routeHref("albums")).toBe("#/albums");
+  });
+
+  it("parses album detail URIs from hash segments", () => {
+    const uri = "at://did:plc:abc/net.atpix.gallery.album/1";
+    const hash = albumDetailHref(uri);
+    expect(parseRouteFromHash(hash)).toBe("albums");
+    expect(parseAlbumUriFromHash(hash)).toBe(uri);
+    expect(parseAlbumUriFromHash("#/albums")).toBeNull();
   });
 });

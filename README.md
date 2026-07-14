@@ -126,7 +126,7 @@ Open [http://127.0.0.1:5173](http://127.0.0.1:5173). API health: [http://127.0.0
 
 ### Test current functionality (Tasks 1.2 + 1.3 + 2.1 + 3.1)
 
-**What works today:** HappyView provisioning (lexicons + spaces flag), OAuth client metadata at `/oauth-client-metadata.json`, **atproto OAuth sign-in** with application shell (header, sidebar, theme toggle), **C2PA manifest embedding before upload** (backend `POST /c2pa/manifest/embed` + upload workspace UI), **public-path photo upload** (`uploadBlob` → `createPhoto` via HappyView OAuth proxy), **My Gallery grid** with cursor pagination and empty state (UI-SCR-001), and backend health. **Not yet:** albums and permissioned uploads (Task 3.3+).
+**What works today:** HappyView provisioning (lexicons + spaces flag), OAuth client metadata at `/oauth-client-metadata.json`, **atproto OAuth sign-in** with application shell (header, sidebar, theme toggle), **C2PA manifest embedding before upload** (backend `POST /c2pa/manifest/embed` + upload workspace UI), **public-path photo upload** (`uploadBlob` → `createPhoto` via HappyView OAuth proxy), **My Gallery grid** with cursor pagination and empty state (UI-SCR-001), **albums list/create**, **album detail view** (UI-SCR-004) with visibility-gated controls, **caption/tag editing** via `updatePhoto` (SRS-F-005), and backend health. **Not yet:** permissioned space provisioning and member admin (Task 5.1+).
 
 **Prerequisites:** Docker running, Python 3.11+, Node.js 22+, an atproto account (Bluesky handle works for HappyView admin login).
 
@@ -312,7 +312,7 @@ Behave writes Allure results to `apps/backend/tests/allure-results/` via `apps/b
 
 #### What you cannot test yet
 
-- **Albums and permissioned uploads** — Task 3.3+ (public-path `uploadBlob` → `createPhoto` and My Gallery grid ship in Task 3.2).
+- **Permissioned space provisioning and member admin** — Task 5.1+ (album CRUD, album detail UI-SCR-004, and caption/tag edit ship in Task 3.3).
 - **Permissioned spaces UI** — Task 5.1.
 
 #### Permissioned albums and `appAccess` (preview for Task 5.1)
