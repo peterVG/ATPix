@@ -13,6 +13,10 @@ The `references/` directory implements **Progressive Disclosure** - the agent on
 - API references (e.g., AO Process API)
 - RFC documents
 - Industry standards
+- AT Protocol Permissioned Data proposal: [at-protocol-0016-permissioned-data-proposal.md](./at-protocol-0016-permissioned-data-proposal.md)
+- HappyView vs proposal comparison: [HappyView-0016-implementation.md](./HappyView-0016-implementation.md)
+- HappyView vs pure 0016 prototype plan: [happy-view-vs-pure-protocol-for-0016-prototype.md](./happy-view-vs-pure-protocol-for-0016-prototype.md)
+- Blacksky AT Protocol tutorial PDFs: [blacksky_tutorial/](./blacksky_tutorial/)
 
 ### Whitepapers
 - Academic papers relevant to your domain
