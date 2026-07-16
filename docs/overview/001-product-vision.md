@@ -55,12 +55,15 @@
 
 ## Technical & Domain References
 
-- [AT Protocol knowledge base](../../.agents/kb/at-protocol.md)
-- [HappyView knowledge base](../../.agents/kb/happyview.md)
+- [AT Protocol knowledge base (v2, combined)](../../.agents/kb/at-protocol-v2.md) — public broadcast + Permissioned Data proposal (identity, addressing, spaces)
+- [AT Protocol knowledge base (legacy overview)](../../.agents/kb/at-protocol.md)
+- [Blacksky tutorial synthesis](../../.agents/kb/at-protocol-blacksky-tutorial.md)
+- [HappyView knowledge base](../../.agents/kb/happyview.md) — **implementation dialect** for spaces (e.g. `ats://`); product requirements follow HappyView, not the raw proposal alone
 - [Product requirements (PRD)](./002-prd.md) — functional requirements, Lexicon spec, C2PA compliance
 - [Product terms ↔ AT Protocol primitives (PRD)](./002-prd.md#product-terms--at-protocol-primitives) — gallery/album (UI) mapped to repos, collections, and records (architecture)
 - [ATPix Lexicon artifacts](../lexicon/net.atpix.gallery.md)
 - [atproto.com reference dump](../references/atproto.comdocs.md)
+- [Blacksky AT Protocol tutorial PDFs](../references/blacksky_tutorial/)
 - [happyview.dev reference dump](../references/happyview.dev.docs.md)
 - [AGENTS.md](../../AGENTS.md) — project principles and standards
 

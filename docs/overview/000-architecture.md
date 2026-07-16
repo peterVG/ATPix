@@ -188,6 +188,8 @@ graph TB
 
 ATPix follows the standard atproto split: **user PDS repos are the source of truth** for public/unlisted content and album containers; **HappyView holds a derived index** for queries and OAuth proxy state; **permissioned photos and `albumItem` records** live in HappyView space repos when `visibility: permissioned` ([ADR-010](../architecture/010-permissioned-spaces-storage.md)).
 
+> **Note (ATP-0016 dialect):** The Blacksky / proposal model describes per-user permissioned repos and `at://…/space/…` URIs ([at-protocol-v2.md](../../.agents/kb/at-protocol-v2.md)). ATPix v1 uses **HappyView’s experimental dialect** (`ats://` URIs, space-scoped records via HappyView APIs). See the comparison table in [ADR-010](../architecture/010-permissioned-spaces-storage.md#protocol-proposal-vs-happyview-dialect-agents).
+
 | Data | Canonical location | ATPix component access |
 |------|-------------------|------------------------|
 | Image blobs (bytes) | Author's **PDS** | Upload via HappyView `uploadBlob` proxy; permissioned reads via `com.atproto.space.getBlob` |
