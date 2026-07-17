@@ -76,7 +76,7 @@ HappyView is **App View–centric dialect**, not pure 0016 topology:
 
 | Topic | Proposal 0016 | HappyView experimental |
 |-------|---------------|------------------------|
-| URI | `at://…/space/…` | `ats://…` |
+| URI | `at://…/space/…` (ATPix normative; HappyView dual-accept) | Legacy `ats://…` still accepted by HappyView |
 | Record store | Per-user permissioned repos on **repo hosts** (usually PDS) | Space record store + per-user crypto state on **HappyView** |
 | Member interactive path | Credential after OAuth `space:read` | Often **DPoP + `X-Client-Key`** without credential |
 | App identity | Client attestation JWT | API client key + metadata URL allow-list |
@@ -188,7 +188,7 @@ Each phase has: **goal**, **0016 concepts demonstrated**, **HappyView surface**,
 |--|--|
 | **Goal** | Create and manage a **space** as the access/sync boundary. |
 | **0016 concepts** | Space identity `(authority, type, skey)`; space type as modality; simplespace `createSpace` / `updateSpace` / `deleteSpace`; `getSpace`; config axes (`policy` / HappyView `mintPolicy`, `appAccess`). |
-| **HappyView work** | Enable `FEATURE_SPACES_ENABLED`; create space of album type; surface space metadata in UI; document URI dialect (`ats://` vs proposal `at://…/space/…`). |
+| **HappyView work** | Enable `FEATURE_SPACES_ENABLED`; create space of album type; surface space metadata in UI; use proposal-form `at://…/space/…` (normalize legacy `ats://` at ingress). |
 | **Acceptance** | Authority creates space; `getSpace` returns config; non-members cannot read gated content (once records exist in later phases). |
 | **Effort** | Small. |
 

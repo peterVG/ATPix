@@ -39,7 +39,7 @@
           "spaceUri": {
             "type": "string",
             "maxLength": 512,
-            "description": "ATPix · ATP-0016 — ats:// URI for permissioned albums (type net.atpix.gallery.albumSpace)."
+            "description": "ATPix · ATP-0016 — proposal-form at://{spaceDid}/space/net.atpix.gallery.albumSpace/{skey} for permissioned albums."
           },
           "spaceKey": {
             "type": "string",

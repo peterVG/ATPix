@@ -103,7 +103,7 @@
           "spaceUri": {
             "type": "string",
             "maxLength": 512,
-            "description": "ATPix · ATP-0016 — ats:// URI when visibility is permissioned."
+            "description": "ATPix · ATP-0016 — proposal-form at://…/space/… URI when visibility is permissioned."
           },
           "createdAt": {
             "type": "string",

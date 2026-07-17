@@ -11,14 +11,6 @@ domain: AT Protocol, Identity, Data Model, Permissioned Data, Architecture
 status: Public protocol + Permissioned Data proposal 0016 (B sections may change)
 ---
 
-# AT Protocol (atproto) — Combined Reference (v2)
-
-**Purpose:** Single high-signal knowledge base for AI agents building on the Authenticated Transfer Protocol. Merges the general Atmosphere stack ([at-protocol.md](./at-protocol.md)) with detailed identity, addressing, data structures, and **Permissioned Data** from the Blacksky tutorial ([at-protocol-blacksky-tutorial.md](./at-protocol-blacksky-tutorial.md)).
-
-**Progressive disclosure:** For verbatim specs or full tutorials, load `docs/references/atproto.comdocs.md` or `docs/references/blacksky_tutorial/*.pdf`.
-
----
-
 ## TL;DR
 
 **AT Protocol** ("atproto") is an open standard for social apps. Users publish **signed records** into personal **repositories**. Changes **sync across the network** so many apps can read the same data and prove authenticity — without each app owning a walled garden.

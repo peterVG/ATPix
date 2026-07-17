@@ -58,7 +58,7 @@
 - [AT Protocol knowledge base (v2, combined)](../../.agents/kb/at-protocol-v2.md) — public broadcast + Permissioned Data proposal (identity, addressing, spaces)
 - [AT Protocol knowledge base (legacy overview)](../../.agents/kb/at-protocol.md)
 - [Blacksky tutorial synthesis](../../.agents/kb/at-protocol-blacksky-tutorial.md)
-- [HappyView knowledge base](../../.agents/kb/happyview.md) — **implementation dialect** for spaces (e.g. `ats://`); product requirements follow HappyView, not the raw proposal alone
+- [HappyView knowledge base](../../.agents/kb/happyview.md) — App View/spaces runtime; ATPix prefers proposal-form space URIs (`at://…/space/…`) while HappyView dual-accepts legacy `ats://`
 - [Product requirements (PRD)](./002-prd.md) — functional requirements, Lexicon spec, C2PA compliance
 - [Product terms ↔ AT Protocol primitives (PRD)](./002-prd.md#product-terms--at-protocol-primitives) — gallery/album (UI) mapped to repos, collections, and records (architecture)
 - [ATPix Lexicon artifacts](../lexicon/net.atpix.gallery.md)

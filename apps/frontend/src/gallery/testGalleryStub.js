@@ -229,7 +229,7 @@ function seedPermissionedAlbumFixture() {
   photos.push(invalid);
 
   const album = createStubAlbum("Permissioned Vault", "permissioned", {
-    spaceUri: "ats://did:plc:space/net.atpix.gallery.albumSpace/album1",
+    spaceUri: "at://did:plc:space/space/net.atpix.gallery.albumSpace/album1",
   });
   albums.push(album);
   linkPhotoToAlbum(album, trusted);
@@ -237,13 +237,16 @@ function seedPermissionedAlbumFixture() {
 }
 
 /**
- * Normalize AT/ATS record URIs for stub lookups.
+ * Normalize record URIs for stub lookups (proposal and legacy dialect).
  *
  * @param {string} uri - Record URI.
- * @returns {string} Normalized ATS URI.
+ * @returns {string} Lookup key.
  */
 function normalizeRecordUri(uri) {
-  return uri.replace(/^at:\/\//, "ats://");
+  if (typeof uri !== "string") {
+    return "";
+  }
+  return uri.replace(/^ats:\/\//, "at://");
 }
 
 /**
@@ -370,7 +373,7 @@ export function createTestFetchHandler() {
         description: body.description,
         spaceUri:
           body.visibility === "permissioned"
-            ? "ats://did:plc:space/net.atpix.gallery.albumSpace/new"
+            ? "at://did:plc:space/space/net.atpix.gallery.albumSpace/new"
             : undefined,
       });
       albums.unshift(album);
@@ -446,13 +449,21 @@ export function createTestFetchHandler() {
       const body = init.body ? JSON.parse(String(init.body)) : {};
       spaceRecordCounter += 1;
       const rkey = `stub${spaceRecordCounter}`;
-      const uri = `ats://did:plc:space/${body.collection}/${rkey}`;
+      const authorDid = "did:plc:atpixuitest";
+      const space =
+        typeof body.space === "string" && body.space.length > 0
+          ? body.space
+          : "at://did:plc:space/space/net.atpix.gallery.albumSpace/album1";
+      // Prefer full proposal record path when space is proposal-form.
+      const uri = space.startsWith("at://") && space.includes("/space/")
+        ? `${space}/${authorDid}/${body.collection}/${rkey}`
+        : `at://did:plc:space/space/net.atpix.gallery.albumSpace/album1/${authorDid}/${body.collection}/${rkey}`;
       const cid = `bafyspace${spaceRecordCounter}`;
       spaceRecords.push({
         uri,
         cid,
         collection: body.collection,
-        space: body.space,
+        space,
         value: body.record ?? {},
       });
 
@@ -461,7 +472,7 @@ export function createTestFetchHandler() {
         photos.unshift({
           uri,
           cid,
-          author: "did:plc:atpixuitest",
+          author: authorDid,
           record: {
             $type: "net.atpix.gallery.photo",
             title: submitted.title ?? "Space Photo",
@@ -469,7 +480,7 @@ export function createTestFetchHandler() {
             keywords: submitted.keywords,
             createdAt: submitted.createdAt ?? nowRfc3339Utc(),
             visibility: "permissioned",
-            spaceUri: body.space,
+            spaceUri: space,
             image: submitted.image,
             c2paValidationState: "trusted",
           },
