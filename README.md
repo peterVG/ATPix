@@ -1,27 +1,75 @@
 # About this project
 
-**ATPix** is a decentralized photo collection and sharing application on the [AT Protocol](https://atproto.com). 
+**ATPix** is a decentralized photo collection and sharing application on the [AT Protocol](https://atproto.com).
 
-Users own their libraries: photos live as cryptographically signed records and blobs in Personal Data Server (PDS) repositories, indexed and served by a [HappyView](https://happyview.dev) App View. 
+Users own their libraries: photos live as cryptographically signed records and blobs in Personal Data Server (PDS) repositories, indexed and served by a [HappyView](https://happyview.dev) App View.
 
 This product is a proof-of-concept to evaluate HappyView's permissioned spaces implementation.
 
+---
+
+## Start here (first-time tester)
+
+You do **not** need prior AT Protocol experience. This README is the full path from empty machine → signed-in gallery → upload, albums, and permissioned spaces.
+
+### Recommended path (about 1–2 hours the first time)
+
+| Stage | What you do | Skip? |
+|-------|-------------|--------|
+| **1. Tools** | Install Docker, Python 3.11+, Node 22+, Git | No |
+| **2. Account** | Use an existing **Bluesky** handle (`you.bsky.social`) | Yes if you already have one |
+| **3. Clone + configure** | Clone this repo, create `.env`, Python venv | No |
+| **4. HappyView** | Start App View in Docker, create admin key, provision lexicons | No |
+| **5. Frontend** | `npm install` + `npm run dev`, register API client | No |
+| **6. Sign in** | OAuth in the browser against Bluesky (or your PDS) | No |
+| **7. Features** | Backend for C2PA, then upload / albums / permissioned tests | No |
+
+**Skip Phase B (OVH PDS)** on your first day. Phase B is only for self-hosted `*.pds.atpix.net` accounts and multi-account permissioned tests.
+
+**You will keep several terminal windows open.** Label them mentally as:
+
+1. **HappyView** — usually just Docker in the background  
+2. **Frontend** — `npm run dev` (must stay running)  
+3. **Backend** — `uvicorn` for C2PA signing (must stay running for uploads)  
+4. **Commands** — occasional one-off commands (provision, curl)
+
+### Words you will see (plain language)
+
+| Term | Meaning for ATPix |
+|------|-------------------|
+| **AT Protocol / atproto** | Open standard for social apps. Your identity and data can move between servers. |
+| **Handle** | Human username, e.g. `alice.bsky.social`. Used to sign in. |
+| **DID** | Permanent account ID (looks like `did:plc:…`). Prefer this for durable links. |
+| **PDS (Personal Data Server)** | Server that stores **your** signed posts/photos. Bluesky hosts one for you if you use `*.bsky.social`. |
+| **App View (HappyView)** | Server that **indexes** data and gives the app a friendly API. ATPix talks to HappyView; HappyView talks to your PDS. |
+| **OAuth** | “Sign in with…” without giving ATPix your password. You approve access on your PDS. |
+| **DPoP** | Extra crypto binding so stolen tokens are harder to reuse. Happens under the hood. |
+| **Lexicon** | Schema files (`net.atpix.gallery.*`) that define photo/album records and APIs. |
+| **Blob** | Binary file (the image bytes), stored on your PDS. |
+| **Record** | JSON metadata about a photo or album, stored on your PDS (or in a permissioned **space**). |
+| **Space / permissioned album** | Private album: only invited members can read it. URIs use proposal form `at://…/space/…` ([ADR-010](docs/architecture/010-permissioned-spaces-storage.md)). |
+| **C2PA** | Content Credentials — provenance stamps embedded in the image file before upload. |
+| **`hv_*` key** | HappyView **admin** key for provisioning (never put this in browser XRPC headers). |
+| **`hvc_*` key** | HappyView **app client** key — browser sends this as `X-Client-Key`. |
+
+Product language (gallery, album) maps to protocol details in the [PRD](docs/overview/002-prd.md#product-terms--at-protocol-primitives) and [Lexicon README](docs/lexicon/net.atpix.gallery.md).
+
 ## What it does
 
-Users sign in with **atproto OAuth** (DPoP-bound sessions, no app passwords) — including new visitors who register a **`*.pds.atpix.net`** handle on the operator-hosted PDS ([F-017](docs/overview/002-prd.md#f-017-hosted-pds-account-onboarding)) — upload images with **C2PA 2.2 Content Credentials**, organize **albums**, and browse **My Gallery** or a **Following / Hashtags** discovery feed. 
+Users sign in with **atproto OAuth** (no app passwords) — optionally via a **`*.pds.atpix.net`** handle on an operator-hosted PDS ([F-017](docs/overview/002-prd.md#f-017-hosted-pds-account-onboarding)) — upload images with **C2PA 2.2 Content Credentials**, organize **albums**, and browse **My Gallery** or a **Following / Hashtags** discovery feed.
 
-Galleries populate two ways: 
-**(a)** direct PDS upload and 
-**(b)** photos already indexed on the network via follow-graph and hashtag rules—Path B uses only HappyView Jetstream sync, not a custom firehose. 
+Galleries populate two ways:
 
-Sharing supports **public**, **unlisted**, and **permissioned** albums; permissioned collections use [HappyView Permissioned Spaces](https://happyview.dev/experimental/spaces) (ATP-0016) so only invited members can view curated private albums.
+- **(a)** direct PDS upload  
+- **(b)** photos already indexed on the network via follow-graph and hashtag rules (HappyView Jetstream sync — Path B not fully shipped yet)
 
-Product language (gallery, album) maps to atproto primitives (queries, `net.atpix.gallery.*` records, space repos) in the [PRD](docs/overview/002-prd.md#product-terms--at-protocol-primitives) and [Lexicon README](docs/lexicon/net.atpix.gallery.md).
+Sharing supports **public**, **unlisted**, and **permissioned** albums; permissioned collections use [HappyView Permissioned Spaces](https://happyview.dev/experimental/spaces) (ATP-0016).
 
 ## Metadata
- Photo metadata maps to [Dublin Core](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/) and [Schema.org](https://schema.org/docs/schemas.html) terms in `net.atpix.gallery.*` Lexicons; image files embed [C2PA 2.2](https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html) Content Credentials for tamper-evident provenance. 
- 
- Photos and metadata remain user-owned and portable across the Atmosphere—not locked in a proprietary CDN or siloed account system.
+
+Photo metadata maps to [Dublin Core](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/) and [Schema.org](https://schema.org/docs/schemas.html) terms in `net.atpix.gallery.*` Lexicons; image files embed [C2PA 2.2](https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html) Content Credentials for tamper-evident provenance.
+
+Photos and metadata remain user-owned and portable across the Atmosphere—not locked in a proprietary CDN or siloed account system.
 
 ## Repository layout
 
@@ -74,36 +122,61 @@ Browser (ATPix) → HappyView (OAuth + XRPC proxy) → user's PDS
 
 v1 is a **product-validation** and **reference implementation** release—not a mass-market consumer launch. Encrypted private albums and client-side encryption are explicitly out of scope. Permissioned albums are **membership-gated** (access control), not end-to-end encrypted.
 
-## Prerequisites
+## Prerequisites (Phase A)
 
-Install runtimes using a version manager ([mise](https://mise.jdx.dev/), [asdf](https://asdf-vm.com/), [nvm](https://github.com/nvm-sh/nvm), or [pyenv](https://github.com/pyenv/pyenv)) — do not rely on OS-shipped Python/Node alone.
+Install these tools before cloning. Prefer a version manager ([mise](https://mise.jdx.dev/), [asdf](https://asdf-vm.com/), [nvm](https://github.com/nvm-sh/nvm), or [pyenv](https://github.com/pyenv/pyenv)) rather than ancient OS-packaged Python/Node.
 
-| Tool | Version | Docs |
-|------|---------|------|
-| Python | 3.11+ | [python.org/downloads](https://www.python.org/downloads/) |
-| Node.js | 22+ | [nodejs.org](https://nodejs.org/) |
-| Docker | latest | [docs.docker.com](https://docs.docker.com/get-docker/) |
-| [`goat`](https://github.com/bluesky-social/goat#install) | latest | Handle/DID checks and network lexicon publish (OVH PDS path) |
-| Git | 2.x | Clone this repository |
+| Tool | Version | Why you need it | Install docs |
+|------|---------|-----------------|--------------|
+| **Git** | 2.x | Clone this repository | [git-scm.com](https://git-scm.com/downloads) |
+| **Docker** (Docker Desktop or Engine + Compose) | recent | Runs HappyView App View in a container | [docs.docker.com/get-docker](https://docs.docker.com/get-docker/) |
+| **Python** | **3.11+** | Backend C2PA API + provision script | [python.org/downloads](https://www.python.org/downloads/) |
+| **Node.js** | **22+** (includes `npm`) | Frontend dev server and tests | [nodejs.org](https://nodejs.org/) |
+| **A web browser** | Chrome, Firefox, Safari, Edge | Sign-in UI and gallery | — |
+| **A PDS account** | Bluesky free account is enough | Sign-in identity | [bsky.app](https://bsky.app) — create handle like `yourname.bsky.social` |
+| [`goat`](https://github.com/bluesky-social/goat#install) | latest | **Optional** — only for OVH PDS / lexicon DNS (Phase B / J) | GitHub install notes |
+
+### Verify tools (run in a terminal)
+
+```bash
+git --version          # e.g. git version 2.x
+docker --version       # Docker Engine
+docker compose version # Compose v2
+python3 --version      # Python 3.11 or newer
+node --version         # v22.x or newer
+npm --version
+```
+
+**Docker must be running** before Step 2 (Docker Desktop: open the app until it says “running”).
+
+**Windows notes:** Use PowerShell or Git Bash. For Python venv activation use `apps\backend\.venv\Scripts\activate`. Prefer `python` if `python3` is missing.
+
+**macOS notes:** If `python3` is missing, install from python.org or Homebrew. Apple’s Command Line Tools may prompt on first `git` use — install them.
+
+### Get a Bluesky account (if you do not have one)
+
+1. Open [bsky.app](https://bsky.app) and create an account.  
+2. Note your handle (e.g. `yourname.bsky.social`).  
+3. You will type that handle into ATPix and HappyView during sign-in. You never paste your Bluesky password into ATPix — only into Bluesky’s own OAuth page.
 
 ## First-time install and test
 
-Use this order after merging Task 5.1. Each phase depends on the ones above it.
+Each phase depends on the ones above it. **First successful smoke test:** Phases **A → C → D → E → F → G → H → I** using the **Bluesky shortcut** (skip **B**).
 
 | Phase | What you set up | Depends on | Go to |
 |-------|-----------------|------------|-------|
-| **A** | Developer tools (Docker, Python, Node, Git) | — | [Prerequisites](#prerequisites) |
-| **B** | Domain DNS + OVH PDS + test handles (`alice.pds.atpix.net`, `bob.pds.atpix.net`) | Registrar + VPS | [Phase B — Dedicated PDS at OVH](#phase-b--dedicated-pds-at-ovh) |
-| **C** | Clone repo, `.env`, backend Python venv | A | [Phase C — Step 1](#step-1--clone-repository-and-environment) |
-| **D** | HappyView App View (Docker, port 3001) | A, C | [Phase D — Step 2](#step-2--start-happyview-and-verify-health) |
-| **E** | HappyView admin login, `hv_*` key, lexicon provisioning | D | [Phase E — Steps 3–4](#step-3--happyview-admin-login-and-admin-api-key) |
-| **F** | Frontend dev server, OAuth metadata, `hvc_*` API client | C, E | [Phase F — Steps 5–6](#step-5--start-frontend-and-verify-oauth-client-metadata) |
-| **G** | Sign in to ATPix (OAuth against your PDS) | B (OVH handles) or any PDS (Bluesky shortcut), F | [Phase G — Step 7](#step-7--sign-in-and-verify-application-shell-task-21) |
-| **H** | Backend API for C2PA signing (port 8000) | C (venv), G for upload tests | [Phase H — Step 8](#step-8--c2pa-pre-upload-signing-task-31) |
-| **I** | Manual feature walkthrough (gallery, albums, permissioned spaces) | G, H | [Phase I — Steps 9–11](#step-9--photo-upload-and-my-gallery-task-32) |
-| **J** | Network lexicon authority (`goat lex publish`) — optional for local dev | B (PDS + `lexicon.atpix.net`); [Phase E](#step-4--provision-lexicons-and-enable-permissioned-spaces) for App View | [Phase J — Lexicon authority](#phase-j--network-lexicon-authority-optional-before-production) |
-| **K** | Automated tests (optional) | D–I as applicable | [Step 12](#step-12--run-automated-tests-optional) |
-| — | **Manual feature tests** (after C–H) | B–H | [What you can test right now](#what-you-can-test-right-now) |
+| **A** | Developer tools + Bluesky (or other PDS) account | — | [Prerequisites](#prerequisites-phase-a) |
+| **B** | *(Optional later)* OVH PDS + `alice`/`bob` handles | Registrar + VPS | [Phase B — Dedicated PDS at OVH](#phase-b--dedicated-pds-at-ovh) |
+| **C** | Clone repo, `.env`, backend Python venv | A | [Step 1](#step-1--clone-repository-and-environment) |
+| **D** | HappyView App View (Docker, port 3001) | A, C | [Step 2](#step-2--start-happyview-and-verify-health) |
+| **E** | HappyView admin login, `hv_*` key, lexicon provisioning | D | [Steps 3–4](#step-3--happyview-admin-login-and-admin-api-key) |
+| **F** | Frontend dev server, OAuth metadata, `hvc_*` API client | C, E | [Steps 5–6](#step-5--start-frontend-and-verify-oauth-client-metadata) |
+| **G** | Sign in to ATPix (OAuth) | Bluesky or Phase B, F | [Step 7](#step-7--sign-in-and-verify-application-shell-task-21) |
+| **H** | Backend API for C2PA signing (port 8000) | C (venv) | [Step 8](#step-8--c2pa-pre-upload-signing-task-31) |
+| **I** | Manual feature walkthrough (gallery, albums, spaces) | G, H | [Steps 9–11](#step-9--photo-upload-and-my-gallery-task-32) |
+| **J** | Network lexicon authority (`goat lex publish`) — optional | B | [Phase J](#phase-j--network-lexicon-authority-optional-before-production) |
+| **K** | Automated tests (optional) | D–I | [Step 12](#step-12--run-automated-tests-optional) |
+| — | **Manual feature checklist** | C–H | [What you can test right now](#what-you-can-test-right-now) |
 
 ```mermaid
 flowchart TD
@@ -135,28 +208,41 @@ While DNS propagates during Phase B, you may run Phases C–D in parallel. For t
 
 | Path | When to use | Sign-in handle | Phase B required? |
 |------|-------------|----------------|-------------------|
-| **Dedicated OVH PDS (recommended)** | First real install; permissioned-album multi-account tests; end-user `*.pds.atpix.net` signup | `alice.pds.atpix.net` / `bob.pds.atpix.net` on `https://pds.atpix.net` | **Yes** — complete Phase B before Phase G |
-| **Bluesky shortcut** | Fast UI smoke test only | `you.bsky.social` (or any hosted PDS) | No — skip Phase B |
+| **Bluesky shortcut (start here)** | First install, UI smoke tests, single-user permissioned album | `you.bsky.social` (or any hosted PDS) | **No** — skip Phase B |
+| **Dedicated OVH PDS** | Multi-account permissioned tests; operator `*.pds.atpix.net` signup | `alice.pds.atpix.net` / `bob.pds.atpix.net` on `https://pds.atpix.net` | **Yes** — complete Phase B before Phase G |
 
-ATPix does **not** host user accounts. HappyView proxies writes to whichever PDS your handle resolves to ([Where user data lives](#where-user-data-lives-pds-vs-app-view)). For permissioned-space BDD and two-account album tests, you need Phase B.
+ATPix does **not** host user accounts. HappyView proxies writes to whichever PDS your handle resolves to ([Where user data lives](#where-user-data-lives-pds-vs-app-view)). For two-account permissioned BDD you need Phase B (or two Bluesky accounts).
 
-**Ports (local dev):** HappyView **3001**, Grafana **3000**, frontend **5173**, backend **8000**. HappyView must reach your PDS over HTTPS (e.g. `curl https://pds.atpix.net/xrpc/_health` from the host running Docker).
+**Ports (local dev) — do not mix these up:**
+
+| Port | Service | URL |
+|------|---------|-----|
+| **5173** | ATPix frontend (gallery UI) | http://127.0.0.1:5173 |
+| **3001** | HappyView App View (admin + API) | http://127.0.0.1:3001 |
+| **8000** | ATPix backend (C2PA signing) | http://127.0.0.1:8000 |
+| **3000** | Grafana (optional observability stack) | http://127.0.0.1:3000 |
+
+HappyView must reach your **PDS over the public internet** (HTTPS). For Bluesky accounts that is automatic. For a self-hosted PDS, try e.g. `curl https://pds.atpix.net/xrpc/_health` from the machine running Docker.
 
 ## What you can test right now
 
-After [Task 5.1](docs/overview/005-plan.md) and [Task 5.2](docs/overview/005-plan.md) (F-017), the following features are implemented end-to-end. Complete [First-time install](#first-time-install-and-test) Phases **C–H** before manual UI tests (Phase **B** as well for the OVH / `*.pds.atpix.net` path). Walkthrough with raw test output: [Task-5.2-Walkthrough.md](apps/frontend/docs/tasks/Task-5.2-Walkthrough.md). Install steps: [Manual walkthrough (Phases C–I)](#manual-walkthrough-phases-ci).
+After [Task 5.1](docs/overview/005-plan.md) and [Task 5.2](docs/overview/005-plan.md) (F-017), the following features are implemented end-to-end.
+
+**Before this checklist:** finish [First-time install](#first-time-install-and-test) Phases **C–H** using the [Bluesky shortcut](#first-time-install-and-test) (or Phase **B** if using OVH handles). Detailed commands: [Manual walkthrough (Phases C–I)](#manual-walkthrough-phases-ci). Prior automated walkthrough notes: [Task-5.2-Walkthrough.md](apps/frontend/docs/tasks/Task-5.2-Walkthrough.md).
+
+You need **three things running at once** (three terminals or Docker + two terminals): HappyView (Docker), frontend (`npm run dev`), backend (`uvicorn`).
 
 ### Before you start
 
 | Requirement | How to verify |
 |-------------|---------------|
 | HappyView running | `curl -sS http://127.0.0.1:3001/health` → JSON |
-| Lexicons provisioned | `python3 scripts/provision_happyview.py --verify-only` → 23 lexicons + `spaces_enabled=true` |
-| Frontend dev server | `npm run dev` in `apps/frontend/` → [http://127.0.0.1:5173](http://127.0.0.1:5173) |
-| `hvc_*` client key | Set in root `.env`; restart `npm run dev` after adding |
-| Backend C2PA API | `uvicorn app.main:app --reload --port 8000` in `apps/backend/` (venv active) |
-| Signed in | OAuth shell visible (header tabs, sidebar handle) |
-| PDS signup link (optional) | `VITE_PDS_SIGNUP_URL=https://pds.atpix.net/account` in `.env` → link on sign-in panel |
+| Lexicons provisioned | `python3 scripts/provision_happyview.py --verify-only` → 23 lexicons + spaces enabled |
+| Frontend dev server | Browser opens [http://127.0.0.1:5173](http://127.0.0.1:5173) without connection refused |
+| `hvc_*` client key | Root `.env` has `VITE_HAPPYVIEW_CLIENT_KEY=hvc_…`; frontend was **restarted** after adding it |
+| Backend C2PA API | `curl -sS http://127.0.0.1:8000/health` → OK; venv activated when starting uvicorn |
+| Signed in | Gallery shell visible (header tabs, sidebar handle or DID, Sign Out) |
+| PDS signup link (optional) | Only if you set `VITE_PDS_SIGNUP_URL` — link appears on sign-in panel |
 
 **OVH path only:** `alice.pds.atpix.net` / `bob.pds.atpix.net` resolve (`goat resolve …`) and `https://pds.atpix.net/xrpc/_health` returns JSON.
 
@@ -257,31 +343,55 @@ behave tests/features/permissioned_spaces_integration_SRS-F-008.feature
 | Unified photo detail and deletion (UI-SCR-003) | Task 4.3 |
 | Embedded signup on atpix.net (F-018) | Task 9.1 |
 
+## Troubleshooting (first-time setup)
+
+| Symptom | Likely cause | What to do |
+|---------|--------------|------------|
+| `docker compose …` fails / cannot connect | Docker not running | Start Docker Desktop; wait until it is healthy; retry |
+| `curl http://127.0.0.1:3001/health` fails | HappyView not up yet | Wait 30s; `docker compose -f docker-compose.happyview.yml ps` and `logs` |
+| Provision script: missing admin key | Step 3 skipped | Create `hv_*` key; put in **root** `.env` as `HAPPYVIEW_ADMIN_KEY` |
+| Provision script: connection refused | Wrong port or container down | Confirm `HAPPYVIEW_URL=http://127.0.0.1:3001` and container is up |
+| Sign-in does nothing / 401 on XRPC | Missing or wrong `hvc_*` | Re-create API Client; set `VITE_HAPPYVIEW_CLIENT_KEY`; **restart** `npm run dev` |
+| Sign-in redirect error / invalid client | Client ID mismatch | Step 6 Client ID must match Step 5 `client_id` **exactly** (loopback string) |
+| Signed in but upload hangs / no C2PA badge | Backend not running | Start Step 8 `uvicorn` on port 8000; check `C2PA_ALLOW_DEV_SIGNING=true` |
+| Port already in use | Another process on 5173/3001/8000 | Stop the other process, or change ports only if you know how to update `.env` to match |
+| `python3: command not found` | Python not installed / wrong name | Install Python 3.11+; on Windows try `python` |
+| `npm: command not found` | Node not installed | Install Node 22+ from nodejs.org |
+| HappyView login works but ATPix does not | Only admin key set | You need **both** `hv_*` (admin) and `hvc_*` (API client) |
+| Permissioned album has no Space URI | Spaces flag off | Re-run Step 4; confirm spaces enabled in provision verify output |
+| Space URI starts with `ats://` | Older HappyView dialect | ATPix should normalize to `at://…/space/…` ([ADR-010](docs/architecture/010-permissioned-spaces-storage.md)); check frontend is current `main` |
+
+**Still stuck?** Capture: which step number, exact command, full error text, and whether HappyView / frontend / backend processes are running (`docker ps`, and terminal output from `npm run dev` / `uvicorn`).
+
 # Setup Development Environment
 
-Follow [First-time install and test](#first-time-install-and-test) for the full ordered walkthrough. The subsections below are the same steps with verification commands.
+Follow phases in order. Commands below assume you start from the **repository root** (`ATPix/`) unless noted.
 
-## Quick reference (after `.env` is configured)
+## Quick reference (day 2+ — after `.env` is fully configured)
+
+Use this only when HappyView keys and lexicons already work. First-time setup: start at [Step 1](#step-1--clone-repository-and-environment).
 
 ```bash
-# HappyView (ADR-007, port 3001)
+# Terminal A — HappyView (ADR-007, port 3001)
 docker compose -f docker-compose.happyview.yml up -d
-# Provision (requires apps/backend venv — see Step 1b)
-cd apps/backend && source .venv/bin/activate && cd ../..
-python3 scripts/provision_happyview.py && python3 scripts/provision_happyview.py --verify-only
 
-# Backend (from apps/backend/, venv activated)
+# Terminal B — Backend C2PA API (port 8000)
+cd apps/backend && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 uvicorn app.main:app --reload --port 8000
 
-# Frontend (from apps/frontend/)
-npm run dev
+# Terminal C — Frontend (port 5173)
+cd apps/frontend && npm run dev
 ```
 
-Open [http://127.0.0.1:5173](http://127.0.0.1:5173). API health: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health). See [docs/lexicon/net.atpix.gallery.md](docs/lexicon/net.atpix.gallery.md) for lexicon upload order.
+- Gallery UI: [http://127.0.0.1:5173](http://127.0.0.1:5173)  
+- Backend health: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)  
+- HappyView health: [http://127.0.0.1:3001/health](http://127.0.0.1:3001/health)
 
 ### Manual walkthrough (Phases C–I)
 
 #### Step 1 — Clone repository and environment
+
+**Goal:** Get the source code and a local config file (`.env`).
 
 ```bash
 git clone https://github.com/peterVG/ATPix.git
@@ -289,74 +399,97 @@ cd ATPix
 cp .env.example .env
 ```
 
-Open `.env` in an editor. You will fill in keys in later steps; for now confirm these defaults exist:
+If you already cloned the repo, skip `git clone` and just `cd` into it.
+
+Open `.env` in any text editor (VS Code, Notepad, nano). You will fill in **secrets in later steps**. For now, leave the defaults and confirm these lines exist:
 
 | Variable | Example value | Purpose |
 |----------|---------------|---------|
 | `HAPPYVIEW_URL` | `http://127.0.0.1:3001` | App View base URL |
-| `VITE_HAPPYVIEW_URL` | `http://127.0.0.1:3001` | Same, for frontend build |
-| `VITE_DEPLOYMENT_ORIGIN` | `http://127.0.0.1:5173` | Public URL of the ATPix UI (OAuth `client_id` origin) |
+| `VITE_HAPPYVIEW_URL` | `http://127.0.0.1:3001` | Same URL for the browser app |
+| `VITE_DEPLOYMENT_ORIGIN` | `http://127.0.0.1:5173` | Where the ATPix UI is served (OAuth origin) |
 | `HAPPYVIEW_ADMIN_KEY` | *(empty until Step 3)* | `hv_*` admin key for provisioning |
-| `VITE_HAPPYVIEW_CLIENT_KEY` | *(empty until Step 6)* | `hvc_*` client key for XRPC |
-| `VITE_BACKEND_URL` | `http://127.0.0.1:8000` | FastAPI C2PA + health API |
-| `VITE_PDS_SIGNUP_URL` | `https://pds.atpix.net/account` | Optional — sign-in panel “Create account” link ([F-017](docs/overview/002-prd.md#f-017-hosted-pds-account-onboarding)) |
-| `TEST_OWNER_PDS_URL` / `TEST_MEMBER_PDS_URL` | `https://pds.atpix.net` | BDD only — after Phase B |
+| `VITE_HAPPYVIEW_CLIENT_KEY` | *(empty until Step 6)* | `hvc_*` client key for the browser |
+| `VITE_BACKEND_URL` | `http://127.0.0.1:8000` | C2PA backend |
+| `C2PA_ALLOW_DEV_SIGNING` | `true` | Local test certificates for C2PA (dev only) |
+| `VITE_PDS_SIGNUP_URL` | optional | “Create account” link on sign-in ([F-017](docs/overview/002-prd.md#f-017-hosted-pds-account-onboarding)) |
+
+Save the file. Do **not** commit `.env` (it is gitignored).
 
 #### Step 1b — Backend Python virtual environment (do this before provisioning)
 
-The provision script needs `python-dotenv`; upload tests need the full backend. Create the venv once after Step 1:
+**Goal:** Isolated Python packages for the provision script and C2PA API.
 
 ```bash
 cd apps/backend
 python3 -m venv .venv
 # macOS/Linux:
 source .venv/bin/activate
-# Windows:
+# Windows (PowerShell or cmd):
 # .venv\Scripts\activate
 pip install -r requirements-dev.txt
 cd ../..
 ```
 
-You will start `uvicorn` in [Step 8](#step-8--c2pa-pre-upload-signing-task-31). Until then, the venv is only required for `scripts/provision_happyview.py` (via `pip install python-dotenv` in Step 4 if you skipped 1b).
+**Success check:** Your prompt often shows `(.venv)`, and `pip show python-dotenv` prints package info.
+
+You will start `uvicorn` in [Step 8](#step-8--c2pa-pre-upload-signing-task-31). Until then, this venv is required for `scripts/provision_happyview.py`.
 
 #### Step 2 — Start HappyView and verify health
+
+**Goal:** Run the App View container that indexes data and proxies OAuth/writes.
+
+1. Ensure Docker Desktop (or Docker Engine) is **running**.  
+2. From the **repository root**:
 
 ```bash
 docker compose -f docker-compose.happyview.yml up -d
 curl -sS http://127.0.0.1:3001/health
 ```
 
-**Expected:** HTTP 200 and a JSON body (not an error page). If `curl` fails, wait 10–30 seconds for the container to start, then retry.
+**Expected:** JSON health response (not an HTML error page). If `curl` fails, wait 15–30 seconds and retry. Check logs: `docker compose -f docker-compose.happyview.yml logs -f` (Ctrl+C to stop following logs; container keeps running).
 
 #### Step 3 — HappyView admin login and admin API key
 
-1. Open **http://127.0.0.1:3001/** in a browser.
-2. Sign in with an atproto handle on a PDS HappyView can reach:
-   - **OVH path (recommended):** `alice.pds.atpix.net` after [Phase B](#phase-b--dedicated-pds-at-ovh) — confirms your PDS works end-to-end.
-   - **Shortcut:** any Bluesky or other hosted handle.
-   The **first** HappyView login becomes super-user.
-3. Go to **Settings → API Keys → Create**.
-4. Name it e.g. `atpix-provision`; enable permissions: `lexicons:create`, `lexicons:read`, `settings:manage`.
-5. Copy the key (starts with `hv_`). Paste into `.env`:
+**Goal:** Become HappyView super-user and create an **admin** key (`hv_…`) used only by automation scripts.
+
+1. Open **http://127.0.0.1:3001/** in a browser.  
+2. Sign in with your **Bluesky handle** (e.g. `yourname.bsky.social`) — or `alice.pds.atpix.net` if you completed Phase B.  
+   - You will be redirected to your PDS to approve access, then return to HappyView.  
+   - The **first** login on this HappyView instance becomes **super-user**.  
+3. In the HappyView UI, open **Settings → API Keys → Create** (labels may vary slightly by version).  
+4. Name it e.g. `atpix-provision`. Enable at least: `lexicons:create`, `lexicons:read`, `settings:manage`.  
+5. Copy the key (starts with `hv_`). Open root `.env` and set:
 
 ```bash
 HAPPYVIEW_ADMIN_KEY=hv_paste_your_key_here
 ```
 
+Save `.env`. Do not put this key in frontend `VITE_*` variables.
+
 #### Step 4 — Provision lexicons and enable permissioned spaces
 
-From the **repository root** (with `apps/backend` venv activated, or after `pip install python-dotenv`):
+**Goal:** Register ATPix photo/album schemas with HappyView and turn on spaces.
+
+From the **repository root**, with the backend venv **activated**:
 
 ```bash
+# If not already activated:
+# cd apps/backend && source .venv/bin/activate && cd ../..
+
 python3 scripts/provision_happyview.py
 python3 scripts/provision_happyview.py --verify-only
 ```
 
-**Expected from `--verify-only`:** confirmation that all 23 `net.atpix.gallery.*` lexicons are registered and `feature.spaces_enabled` is `true`. Errors about `HAPPYVIEW_ADMIN_KEY` mean Step 3 is incomplete.
+**Expected from `--verify-only`:** all **23** `net.atpix.gallery.*` lexicons registered and `feature.spaces_enabled` / spaces enabled **true**.
 
-Optional: in HappyView admin, open **Lexicons** and confirm `net.atpix.gallery.photo` (and siblings) appear in the list.
+**If you see errors about `HAPPYVIEW_ADMIN_KEY`:** Step 3 is incomplete or the key was not saved in the **root** `.env`.
+
+Optional: in HappyView admin, open **Lexicons** and confirm `net.atpix.gallery.photo` appears.
 
 #### Step 5 — Start frontend and verify OAuth client metadata
+
+**Goal:** Run the ATPix UI and confirm the OAuth metadata document is reachable (HappyView will need its `client_id` in Step 6).
 
 ```bash
 cd apps/frontend
@@ -364,97 +497,124 @@ npm install
 npm run dev
 ```
 
-Leave this terminal running. In a **second** terminal:
+**Leave this terminal running.** You should see Vite print a local URL (usually `http://127.0.0.1:5173/`).
+
+In a **second** terminal (repository root or any directory):
 
 ```bash
 # Landing page loads
 curl -sS -o /dev/null -w "http_code=%{http_code}\n" http://127.0.0.1:5173/
 
-# OAuth metadata document (Task 1.3)
+# OAuth metadata document
 curl -sS http://127.0.0.1:5173/oauth-client-metadata.json
 ```
 
-**Expected metadata checks (local dev uses loopback client-id — not the metadata URL):**
+**Expected:**
 
-| JSON field | Expected value (local dev on `127.0.0.1:5173`) |
-|------------|--------------------------------------------------|
-| `client_id` | Loopback URL (e.g. `http://localhost/oauth/callback?redirect_uri=…`) encoding `http://127.0.0.1:5173/oauth/callback` — copy the full value from `curl` |
+| Check | Expected |
+|-------|----------|
+| HTTP code for `/` | `200` |
 | `client_name` | `ATPix` |
-| `redirect_uris` | `["http://127.0.0.1:5173/oauth/callback"]` |
+| `redirect_uris` | includes `http://127.0.0.1:5173/oauth/callback` |
 | `dpop_bound_access_tokens` | `true` |
 | `token_endpoint_auth_method` | `"none"` |
-| `scope` | contains `atproto`, `blob:*/*`, `repo:net.atpix.gallery.photo` |
+| `scope` | includes `atproto`, `blob:*/*`, and `repo:net.atpix.gallery.photo` |
+| `client_id` | **Local dev:** a long **loopback** URL (often starts with `http://localhost/…` or similar) encoding your redirect — **copy this entire string** for Step 6. **Not** the same as the metadata URL in local mode. |
 
-Production builds (`VITE_DEPLOYMENT_ORIGIN=https://your-domain`) emit `client_id` as `https://your-domain/oauth-client-metadata.json` instead.
-
-Open **http://127.0.0.1:5173/** in a browser — you should see the **Sign in to ATPix** panel with **HappyView endpoint: `http://127.0.0.1:3001`**.
-
-**Production build check (optional):**
-
-```bash
-cd apps/frontend
-VITE_DEPLOYMENT_ORIGIN=http://127.0.0.1:5173 npm run build
-grep client_id dist/oauth-client-metadata.json
-```
+Open **http://127.0.0.1:5173/** in a browser — you should see **Sign in to ATPix** and **HappyView endpoint: `http://127.0.0.1:3001`**.
 
 #### Step 6 — Register ATPix API client in HappyView (required for sign-in)
 
-HappyView must know about your app **before** users can sign in via OAuth. You register it as an **API Client** (different from the admin `hv_*` key).
+**Goal:** Tell HappyView about the browser app. Without this, OAuth sign-in fails.
 
-1. Keep `npm run dev` running so `http://127.0.0.1:5173/oauth-client-metadata.json` stays reachable.
-2. Open **http://127.0.0.1:3001/** → **API Clients** (admin sidebar).
-3. Click **Create** (or equivalent).
-4. Fill in fields:
+> Two different keys:  
+> - **`hv_*`** = admin (provisioning only)  
+> - **`hvc_*`** = app client (browser)  
+> Never put `hv_*` in `VITE_HAPPYVIEW_CLIENT_KEY` ([TC-006](docs/overview/002-prd.md#tc-006-api-client-identification)).
+
+1. Keep `npm run dev` running so `http://127.0.0.1:5173/oauth-client-metadata.json` stays available.  
+2. Open **http://127.0.0.1:3001/** → **API Clients** (admin sidebar).  
+3. Click **Create**.  
+4. Fill in:
 
 | Field | Value |
 |-------|-------|
 | **Type** | Public (browser app; no client secret) |
-| **Client ID** | Copy the **`client_id`** field from Step 5 exactly (loopback URL locally; `https://…/oauth-client-metadata.json` in production) |
-| **Allowed origins** | `http://127.0.0.1:5173` (and `http://localhost:5173` if you use that hostname) |
-| **Scopes** | Include at minimum: `atproto`, `blob:*/*`, and the `repo:net.atpix.gallery.*` collections listed in the metadata `scope` field |
+| **Client ID** | Paste the **entire** `client_id` string from Step 5 `curl` output |
+| **Allowed origins** | `http://127.0.0.1:5173` (add `http://localhost:5173` if you use that host) |
+| **Scopes** | At least: `atproto`, `blob:*/*`, and each `repo:net.atpix.gallery.*` collection from the metadata `scope` |
 
-5. Save. Copy the generated **client key** (`hvc_…`) — shown once on create.
-6. Add to the **repository root** `.env` (created in Step 1):
+5. Save. Copy the **client key** (`hvc_…`) — it is often shown **only once**.  
+6. In the **repository root** `.env`:
 
 ```bash
 VITE_HAPPYVIEW_CLIENT_KEY=hvc_paste_your_key_here
 ```
 
-Vite is configured with `envDir` pointing at the repo root, so `npm run dev` from `apps/frontend/` loads `VITE_*` variables from that file only. A separate `apps/frontend/.env` is **not** read unless you change `envDir` in `apps/frontend/vite.config.js`.
+Also set `HAPPYVIEW_CLIENT_KEY` to the **same** `hvc_…` value if you will run backend BDD later.
 
-7. **Restart** `npm run dev` (Vite reads `.env` at startup).
+7. **Stop** the frontend (Ctrl+C in the `npm run dev` terminal) and start it again:
 
-**Important:** `hv_*` = admin automation (provisioning). `hvc_*` = browser app identity on every XRPC call. Never put `hv_*` on XRPC routes ([TC-006](docs/overview/002-prd.md#tc-006-api-client-identification)).
+```bash
+cd apps/frontend
+npm run dev
+```
+
+Vite only reads `.env` at startup — a restart is required after editing keys.
 
 #### Step 7 — Sign in and verify application shell (Task 2.1)
 
-Prerequisites: Steps 2–6 complete (`hvc_*` key in `.env`, `npm run dev` restarted). **OVH path:** [Phase B](#phase-b--dedicated-pds-at-ovh) complete so `alice.pds.atpix.net` resolves and `https://pds.atpix.net/xrpc/_health` returns JSON.
+**Goal:** Complete OAuth and land inside the gallery shell.
 
-1. Open **http://127.0.0.1:5173/** — confirm the sign-in panel shows **Sign in with atproto**, optional **Create a `*.pds.atpix.net` handle** link when `VITE_PDS_SIGNUP_URL` is set, and **HappyView endpoint: `http://127.0.0.1:3001`**.
-2. Enter your handle (`alice.pds.atpix.net` on the OVH path, or `you.bsky.social` for the Bluesky shortcut) and submit.
-3. Complete OAuth on your PDS (`https://pds.atpix.net` for OVH accounts); you should return to ATPix at `/oauth/callback` then land on **My Gallery** inside the shell.
-4. Verify shell chrome:
-   - Header tabs: **Gallery**, **Discovery**, **Albums**
-   - Sidebar: your **@handle** or **DID**, **Upload Media**, **Sign Out**
-   - Header utilities: color-scheme toggle (◐), search, upload, notifications, avatar
-5. Click **Discovery** — the Discovery tab should show as active.
-6. Toggle the header color-scheme control — chrome switches between dark and light; photo area uses placeholder cards only.
-7. Open **Settings** (sidebar) → **Appearance** → select **Light**, **Dark**, or **System** — preference persists in `localStorage` key `atpix-color-scheme`.
-8. Click **Sign Out** — you should return to the sign-in panel.
+Prerequisites: Steps 2–6 complete; HappyView container still up; frontend restarted with `hvc_*` set.
 
-**OAuth callback path:** `http://127.0.0.1:5173/oauth/callback` (Vite SPA fallback serves the app).
+1. Open **http://127.0.0.1:5173/**.  
+2. Confirm the sign-in panel shows **Sign in with atproto** and HappyView endpoint `http://127.0.0.1:3001`.  
+3. Enter your handle (`you.bsky.social` or `alice.pds.atpix.net`) → submit.  
+4. Complete the OAuth consent on your PDS (Bluesky or OVH). Allow the requested permissions.  
+5. You should return to ATPix (`/oauth/callback`) and land on **My Gallery**.  
+6. Verify:
+   - Header tabs: **Gallery**, **Discovery**, **Albums**  
+   - Sidebar: handle or DID, **Upload Media**, **Sign Out**  
+   - Color scheme toggle (◐) works; Settings → Appearance persists after reload  
+7. **Sign Out** returns to the sign-in panel; sign in again before uploads.
+
+**If sign-in fails:** see [Troubleshooting](#troubleshooting-first-time-setup). Common causes: wrong `hvc_*` key, frontend not restarted, Client ID mismatch in HappyView, HappyView not running.
+
+**OAuth callback URL:** `http://127.0.0.1:5173/oauth/callback`.
 
 #### Step 8 — C2PA pre-upload signing (Task 3.1)
 
-Prerequisites: [Step 1b](#step-1b--backend-python-virtual-environment-do-this-before-provisioning) venv ready; Steps 2–7 complete (signed in).
+**Goal:** Run the small FastAPI service that embeds Content Credentials into images **before** they are uploaded to your PDS.
 
-1. In a **new terminal**, start the backend API (leave `npm run dev` running):
-   - macOS/Linux: `cd apps/backend && source .venv/bin/activate && uvicorn app.main:app --reload --port 8000`
-   - Windows: `cd apps/backend && .venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000`
-2. Confirm C2PA status: `curl -sS http://127.0.0.1:8000/c2pa/status`
-3. In the signed-in shell, click **Upload Media** (header ↑ or sidebar button).
-4. Select a JPEG or PNG (≤ 50 MB). The upload workspace runs **C2PA signing before blob upload** and shows a **C2PA** badge on signed queue items.
-5. Optional API check:
+Prerequisites: [Step 1b](#step-1b--backend-python-virtual-environment-do-this-before-provisioning) done; frontend still running; you are signed in.
+
+1. Open a **new terminal**.  
+2. Start the backend:
+
+```bash
+# macOS/Linux
+cd apps/backend
+source .venv/bin/activate
+uvicorn app.main:app --reload --port 8000
+
+# Windows
+# cd apps/backend
+# .venv\Scripts\activate
+# python -m uvicorn app.main:app --reload --port 8000
+```
+
+3. In another terminal, confirm:
+
+```bash
+curl -sS http://127.0.0.1:8000/c2pa/status
+curl -sS http://127.0.0.1:8000/health
+```
+
+4. In the signed-in ATPix UI, click **Upload Media**.  
+5. Select a JPEG or PNG (≤ 50 MB). Wait for the **C2PA** badge on the queue item (signing happens first).  
+
+Optional API smoke test:
 
 ```bash
 curl -sS -o /tmp/atpix-signed.jpg \
@@ -463,7 +623,7 @@ curl -sS -o /tmp/atpix-signed.jpg \
   http://127.0.0.1:8000/c2pa/manifest/embed
 ```
 
-The backend loads environment variables from the repository-root `.env` automatically. For local development, set `C2PA_ALLOW_DEV_SIGNING=true` to use CAI test certificates from `apps/backend/tests/fixtures/c2pa/`. Production deployments must provide `C2PA_SIGNING_CERTS_PATH` and `C2PA_SIGNING_KEY_PATH` with org-issued claim-signing credentials and keep `C2PA_ALLOW_DEV_SIGNING=false`.
+Local dev uses `C2PA_ALLOW_DEV_SIGNING=true` and test certs under `apps/backend/tests/fixtures/c2pa/`. Production must use real org certs and set `C2PA_ALLOW_DEV_SIGNING=false`.
 
 #### Step 9 — Photo upload and My Gallery (Task 3.2)
 
