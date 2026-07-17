@@ -14,6 +14,15 @@ export const SPACE_PATH_MARKER = "space";
 export const ALBUM_SPACE_TYPE = "net.atpix.gallery.albumSpace";
 
 /**
+ * Placeholder space URI for UI before a real `spaceUri` is linked.
+ * Proposal form only — not a live space.
+ *
+ * @constant {string}
+ */
+export const PENDING_SPACE_URI_PLACEHOLDER =
+  "at://did:plc:pending/space/net.atpix.gallery.albumSpace/pending";
+
+/**
  * Strip a known AT Protocol URI scheme prefix.
  *
  * @param {string} uri - Full URI.

@@ -6,6 +6,7 @@ import { isVerifiedPhotoRecord, renderMediaCard } from "../gallery/renderMediaCa
 import { renderVisibilityChip } from "../gallery/visibilityChip.js";
 import { GRID_COLUMNS, breakpointFromWidth } from "../layout/breakpoint.js";
 import { albumDetailHref, navigateToRoute, navigateToSpaceAdmin } from "../router/router.js";
+import { PENDING_SPACE_URI_PLACEHOLDER } from "../space/spaceUri.js";
 import { escapeHtml } from "../utils/html.js";
 
 /** @typedef {"all" | "verified" | "collaborators"} AlbumTab */
@@ -76,6 +77,8 @@ export function renderAlbumDetailPanel({ mount, identity, albumUri }) {
   const record = () => albumView?.record ?? {};
   const visibility = () => record().visibility ?? "public";
   const isPermissioned = () => visibility() === "permissioned";
+  /** Space URI shown in the sidebar and used by the Copy control (same fallback). */
+  const resolveDisplayedSpaceUri = () => record().spaceUri ?? PENDING_SPACE_URI_PLACEHOLDER;
 
   const filteredPhotos = () => {
     if (activeTab === "verified") {
@@ -141,7 +144,7 @@ export function renderAlbumDetailPanel({ mount, identity, albumUri }) {
       return "";
     }
 
-    const spaceUri = record().spaceUri ?? "at://did:plc:pending/space/net.atpix.gallery.albumSpace/pending";
+    const spaceUri = resolveDisplayedSpaceUri();
     return `
       <div class="album-sidebar__field" data-testid="album-space-uri">
         <p class="label-caps">Space URI</p>
@@ -449,8 +452,8 @@ export function renderAlbumDetailPanel({ mount, identity, albumUri }) {
     }
 
     if (target.closest('[data-testid="album-space-uri-copy"]')) {
-      const spaceUri = record().spaceUri;
-      if (spaceUri && navigator.clipboard?.writeText) {
+      const spaceUri = resolveDisplayedSpaceUri();
+      if (navigator.clipboard?.writeText) {
         void navigator.clipboard.writeText(spaceUri);
       }
       return;

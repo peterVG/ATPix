@@ -12,7 +12,6 @@ import { listAlbums } from "../api/galleryApi.js";
 import { publishPermissionedPhoto } from "../upload/publishPermissionedPhoto.js";
 import { publishPreparedPhoto } from "../upload/publishPreparedPhoto.js";
 import { getHappyViewFetchHandler } from "../auth/happyViewFetch.js";
-import { normalizeSpaceUriToProposal } from "../space/spaceUri.js";
 import { escapeHtml } from "../utils/html.js";
 
 /**
@@ -229,9 +228,7 @@ export function renderUploadPanel({ mount, identity }) {
 
   const publishPermissionedForItem = async (item, metadata, onProgress) => {
     const album = permissionedAlbums.find((entry) => entry.uri === selectedPermissionedAlbumUri);
-    const spaceUri = album?.record?.spaceUri
-      ? normalizeSpaceUriToProposal(album.record.spaceUri)
-      : undefined;
+    const spaceUri = album?.record?.spaceUri;
     if (!album || !spaceUri) {
       return {
         status: "error",
