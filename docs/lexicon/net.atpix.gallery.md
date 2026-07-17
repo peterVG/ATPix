@@ -20,7 +20,7 @@ Lexicon NSIDs use semantic product names (`gallery`, `album`). Storage and sync 
 | **Photo** | Record + blob | Collection `net.atpix.gallery.photo`; blob via `uploadBlob` |
 | **Album** | Container record | Collection `net.atpix.gallery.album` in owner's PDS **repo** |
 | **Album membership** | Junction records | Collection `net.atpix.gallery.albumItem`; optional `photo.albumUris[]` |
-| **Permissioned album** | Permissioned **space repo** | `ats://…`; space type `net.atpix.gallery.albumSpace` |
+| **Permissioned album** | Permissioned **space repo** | `at://…/space/…`; space type `net.atpix.gallery.albumSpace` |
 | **Share link** | UI route + visibility | `visibility` on album/photo records |
 
 ### Record collections and repo placement

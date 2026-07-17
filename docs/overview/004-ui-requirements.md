@@ -255,7 +255,7 @@ Reuse UI-SCR-001 cards; show C2PA watermark/badge on thumbnails where applicable
 
 | Field | Display |
 |-------|---------|
-| **Space URI** | `ats://…` truncated with copy affordance (permissioned albums) |
+| **Space URI** | `at://…/space/…` truncated with copy affordance (permissioned albums) |
 | **Share link** | Stable URL with external-open icon |
 | **Collaborators** | Avatar stack + count; link to access logs |
 | **Provenance summary** | Aggregate C2PA validation stats (neutral wording) |

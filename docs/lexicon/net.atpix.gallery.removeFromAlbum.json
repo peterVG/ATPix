@@ -20,7 +20,7 @@
             "photoUri": {
               "type": "string",
               "maxLength": 512,
-              "description": "Photo record URI (at:// or ats://). Used with albumUri when uri is omitted."
+              "description": "Photo record URI (public at:// or permissioned at://…/space/…). Used with albumUri when uri is omitted."
             }
           }
         }

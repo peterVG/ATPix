@@ -6,6 +6,9 @@ import { uploadBlob } from "../api/galleryApi.js";
 import { createSpaceRecord, deleteSpaceRecord } from "../api/spaceApi.js";
 import { getHappyViewFetchHandler } from "../auth/happyViewFetch.js";
 import { nowRfc3339Utc } from "../gallery/formatCreatedAt.js";
+import { normalizeSpaceUriToProposal, parseSpaceRecordRkey } from "../space/spaceUri.js";
+
+export { parseSpaceRecordRkey };
 
 /**
  * @typedef {object} PublishPermissionedPhotoInput
@@ -29,19 +32,6 @@ import { nowRfc3339Utc } from "../gallery/formatCreatedAt.js";
  */
 
 /**
- * Extract the record key from a space AT URI.
- *
- * @param {string} uri - Space record AT URI.
- * @returns {string | null} Record key segment when present.
- */
-export function parseSpaceRecordRkey(uri) {
-  const normalized = uri.replace(/^ats:\/\//, "").replace(/^at:\/\//, "");
-  const segments = normalized.split("/");
-  const rkey = segments[segments.length - 1];
-  return rkey && rkey.length > 0 ? rkey : null;
-}
-
-/**
  * Best-effort rollback for permissioned upload writes.
  *
  * @param {(path: string, init?: RequestInit) => Promise<Response>} fetchHandler - DPoP fetch handler.
@@ -51,12 +41,13 @@ export function parseSpaceRecordRkey(uri) {
  * @returns {Promise<void>} Resolves when rollback attempts complete.
  */
 export async function rollbackPermissionedUpload(fetchHandler, spaceUri, photo, albumItem) {
+  const space = normalizeSpaceUriToProposal(spaceUri);
   if (albumItem?.uri) {
     const albumItemRkey = parseSpaceRecordRkey(albumItem.uri);
     if (albumItemRkey) {
       try {
         await deleteSpaceRecord(fetchHandler, {
-          space: spaceUri,
+          space,
           collection: "net.atpix.gallery.albumItem",
           rkey: albumItemRkey,
         });
@@ -71,7 +62,7 @@ export async function rollbackPermissionedUpload(fetchHandler, spaceUri, photo, 
     if (photoRkey) {
       try {
         await deleteSpaceRecord(fetchHandler, {
-          space: spaceUri,
+          space,
           collection: "net.atpix.gallery.photo",
           rkey: photoRkey,
         });
@@ -106,9 +97,10 @@ export async function publishPermissionedPhoto(input) {
     const blobRef = await uploadBlob(fetchHandler, input.signedBlob, input.mimeType);
     report(55);
 
+    const spaceUri = normalizeSpaceUriToProposal(input.spaceUri);
     const createdAt = nowRfc3339Utc();
     createdPhoto = await createSpaceRecord(fetchHandler, {
-      space: input.spaceUri,
+      space: spaceUri,
       collection: "net.atpix.gallery.photo",
       record: {
         $type: "net.atpix.gallery.photo",
@@ -118,13 +110,13 @@ export async function publishPermissionedPhoto(input) {
         caption: input.caption,
         keywords: input.keywords,
         createdAt,
-        spaceUri: input.spaceUri,
+        spaceUri,
       },
     });
     report(80);
 
     createdAlbumItem = await createSpaceRecord(fetchHandler, {
-      space: input.spaceUri,
+      space: spaceUri,
       collection: "net.atpix.gallery.albumItem",
       record: {
         $type: "net.atpix.gallery.albumItem",

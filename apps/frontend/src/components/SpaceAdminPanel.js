@@ -11,21 +11,13 @@ import {
 import { getHappyViewFetchHandler } from "../auth/happyViewFetch.js";
 import { buildSpaceAppAccess, getDeploymentOrigin, getOAuthClientId } from "../config/oauthClientMetadata.js";
 import { albumDetailHref } from "../router/router.js";
+import { ALBUM_SPACE_TYPE, normalizeSpaceUriToProposal, parseSpaceDid } from "../space/spaceUri.js";
 import { escapeHtml } from "../utils/html.js";
 
 /** @constant {string} Permissioned album space record type (ADR-010). */
-export const ALBUM_SPACE_RECORD_TYPE = "net.atpix.gallery.albumSpace";
+export const ALBUM_SPACE_RECORD_TYPE = ALBUM_SPACE_TYPE;
 
-/**
- * Extract the space DID from an `ats://` URI.
- *
- * @param {string} spaceUri - Space AT URI.
- * @returns {string} Space DID segment.
- */
-export function parseSpaceDid(spaceUri) {
-  const normalized = spaceUri.replace(/^ats:\/\//, "");
-  return normalized.split("/")[0] ?? spaceUri;
-}
+export { parseSpaceDid };
 
 /**
  * Validate a handle string for invite UI gating.
@@ -313,7 +305,8 @@ export function renderSpaceAdminPanel({ mount, identity, albumUri }) {
       const fetchHandler = await getHappyViewFetchHandler();
       const albumPayload = await getAlbum(fetchHandler, { uri: albumUri });
       albumRecord = albumPayload.album;
-      spaceUri = albumRecord?.record?.spaceUri ?? null;
+      const rawSpaceUri = albumRecord?.record?.spaceUri ?? null;
+      spaceUri = rawSpaceUri ? normalizeSpaceUriToProposal(rawSpaceUri) : null;
 
       if (!spaceUri) {
         throw new Error("Album is missing a linked space URI");

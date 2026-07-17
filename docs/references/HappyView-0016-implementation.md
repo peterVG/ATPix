@@ -251,12 +251,13 @@ These are valuable product features; they are not “wrong,” but they are not 
 
 ## Part E — Guidance for ATPix agents & implementers
 
-1. **Implement against HappyView docs + ADR-010**, not by “fixing” URIs to `at://…/space/…`.
-2. Use **proposal 0016** to understand *why* LtHash, deniable commits, credentials, and no firehose exist—and to evaluate future interop.
+1. **Space URIs:** ATPix **prefers proposal form** `at://{spaceDid}/space/{type}/{skey}/…`. HappyView dual-accepts proposal and legacy `ats://`; normalize dialect → proposal in the client when safe (`apps/frontend/src/space/spaceUri.js`).
+2. Use **proposal 0016** for cryptographic/sync concepts and [ADR-010](../architecture/010-permissioned-spaces-storage.md) for ATPix normative choices.
 3. When writing tests or PRD language:
-   - **`ats://`**, **`mintPolicy`**, **`appAccess: {type: allowList}`**, **DPoP member path**, **invite endpoints** are HappyView-normative.
-4. When reading Blacksky tutorials or [at-protocol-v2.md](../../.agents/kb/at-protocol-v2.md), map proposal names → HappyView dialect using this file.
-5. If HappyView later drops dialect in favor of pure 0016 wire formats, open a new ADR and cascade PRD/SRS/lexicons deliberately.
+   - Prefer **`at://…/space/…`** fixtures; accept **`ats://`** only at ingress.
+   - **`mintPolicy`**, **`appAccess: {type: allowList}`**, **DPoP member path**, **invite endpoints** remain HappyView-shaped.
+4. When reading Blacksky tutorials or [at-protocol-v2.md](../../.agents/kb/at-protocol-v2.md), map non-URI dialect names with this file; **URI grammar follows the proposal**.
+5. Other HappyView dialect (hosting topology, mint field names) still needs an ADR if ATPix migrates away from them.
 
 ---
 

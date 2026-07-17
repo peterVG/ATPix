@@ -141,7 +141,7 @@ export function renderAlbumDetailPanel({ mount, identity, albumUri }) {
       return "";
     }
 
-    const spaceUri = record().spaceUri ?? "ats://pending.space.uri";
+    const spaceUri = record().spaceUri ?? "at://did:plc:pending/space/net.atpix.gallery.albumSpace/pending";
     return `
       <div class="album-sidebar__field" data-testid="album-space-uri">
         <p class="label-caps">Space URI</p>

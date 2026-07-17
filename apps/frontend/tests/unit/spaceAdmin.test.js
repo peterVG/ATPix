@@ -10,8 +10,16 @@ import {
 import { parseAlbumRouteFromHash, spaceAdminHref } from "../../src/router/router.js";
 
 describe("space admin helpers", () => {
-  it("parses space DID from ats URI", () => {
-    expect(parseSpaceDid("ats://did:plc:space/net.atpix.gallery.albumSpace/album1")).toBe("did:plc:space");
+  it("parses space DID from proposal at://…/space/… URI", () => {
+    expect(parseSpaceDid("at://did:plc:space/space/net.atpix.gallery.albumSpace/album1")).toBe(
+      "did:plc:space",
+    );
+  });
+
+  it("parses space DID from legacy ats:// dialect URI", () => {
+    expect(parseSpaceDid("ats://did:plc:space/net.atpix.gallery.albumSpace/album1")).toBe(
+      "did:plc:space",
+    );
   });
 
   it("validates invite handles", () => {

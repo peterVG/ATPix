@@ -3,6 +3,7 @@
  */
 
 import { buildSpaceConfig } from "../config/oauthClientMetadata.js";
+import { normalizeSpaceUriToProposal } from "../space/spaceUri.js";
 import { buildXrpcHeaders } from "./happyview.js";
 import { parseXrpcJson, parseXrpcVoid } from "./xrpcResponse.js";
 
@@ -109,7 +110,11 @@ export async function createAlbum(fetchHandler, input) {
     body: JSON.stringify(input),
   });
 
-  return parseXrpcJson(response);
+  const payload = await parseXrpcJson(response);
+  if (typeof payload.spaceUri === "string" && payload.spaceUri.length > 0) {
+    payload.spaceUri = normalizeSpaceUriToProposal(payload.spaceUri);
+  }
+  return payload;
 }
 
 /**

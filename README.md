@@ -70,7 +70,7 @@ Browser (ATPix) → HappyView (OAuth + XRPC proxy) → user's PDS
 - **[UI requirements v1.1](docs/overview/004-ui-requirements.md)** — screens, components, and mockups ([UX guide](docs/references/000-UX-guide.md))
 - **BDD features** — Gherkin scenarios under `apps/frontend/tests/features/` (UI/auth/gallery) and `apps/backend/tests/features/` (C2PA, lexicon, spaces, performance)
 - **Architecture** — [ADRs 001–011](docs/architecture/) including OAuth ([006](docs/architecture/006-oauth-dpop-authentication.md)), HappyView integration ([007](docs/architecture/007-happyview-app-view-integration.md)), C2PA ([008](docs/architecture/008-c2pa-sdk-and-signing.md)), lexicon authority ([009](docs/architecture/009-lexicon-namespace-authority.md)), permissioned spaces ([010](docs/architecture/010-permissioned-spaces-storage.md)), SQLite index ([011](docs/architecture/011-sqlite-index-database.md))
-- **Agent knowledge bases** — [AT Protocol combined (v2)](.agents/kb/at-protocol-v2.md) (public + permissioned proposal concepts); [HappyView](.agents/kb/happyview.md) (ATPix wire dialect). Permissioned albums use HappyView’s `ats://` Spaces API, not the raw proposal URI grammar alone — see [ADR-010](docs/architecture/010-permissioned-spaces-storage.md).
+- **Agent knowledge bases** — [AT Protocol combined (v2)](.agents/kb/at-protocol-v2.md) (public + permissioned proposal concepts); [HappyView](.agents/kb/happyview.md) (App View runtime). Permissioned albums use **proposal-form** space URIs (`at://{spaceDid}/space/…`); HappyView also accepts legacy `ats://` — see [ADR-010](docs/architecture/010-permissioned-spaces-storage.md).
 
 v1 is a **product-validation** and **reference implementation** release—not a mass-market consumer launch. Encrypted private albums and client-side encryption are explicitly out of scope. Permissioned albums are **membership-gated** (access control), not end-to-end encrypted.
 
@@ -471,7 +471,7 @@ Caption/tag edits persist via `net.atpix.gallery.updatePhoto`.
 
 Prerequisites: Steps 2–10 complete; `feature.spaces_enabled=true` (Step 4). **Multi-account tests:** Phase B handles (`alice.pds.atpix.net` owner, `bob.pds.atpix.net` member).
 
-1. Create a **Permissioned** album (Albums → visibility chip → Create album). Confirm the album detail shows **Invite Members** and a **Space URI** (`ats://…/net.atpix.gallery.albumSpace/…`).
+1. Create a **Permissioned** album (Albums → visibility chip → Create album). Confirm the album detail shows **Invite Members** and a **Space URI** (`at://…/space/net.atpix.gallery.albumSpace/…`).
 2. Click **Invite Members** (or **Manage space** on the Collaborators tab) to open **Permissioned Space** admin (UI-SCR-006):
    - Space DID, record type `net.atpix.gallery.albumSpace`, **Gated** badge
    - Member directory (ADMIN / MEMBER / VIEWER roles)
