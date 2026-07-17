@@ -55,7 +55,7 @@ Typical write path once the gallery UI is implemented:
 Browser (ATPix) → HappyView (OAuth + XRPC proxy) → user's PDS
 ```
 
-**Permissioned albums** ([ADR-010](docs/architecture/010-permissioned-spaces-storage.md)): the `net.atpix.gallery.album` container record stays in the owner's **PDS** and links `spaceUri`. The HappyView **space repo** holds permissioned `net.atpix.gallery.photo` and `net.atpix.gallery.albumItem` records. **Image blobs remain on the author's PDS** and are served via `com.atproto.space.getBlob` with membership checks.
+**Permissioned albums** ([ADR-010](docs/architecture/010-permissioned-spaces-storage.md)): the `net.atpix.gallery.album` container record stays in the owner's **PDS** and links `spaceUri` in **proposal form** (`at://{spaceDid}/space/net.atpix.gallery.albumSpace/{skey}`). The HappyView **space repo** holds permissioned `net.atpix.gallery.photo` and `net.atpix.gallery.albumItem` records (record URIs: `at://{spaceDid}/space/…/{authorDid}/{collection}/{rkey}`). **Image blobs remain on the author's PDS** and are served via `com.atproto.space.getBlob` with membership checks.
 
 **Local Docker persistence:** HappyView stores its own SQLite index, OAuth sessions, and provisioned lexicons under `./data/happyview_data/` (bind-mounted in `docker-compose.happyview.yml`). Stopping the container does **not** delete user PDS data. Wiping `./data/happyview_data/` loses local index and sessions only — records on users' PDSes remain; re-run [Step 4 provisioning](#step-4--provision-lexicons-and-enable-permissioned-spaces) and backfill to rebuild the index.
 
@@ -184,18 +184,46 @@ After [Task 5.1](docs/overview/005-plan.md) and [Task 5.2](docs/overview/005-pla
 2. **Manage Photos** → add a photo from Test 2.
 3. Return to **My Gallery** → open a photo card → edit caption/tags (≤ 2000 chars) → save.
 4. Create a **Permissioned** album — confirm **Invite Members** and **Space URI** appear; share link hidden.
+5. **Space URI format (ATP-0016 proposal form):** copy the **Space URI** from album detail. It MUST match:
+
+   ```text
+   at://{spaceDid}/space/net.atpix.gallery.albumSpace/{skey}
+   ```
+
+   - Scheme is **`at://`** (not `ats://`)
+   - Path segment after the DID is the literal **`space`**
+   - Space type is **`net.atpix.gallery.albumSpace`**
+   - Example shape: `at://did:plc:abc123…/space/net.atpix.gallery.albumSpace/3j…`  
+   HappyView may still accept legacy `ats://` internally; ATPix displays/stores the proposal form ([ADR-010](docs/architecture/010-permissioned-spaces-storage.md)).
 
 ### Test 4 — Permissioned space admin (F-008, UI-SCR-006)
 
 1. On a permissioned album, click **Invite Members** (or **Manage space** on Collaborators tab).
-2. Verify space admin panel: Space DID, **Gated** badge, member directory, invite-by-handle form.
+2. Verify space admin panel: **Space DID** equals the DID segment of the Space URI from Test 3, **Gated** badge, member directory, invite-by-handle form.
 3. **OVH multi-account:** sign in as `alice.pds.atpix.net`, invite `bob.pds.atpix.net`; sign in as Bob in a separate browser profile and accept/open the album (when invite flow is configured on your PDS).
 
-### Test 5 — Permissioned upload (F-002 permissioned path)
+### Test 5 — Permissioned upload and record URI (F-002 permissioned path)
 
 1. **Upload Media** → destination **Permissioned Space** → select the permissioned album from Test 3/4.
 2. Publish a photo — records written via `space.createRecord`; thumbnails load through authenticated `space.getBlob`.
 3. Confirm photo appears in the permissioned album grid (member session required).
+4. **Record URI format (permissioned photo):** inspect the created photo’s record URI (network tab for `com.atproto.space.createRecord` response, or album item payload). It MUST match:
+
+   ```text
+   at://{spaceDid}/space/{spaceType}/{skey}/{authorDid}/{collection}/{rkey}
+   ```
+
+   For ATPix albums:
+
+   ```text
+   at://{spaceDid}/space/net.atpix.gallery.albumSpace/{skey}/{authorDid}/net.atpix.gallery.photo/{rkey}
+   ```
+
+   Checks:
+   - Same `{spaceDid}`, `space`, `net.atpix.gallery.albumSpace`, and `{skey}` as the album’s Space URI
+   - `{authorDid}` is your account DID
+   - Collection is `net.atpix.gallery.photo` (album membership uses `net.atpix.gallery.albumItem` with the same space prefix)
+   - Final segment is the record key (`rkey`, often a TID)
 
 ### Test 6 — Automated tests (no live OAuth)
 
@@ -206,6 +234,8 @@ cd apps/frontend && npm run lint && npm run test:unit && npm run test:ui
 cd ../backend && source .venv/bin/activate
 ruff check . --fix && ruff format . && ./test
 ```
+
+URI helpers are covered by unit tests (`tests/unit/spaceUri.test.js`, `spaceAdmin.test.js`, `publishPermissionedPhoto.test.js`) — proposal-form fixtures plus legacy `ats://` ingress.
 
 View Allure reports: `allure serve apps/frontend/tests/allure-results` (see [Run tests](#run-tests)).
 
@@ -471,13 +501,13 @@ Caption/tag edits persist via `net.atpix.gallery.updatePhoto`.
 
 Prerequisites: Steps 2–10 complete; `feature.spaces_enabled=true` (Step 4). **Multi-account tests:** Phase B handles (`alice.pds.atpix.net` owner, `bob.pds.atpix.net` member).
 
-1. Create a **Permissioned** album (Albums → visibility chip → Create album). Confirm the album detail shows **Invite Members** and a **Space URI** (`at://…/space/net.atpix.gallery.albumSpace/…`).
+1. Create a **Permissioned** album (Albums → visibility chip → Create album). Confirm the album detail shows **Invite Members** and a **Space URI** in proposal form: `at://{spaceDid}/space/net.atpix.gallery.albumSpace/{skey}` (see [Test 3](#test-3--albums-and-caption-editing-f-004-f-005)).
 2. Click **Invite Members** (or **Manage space** on the Collaborators tab) to open **Permissioned Space** admin (UI-SCR-006):
-   - Space DID, record type `net.atpix.gallery.albumSpace`, **Gated** badge
+   - Space DID (matches Space URI authority), record type `net.atpix.gallery.albumSpace`, **Gated** badge
    - Member directory (ADMIN / MEMBER / VIEWER roles)
    - Invite by handle or direct **Add member**
    - Export Logs / Share Access actions
-3. **Permissioned upload:** Upload Media → select **Permissioned Space** destination → pick the permissioned album → publish. Photos are written to the linked space via `space.createRecord` (blobs remain on your PDS; thumbnails are fetched through authenticated `space.getBlob` calls and rendered as object URLs in the gallery UI).
+3. **Permissioned upload:** Upload Media → select **Permissioned Space** destination → pick the permissioned album → publish. Photos are written to the linked space via `space.createRecord` (blobs remain on your PDS; thumbnails are fetched through authenticated `space.getBlob` calls and rendered as object URLs in the gallery UI). Confirm permissioned **record** URIs follow `at://{spaceDid}/space/…/{authorDid}/net.atpix.gallery.photo/{rkey}` ([Test 5](#test-5--permissioned-upload-and-record-uri-f-002-permissioned-path)).
 4. **Multi-account BDD (optional):** export OAuth session env vars for two accounts (see `.env.example` `TEST_OWNER_*` / `TEST_MEMBER_*`) after signing in via ATPix. Behave loads the repository root `.env` automatically; ensure `HAPPYVIEW_CLIENT_KEY` and test-account variables are set there, then:
 
 ```bash
